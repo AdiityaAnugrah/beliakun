@@ -1,0 +1,89 @@
+// Bagian Navbar
+nav {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    padding-block: 1rem;
+    z-index: 99;
+
+    a {
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+        color: whitesmoke;
+
+        &:hover {
+            color: var(--hitam);
+        }
+    }
+
+    .active {
+        color: var(--merah);
+        font-weight: 400;
+        &:hover {
+            color: var(--putih);
+        }
+    }
+}
+// End of Navbar
+// Ini Bagiann Footer
+footer {
+    font-size: small;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--hitam);
+    color: white;
+    a {
+        opacity: 0.8;
+        text-decoration: none;
+        color: white;
+        &:hover {
+            color: var(--merah);
+        }
+    }
+}
+// End of Footer
+
+.hidden-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.btn {
+    display: flex;
+    text-decoration: none;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    letter-spacing: 0.3em;
+
+    &.kotak {
+        border: 1px solid var(--hitam);
+    }
+}
+.search {
+    display: flex;
+    transition: 0.3s;
+    input {
+        display: block;
+        width: 0px;
+        overflow: hidden;
+        transition: 0.3s;
+    }
+    &.show {
+        gap: 0.5rem;
+        transition: 0.3s;
+        input {
+            width: 100px;
+            padding-inline: 1.5em;
+            transition: 0.3s;
+        }
+    }
+}
