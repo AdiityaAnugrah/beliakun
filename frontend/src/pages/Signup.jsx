@@ -10,7 +10,7 @@ const Signup = () => {
     const { setNotif } = useNotifStore();
     const navigate = useNavigate();
     const [form, setForm] = useState({
-        fullName: "",
+        nama: "",
         email: "",
         username: "",
         password: "",
@@ -21,7 +21,7 @@ const Signup = () => {
     const [showPassword, setShowPassword] = useState(false);
 
     const isFormValid =
-        form.fullName.trim() &&
+        form.nama.trim() &&
         form.email.trim() &&
         form.username.trim() &&
         form.password.length >= 6 &&
@@ -41,7 +41,7 @@ const Signup = () => {
         setIsSubmitting(true);
         try {
             const res = await signup({
-                nama: form.fullName,
+                nama: form.nama,
                 email: form.email,
                 username: form.username,
                 password: form.password,
@@ -71,7 +71,7 @@ const Signup = () => {
                 <form onSubmit={handleSubmit} className="form">
                     <input
                         type="text"
-                        name="fullName"
+                        name="nama"
                         placeholder="Full Name"
                         onChange={handleChange}
                         required
