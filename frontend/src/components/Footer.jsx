@@ -10,12 +10,17 @@ const Footer = () => {
                         <Link to="/">Home</Link>
                         <Link to="/about">About Us</Link>
                     </div>
-
                     <div className="footer-partners">
                         <h4>Our Partners</h4>
                         <div className="partner-logos">
-                            <img src="/partners/logo1.png" alt="Partner 1" />
-                            <img src="/partners/logo2.png" alt="Partner 2" />
+                            <img
+                                src="../partners/cloudflare.svg"
+                                alt="Cloudflare"
+                            />
+                            <img
+                                src="../partners/Midtrans.svg"
+                                alt="Midtrans"
+                            />
                         </div>
                     </div>
                 </div>

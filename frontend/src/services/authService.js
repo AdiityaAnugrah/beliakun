@@ -10,7 +10,6 @@ export const signup = async (data) => {
     const hasil = {
         status: res.status,
         message: resJson.message,
-        data: resJson.data,
     };
     return hasil;
 };

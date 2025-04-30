@@ -142,7 +142,7 @@ footer {
     width: 100%;
     background-color: var(--hitam);
     color: white;
-    padding: 2rem 1rem;
+    padding: 2.5rem 1rem;
     font-size: 0.9rem;
     text-align: center;
 
@@ -162,7 +162,7 @@ footer {
         margin: 0 auto;
         display: flex;
         flex-direction: column;
-        gap: 2rem;
+        gap: 1rem;
     }
 
     .footer-top,
@@ -170,7 +170,7 @@ footer {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 1.5rem;
+        gap: 2px;
     }
 
     .footer-links,
@@ -183,11 +183,13 @@ footer {
 
     .footer-partners {
         text-align: center;
-
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         h4 {
             margin-bottom: 0.5rem;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 12px;
         }
 
         .partner-logos {
@@ -199,13 +201,8 @@ footer {
             img {
                 max-height: 40px;
                 object-fit: contain;
-                filter: brightness(0) invert(1);
                 opacity: 0.8;
-                transition: opacity 0.3s ease;
-
-                &:hover {
-                    opacity: 1;
-                }
+                opacity: 1;
             }
         }
     }
@@ -241,6 +238,22 @@ footer {
             justify-content: space-between;
             align-items: center;
             text-align: left;
+            gap: 4px;
+        }
+
+        .footer-partners {
+            text-align: left;
+            align-items: flex-start;
+        }
+    }
+    @media (min-width: 360px) {
+        .footer-top,
+        .footer-bottom {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            text-align: left;
+            gap: 4px;
         }
 
         .footer-partners {
@@ -249,6 +262,7 @@ footer {
         }
     }
 }
+
 // End of Footer
 
 .hidden-scrollbar::-webkit-scrollbar {
@@ -287,6 +301,121 @@ footer {
             width: 100px;
             padding-inline: 1.5em;
             transition: 0.3s;
+        }
+    }
+}
+
+// TAMPILAN SIGUP
+.signup-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    background-color: #f8f9fa;
+}
+
+.form-box {
+    background-color: white;
+    padding: 2rem;
+    max-width: 400px;
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    text-align: center;
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    input {
+        padding: 0.75rem 1rem;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+
+        &:focus {
+            border-color: var(--merah);
+            outline: none;
+        }
+    }
+
+    button {
+        background-color: var(--merah);
+        color: white;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s;
+
+        &:hover {
+            background-color: #d9534f;
+        }
+    }
+}
+
+.error-msg {
+    color: red;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
+
+.input-password {
+    position: relative;
+
+    input {
+        width: 100%;
+        padding-right: 2.5rem;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #888;
+        font-size: 1.1rem;
+    }
+}
+
+// TAMPILAN SIGNUP
+
+.notif {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 0px;
+    z-index: 101;
+    background-color: aqua;
+    display: flex;
+    justify-content: center;
+
+    div {
+        background-color: var(--merah);
+        width: fit-content;
+        height: fit-content;
+        padding: 1em 2em;
+        transform: translateY(-100px);
+        transition: 0.4s;
+    }
+
+    &.show {
+        div {
+            transform: translateY(20px);
+            transition: 0.4s;
         }
     }
 }
