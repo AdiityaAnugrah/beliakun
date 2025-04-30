@@ -19,7 +19,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // Routes
-app.get("/", (req, res) => {
+app.get("/api", (req, res) => {
     res.send("Welcome to the API!");
 });
 app.use("/api/auth", authRoutes);
