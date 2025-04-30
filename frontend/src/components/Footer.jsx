@@ -1,56 +1,48 @@
 import { Link } from "react-router-dom";
-import { Img } from "react-image";
 import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
 
 const Footer = () => {
     return (
         <footer>
-            <div className="container my-6 mx-6">
-                <div className="flex justify-between items-center py-4">
-                    <div className="flex gap-4">
+            <div className="footer-container">
+                <div className="footer-top">
+                    <div className="footer-links">
                         <Link to="/">Home</Link>
                         <Link to="/about">About Us</Link>
-                        <Link to="/contact">Contact Us</Link>
                     </div>
-                    <div className="flex flex-col">
-                        <Img src="" alt="Logo" width={150} height={200} />
+
+                    <div className="footer-partners">
+                        <h4>Our Partners</h4>
+                        <div className="partner-logos">
+                            <img src="/partners/logo1.png" alt="Partner 1" />
+                            <img src="/partners/logo2.png" alt="Partner 2" />
+                        </div>
                     </div>
                 </div>
-                <hr
-                    style={{
-                        opacity: "0.5",
-                        width: "100%",
-                    }}
-                />
-                <div className="flex justify-between items-center py-4">
-                    <div className="flex gap-2">
+
+                <hr className="footer-separator" />
+
+                <div className="footer-bottom">
+                    <div className="footer-socials">
                         <Link to="/">
-                            <FaFacebookF style={{ fontSize: "18px" }} />
+                            <FaFacebookF />
                         </Link>
                         <Link to="/">
-                            <FaInstagram style={{ fontSize: "18px" }} />
+                            <FaInstagram />
                         </Link>
                         <Link to="/">
-                            <FaTwitter style={{ fontSize: "18px" }} />
+                            <FaTwitter />
                         </Link>
                     </div>
-                    <div
-                        className="flex gap-2 text-sm"
-                        style={{ opacity: "0.7" }}
-                    >
+                    <div className="footer-legal">
                         <Link to="/">Terms & Conditions</Link>
                         <Link to="/">Privacy Policy</Link>
                     </div>
                 </div>
             </div>
-            <p
-                className="text-center mb-4"
-                style={{
-                    opacity: "0.5",
-                    fontSize: "14px",
-                }}
-            >
-                Copyright &copy;{" Ilenafurniture"} {new Date().getFullYear()}
+
+            <p className="footer-copy">
+                &copy; {new Date().getFullYear()} AA_Code. All rights reserved.
             </p>
         </footer>
     );
