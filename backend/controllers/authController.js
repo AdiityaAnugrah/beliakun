@@ -23,6 +23,8 @@ const registerUser = async (req, res) => {
             email,
             username,
             password: hashedPassword,
+            role: "pelanggan",
+            status: "active",
         });
 
         res.status(200).json({ message: "User registered successfully" });
@@ -41,7 +43,9 @@ const loginUser = async (req, res) => {
         });
         console.log(user);
         if (!user) {
-            return res.status(400).json({ message: "User not found" });
+            return res
+                .status(400)
+                .json({ message: "User not found || Email not found" });
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
