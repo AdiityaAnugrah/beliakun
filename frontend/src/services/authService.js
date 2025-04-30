@@ -1,4 +1,4 @@
-const API_URL = `${import.meta.env.VITE_URL_BACKEND}/api`;
+const API_URL = `${import.meta.env.VITE_URL_BACKEND}`;
 
 export const signup = async (data) => {
     const res = await fetch(`${API_URL}/auth/signup`, {
