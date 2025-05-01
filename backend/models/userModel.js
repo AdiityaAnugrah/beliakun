@@ -35,6 +35,8 @@ const User = sequelize.define(
         },
         token: {
             type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: null,
         },
     },
     {

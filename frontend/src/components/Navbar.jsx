@@ -5,6 +5,7 @@ import useUserStore from "../../store/userStore";
 import { FaPowerOff } from "react-icons/fa";
 import { FiMenu, FiX } from "react-icons/fi";
 import { logout } from "../services/authService";
+import useNotifStore from "../../store/notifStore";
 
 const Navbar = () => {
     const user = useUserStore();
@@ -12,6 +13,7 @@ const Navbar = () => {
     const location = useLocation();
     const [scrolled, setScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+    const { setNotif } = useNotifStore();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -26,6 +28,7 @@ const Navbar = () => {
     const handleLogout = async () => {
         await logout(user.token);
         user.emptyUser();
+        setNotif("Logout successful!");
         setMenuOpen(false);
         navigate("/login");
     };
