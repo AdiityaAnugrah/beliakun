@@ -2,7 +2,7 @@ const API_URL = `${import.meta.env.VITE_URL_BACKEND}`;
 
 export const signup = async (data) => {
     try {
-        const res = await fetch(`${API_URL}/api/auth/signup`, {
+        const res = await fetch(`${API_URL}/auth/signup`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data),
