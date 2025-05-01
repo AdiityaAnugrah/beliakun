@@ -20,12 +20,13 @@ const Signup = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
+    // Validasi form dan captchaToken
     const isFormValid =
         form.nama.trim() &&
         form.email.trim() &&
         form.username.trim() &&
         form.password.length >= 6 &&
-        captchaToken;
+        captchaToken; // Pastikan token captcha ada
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -40,26 +41,26 @@ const Signup = () => {
 
         setIsSubmitting(true);
         try {
-            console.log(form);
+            // Mengirim data ke backend
             const res = await signup({
                 nama: form.nama,
                 email: form.email,
                 username: form.username,
                 password: form.password,
-                captchaToken,
+                captchaToken, // Sertakan token captcha di sini
             });
 
             if (res.status !== 200) {
-                setMessage(res.message);
+                setMessage(res.message); // Pesan dari backend
                 setIsSubmitting(false);
                 return;
             }
 
-            setNotif(res.message);
-            navigate("/login");
+            setNotif(res.message); // Set notifikasi sukses
+            navigate("/login"); // Arahkan ke halaman login
         } catch (err) {
             setMessage("Signup failed. Please try again.");
-            console.log(err);
+            console.log(err); // Debugging error
         } finally {
             setIsSubmitting(false);
         }
@@ -113,8 +114,8 @@ const Signup = () => {
                             Security Verification
                         </label>
                         <Turnstile
-                            sitekey="0x4AAAAAABB8oU7Lk-20BkvF"
-                            onVerify={(token) => setCaptchaToken(token)}
+                            sitekey="0x4AAAAAABXrkQIeIGbuJene"
+                            onVerify={(token) => setCaptchaToken(token)} // Tangkap token Captcha
                         />
                     </div>
 
@@ -122,7 +123,7 @@ const Signup = () => {
                         text={isSubmitting ? "Registering..." : "Sign Up"}
                         style="kotak"
                         type="submit"
-                        disabled={!isFormValid || isSubmitting}
+                        disabled={!isFormValid || isSubmitting} // Disable button jika form tidak valid
                     />
 
                     <p className="login-link">
@@ -130,7 +131,7 @@ const Signup = () => {
                         <a href="/login">Log in here</a>
                     </p>
                 </form>
-                {message && <p className="error-msg">{message}</p>}
+                {message && <p className="error-msg">{message}</p>}{" "}
             </div>
         </div>
     );

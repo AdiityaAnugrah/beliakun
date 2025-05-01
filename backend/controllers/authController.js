@@ -6,6 +6,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/userModel.js");
 
+const SECRET_KEY = "0x4AAAAAABXrkULWnDa5SdueNc1uZEGBHhk";
+
 const registerUser = async (req, res) => {
     const { nama, email, username, password, captchaToken } = req.body;
 
@@ -14,7 +16,19 @@ const registerUser = async (req, res) => {
     }
 
     try {
-        // ✅ Verifikasi ke Cloudflare Turnstile
+        // Ambil IP address pengguna dari header
+        const ip =
+            req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+
+        // Membuat FormData untuk mengirimkan ke Cloudflare Turnstile API
+        const formData = new URLSearchParams();
+        formData.append("secret", SECRET_KEY); // Ganti dengan secret key Anda
+        formData.append("response", captchaToken); // Token Captcha dari frontend
+        formData.append("remoteip", ip); // IP address pengguna
+        const idempotencyKey = crypto.randomUUID(); // Membuat idempotency key untuk permintaan yang unik
+        formData.append("idempotency_key", idempotencyKey); // Menambahkan idempotency key
+
+        // Verifikasi Captcha dengan Cloudflare Turnstile
         const verifyRes = await fetch(
             "https://challenges.cloudflare.com/turnstile/v0/siteverify",
             {
@@ -22,27 +36,27 @@ const registerUser = async (req, res) => {
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
                 },
-                body: new URLSearchParams({
-                    secret: "0x4AAAAAABB8oWZLC_bnyE_OtR6xkzDyUpA",
-                    response: captchaToken,
-                }),
+                body: formData,
             }
         );
 
         const verifyData = await verifyRes.json();
+        console.log("Cloudflare Verification Data:", verifyData); // Debugging
 
+        // Jika verifikasi gagal
         if (!verifyData.success) {
             return res
                 .status(403)
                 .json({ message: "Captcha verification failed" });
         }
 
-        // ✅ Lanjut buat user jika belum terdaftar
+        // Cek apakah user sudah ada
         const existing = await User.findOne({ where: { email } });
         if (existing) {
             return res.status(400).json({ message: "Email already exists" });
         }
 
+        // Hash password dan simpan user baru
         const hashedPassword = await bcrypt.hash(password, 10);
         await User.create({
             nama,
