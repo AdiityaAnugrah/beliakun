@@ -9,8 +9,9 @@ export const signup = async (data) => {
         });
 
         // Cek apakah status respons adalah 2xx
+        const resJson = await res.json();
+
         if (res.ok) {
-            const resJson = await res.json();
             console.log("RESPON DARI SI backend:", resJson); // Log respons dari backend
             return {
                 status: res.status,
@@ -18,7 +19,6 @@ export const signup = async (data) => {
             };
         } else {
             // Tangani jika status bukan 2xx (gagal)
-            const resJson = await res.json();
             console.log("Error response from backend:", resJson);
             return {
                 status: res.status,

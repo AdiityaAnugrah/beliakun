@@ -1,6 +1,7 @@
 // import bcrypt from "bcryptjs";
 // import jwt from "jsonwebtoken";
 // import { User } from "../models/index.js";
+const crypto = require("crypto");
 const fetch = require("node-fetch");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -63,6 +64,7 @@ const registerUser = async (req, res) => {
             email,
             username,
             password: hashedPassword,
+            token: null,
         });
 
         return res

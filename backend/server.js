@@ -17,7 +17,7 @@ const app = express();
 
 app.use(
     cors({
-        origin: "https://beliakun.com",
+        origin: "*",
         methods: ["GET", "POST", "PUT", "DELETE"],
         allowedHeaders: ["Content-Type", "Authorization"],
     })
@@ -34,6 +34,6 @@ app.use("/api/auth", authRoutes);
 const PORT = process.env.PORT || 4000;
 initModels().then(() => {
     app.listen(PORT, () => {
-        console.log(`✅ Server running on http://localhost:${PORT}`);
+        console.log(`✅ UDAH JALAN DI SERVERMU DI PORT [${PORT}]`);
     });
 });
