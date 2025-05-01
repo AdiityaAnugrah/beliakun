@@ -40,6 +40,7 @@ const Signup = () => {
 
         setIsSubmitting(true);
         try {
+            console.log(form);
             const res = await signup({
                 nama: form.nama,
                 email: form.email,

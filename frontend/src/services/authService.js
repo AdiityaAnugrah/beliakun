@@ -7,6 +7,7 @@ export const signup = async (data) => {
         body: JSON.stringify(data),
     });
     const resJson = await res.json();
+    console.log("RESPON DARI SI backend:", resJson);
     const hasil = {
         status: res.status,
         message: resJson.message,
