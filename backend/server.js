@@ -15,7 +15,13 @@ const { initModels } = require("./models/index.js");
 dotenv.config();
 const app = express();
 
-app.use(cors());
+app.use(
+    cors({
+        origin: "https://beliakun.com",
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+    })
+);
 app.use(bodyParser.json());
 
 // Routes
