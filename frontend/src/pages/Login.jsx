@@ -16,8 +16,7 @@ const Login = () => {
     const { setNama, setEmail, setUsername, setToken, setRole } =
         useUserStore();
     const navigate = useNavigate();
-    const { setNotif } = useNotifStore(); // Ambil setNotif dari store
-    const { teks, show } = useNotifStore(); // Ambil teks dan show dari store
+    const { teks, show, setNotif, showNotif } = useNotifStore();
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -38,9 +37,12 @@ const Login = () => {
             setToken(response.data.token);
             setRole(response.data.role);
             setMessage(t("login_success"));
-
-            setNotif(t("login_success")); // Menampilkan notifikasi sukses
-            navigate("/");
+            setNotif(t("login_success"));
+            if (response.data.role == "admin") {
+                navigate("/admin/dashboard");
+            } else {
+                navigate("/");
+            }
         } catch (err) {
             console.error(err);
             setMessage(t("login_failed"));
@@ -50,11 +52,9 @@ const Login = () => {
 
     useEffect(() => {
         if (teks) {
-            setTimeout(() => {
-                setNotif(""); // Menghapus teks notifikasi setelah 3 detik
-            }, 3000);
+            showNotif();
         }
-    }, [teks, setNotif]);
+    }, []);
 
     return (
         <>

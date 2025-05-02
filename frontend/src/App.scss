@@ -130,17 +130,19 @@ nav {
             }
 
             .dropdown-menu {
-                display: none;
+                display: block;
                 position: absolute;
                 top: 100%;
                 left: 0;
-                background-color: white;
-                border: 1px solid #ddd;
-                padding: 10px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                background-color: #f8f9fa;
+                padding-inline: 0px;
                 z-index: 91;
-                width: 200px;
+                max-width: 100px;
                 border-radius: 5px;
+                max-height: 0px;
+                padding-block: 0px;
+                overflow: hidden;
+                transition: 0.3s;
             }
 
             .dropdown-menu button {
@@ -159,7 +161,9 @@ nav {
             }
 
             .dropdown-menu.open {
-                display: block;
+                max-height: 40px;
+                padding-block: 4px;
+                transition: 0.3s;
             }
         }
 
@@ -456,19 +460,20 @@ footer {
     transition: opacity 0.4s ease, transform 0.4s ease;
 
     div {
-        background-color: var(--hijau); /* Warna notifikasi */
-        color: var(--hitam);
+        background-color: var(--hijau);
+        color: var(--putih);
+        border: 1px solid var(--putih);
         padding: 1em 2em;
         border-radius: 5px;
         opacity: 0;
-        transform: translateY(-100px); /* Posisi awal di atas */
+        transform: translateY(-100px);
         transition: opacity 0.4s ease, transform 0.4s ease;
     }
 
     &.show {
         div {
             opacity: 1;
-            transform: translateY(20px); /* Posisi akhir */
+            transform: translateY(20px);
         }
     }
 }

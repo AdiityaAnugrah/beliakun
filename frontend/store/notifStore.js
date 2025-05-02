@@ -6,13 +6,7 @@ const useNotifStore = create((set) => ({
     setNotif: (teks) => {
         set({
             teks: teks,
-            show: true,
         });
-        setTimeout(() => {
-            set({
-                show: false,
-            });
-        }, 3000);
     },
     showNotif: () => {
         set({
@@ -23,6 +17,11 @@ const useNotifStore = create((set) => ({
                 show: false,
             });
         }, 3000);
+        setTimeout(() => {
+            set({
+                teks: "",
+            });
+        }, 4000);
     },
 }));
 

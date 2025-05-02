@@ -43,11 +43,12 @@ const resources = {
             dont_have_account: "Don’t have an account?",
             sign_up: "Sign up",
             welcome_user: "Welcome, {{username}}!",
-            logout: "Logout", // Tambahkan logout
-            profile: "Profile", // Tambahkan profile
-            settings: "Settings", // Tambahkan settings
-            change_password: "Change Password", // Tambahkan change password
-            delete_account: "Delete Account", // Tambahkan delete account
+            logout: "Logout",
+            profile: "Profile",
+            settings: "Settings",
+            change_password: "Change Password",
+            delete_account: "Delete Account",
+            logout_successful: "Logout successful",
         },
     },
     id: {
@@ -91,11 +92,12 @@ const resources = {
             dont_have_account: "Belum punya akun?",
             sign_up: "Daftar",
             welcome_user: "Selamat datang, {{username}}!",
-            logout: "Keluar", // Tambahkan logout
-            profile: "Profil", // Tambahkan profile
-            settings: "Pengaturan", // Tambahkan settings
-            change_password: "Ubah Password", // Tambahkan change password
-            delete_account: "Hapus Akun", // Tambahkan delete account
+            logout: "Keluar",
+            profile: "Profil",
+            settings: "Pengaturan",
+            change_password: "Ubah Password",
+            delete_account: "Hapus Akun",
+            logout_successful: "Keluar berhasil",
         },
     },
 };

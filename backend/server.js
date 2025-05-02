@@ -1,33 +1,34 @@
-// import express from "express";
-// import dotenv from "dotenv";
-// import cors from "cors";
-// import bodyParser from "body-parser";
-// import authRoutes from "./routes/authRoutes.js";
-// import { initModels } from "./models/index.js";
-
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+
 const authRoutes = require("./routes/authRoutes.js");
-const { initModels } = require("./models/index.js");
+const productRoutes = require("./routes/productRoutes.js");
+const cartRoutes = require("./routes/cartRoutes.js");
+const paymentRoutes = require("./routes/paymentRoutes.js");
 
 dotenv.config();
+
 const app = express();
 
-app.use(cors({}));
+app.use(cors());
 app.use(bodyParser.json());
 
-// Routes
 app.get("/api", (req, res) => {
     res.send("Welcome to the API!");
 });
-app.use("/api/auth", authRoutes);
 
-// Init DB & start server
+app.use("/api/auth", authRoutes);
+app.use("/api/product", productRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/payment", paymentRoutes);
+
+const { initModels } = require("./models/index.js");
+
 const PORT = process.env.PORT || 4000;
 initModels().then(() => {
     app.listen(PORT, () => {
-        console.log(`✅ UDAH JALAN DI SERVERMU DI PORT [${PORT}]`);
+        console.log(`✅ SERVER BERJALAN DI PORT [${PORT}]`);
     });
 });

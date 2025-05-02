@@ -57,13 +57,9 @@ const Navbar = () => {
                         height={200}
                     />
                 </Link>
-
-                {/* Toggle button for small screen */}
                 <button className="menu-toggle md:hidden" onClick={toggleMenu}>
                     {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
                 </button>
-
-                {/* Menu */}
                 <div className={`menu-container ${menuOpen ? "open" : ""}`}>
                     <ul className="menu-right">
                         {/* <li>
@@ -89,17 +85,19 @@ const Navbar = () => {
                                     <span>
                                         {t("welcome")}, {user.username}
                                     </span>
-                                    {dropdownOpen && (
-                                        <div className="dropdown-menu">
-                                            <button
-                                                className="btn-auth"
-                                                onClick={handleLogout}
-                                            >
-                                                <FaPowerOff size={18} />
-                                                {t("logout")}
-                                            </button>
-                                        </div>
-                                    )}
+                                    <div
+                                        className={`dropdown-menu ${
+                                            dropdownOpen ? "open" : ""
+                                        }`}
+                                    >
+                                        <button
+                                            className="btn-auth"
+                                            onClick={handleLogout}
+                                        >
+                                            <FaPowerOff size={18} />
+                                            {t("logout")}
+                                        </button>
+                                    </div>
                                 </li>
                             </>
                         ) : (

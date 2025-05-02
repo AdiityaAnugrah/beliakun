@@ -4,12 +4,12 @@ const {
     loginUser,
     logout,
 } = require("../controllers/authController.js");
-const filterAuth = require("../routes/filterAuth.js");
+const { filterAll } = require("./filterAuth.js");
 
 // const router = express.Router();
 
 router.post("/signup", registerUser);
 router.post("/login", loginUser);
-router.post("/logout", filterAuth, logout);
+router.post("/logout", filterAll, logout);
 
 module.exports = router;

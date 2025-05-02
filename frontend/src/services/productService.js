@@ -1,0 +1,109 @@
+const API_URL = `${import.meta.env.VITE_URL_BACKEND}`;
+
+export const getProducts = async () => {
+    try {
+        const res = await fetch(`${API_URL}/product`);
+        const resJson = await res.json();
+        console.log(resJson);
+
+        if (res.ok) {
+            console.log("Produk berhasil diambil:", resJson);
+            return { status: res.status, data: resJson };
+        } else {
+            console.log("Gagal mengambil produk:", resJson);
+            return {
+                status: res.status,
+                message: resJson.message || "Failed to fetch products",
+            };
+        }
+    } catch (err) {
+        console.error("Request error:", err);
+        return { status: 500, message: "Server error. Please try again." };
+    }
+};
+
+// Menambahkan produk baru
+export const addProduct = async (data, token) => {
+    try {
+        const res = await fetch(`${API_URL}/product`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(data),
+        });
+        const resJson = await res.json();
+
+        if (res.ok) {
+            console.log("Produk berhasil ditambahkan:", resJson);
+            return { status: res.status, message: resJson.message };
+        } else {
+            console.log("Gagal menambahkan produk:", resJson);
+            return {
+                status: res.status,
+                message: resJson.message || "Failed to add product",
+            };
+        }
+    } catch (err) {
+        console.error("Request error:", err);
+        return { status: 500, message: "Server error. Please try again." };
+    }
+};
+
+// Mengupdate produk
+export const updateProduct = async (id, data, token) => {
+    try {
+        const res = await fetch(`${API_URL}/product/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(data),
+        });
+        const resJson = await res.json();
+
+        if (res.ok) {
+            console.log("Produk berhasil diperbarui:", resJson);
+            return { status: res.status, message: resJson.message };
+        } else {
+            console.log("Gagal memperbarui produk:", resJson);
+            return {
+                status: res.status,
+                message: resJson.message || "Failed to update product",
+            };
+        }
+    } catch (err) {
+        console.error("Request error:", err);
+        return { status: 500, message: "Server error. Please try again." };
+    }
+};
+
+// Menghapus produk
+export const deleteProduct = async (id, token) => {
+    try {
+        const res = await fetch(`${API_URL}/product/${id}`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        const resJson = await res.json();
+
+        if (res.ok) {
+            console.log("Produk berhasil dihapus:", resJson);
+            return { status: res.status, message: resJson.message };
+        } else {
+            console.log("Gagal menghapus produk:", resJson);
+            return {
+                status: res.status,
+                message: resJson.message || "Failed to delete product",
+            };
+        }
+    } catch (err) {
+        console.error("Request error:", err);
+        return { status: 500, message: "Server error. Please try again." };
+    }
+};
