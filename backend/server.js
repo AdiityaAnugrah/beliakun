@@ -16,13 +16,13 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.get("/api", (req, res) => {
-    res.send("Welcome to the API!");
+    res.send("|| API UDAH JALAN TOT ||");
 });
 
-app.use("api/auth", authRoutes);
-app.use("api/product", productRoutes);
-app.use("api/cart", cartRoutes);
-app.use("api/payment", paymentRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/product", productRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/payment", paymentRoutes);
 
 const { initModels } = require("./models/index.js");
 
