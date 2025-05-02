@@ -7,6 +7,7 @@ import About from "./pages/About.jsx";
 import NotFond from "./pages/NotFond.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
+import "./i18n";
 
 createRoot(document.getElementById("root")).render(
     <BrowserRouter>

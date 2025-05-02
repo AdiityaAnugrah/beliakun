@@ -1,25 +1,27 @@
 import { Link } from "react-router-dom";
 import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
+import { useTranslation } from "react-i18next"; // Impor useTranslation
 
 const Footer = () => {
+    const { t } = useTranslation(); // Menggunakan hook t() untuk teks yang diterjemahkan
     return (
         <footer>
             <div className="footer-container">
                 <div className="footer-top">
                     <div className="footer-links">
-                        <Link to="/">Home</Link>
-                        <Link to="/about">About Us</Link>
+                        <Link to="/">{t("home")}</Link>{" "}
+                        <Link to="/about">{t("about_us")}</Link>{" "}
                     </div>
                     <div className="footer-partners">
-                        <h4>Our Partners</h4>
+                        <h4>{t("our_partners")}</h4>
                         <div className="partner-logos">
                             <img
                                 src="../partners/cloudflare.svg"
-                                alt="Cloudflare"
+                                alt={t("cloudflare")}
                             />
                             <img
                                 src="../partners/Midtrans.svg"
-                                alt="Midtrans"
+                                alt={t("midtrans")}
                             />
                         </div>
                     </div>
@@ -40,14 +42,17 @@ const Footer = () => {
                         </Link>
                     </div>
                     <div className="footer-legal">
-                        <Link to="/">Terms & Conditions</Link>
-                        <Link to="/">Privacy Policy</Link>
+                        <Link to="/terms">{t("terms_conditions")}</Link>{" "}
+                        {/* Teks diterjemahkan */}
+                        <Link to="/privacy">{t("privacy_policy")}</Link>{" "}
+                        {/* Teks diterjemahkan */}
                     </div>
                 </div>
             </div>
 
             <p className="footer-copy">
-                &copy; {new Date().getFullYear()} AA_Code. All rights reserved.
+                &copy; {new Date().getFullYear()} AA_Code.{" "}
+                {t("all_rights_reserved")} {/* Teks diterjemahkan */}
             </p>
         </footer>
     );

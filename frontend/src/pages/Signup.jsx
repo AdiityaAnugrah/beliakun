@@ -5,8 +5,10 @@ import useNotifStore from "../../store/notifStore";
 import Tombol from "../components/Tombol";
 import Turnstile from "react-turnstile";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useTranslation } from "react-i18next"; // Import hook useTranslation
 
 const Signup = () => {
+    const { t } = useTranslation(); // Menggunakan hook useTranslation untuk akses teks yang diterjemahkan
     const { setNotif } = useNotifStore();
     const navigate = useNavigate();
     const [form, setForm] = useState({
@@ -26,7 +28,7 @@ const Signup = () => {
         form.email.trim() &&
         form.username.trim() &&
         form.password.length >= 6 &&
-        captchaToken; // Pastikan token captcha ada
+        captchaToken;
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -34,33 +36,50 @@ const Signup = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!isFormValid) {
-            setMessage("Please fill in all fields correctly.");
+
+        // Validasi dan pengecekan kesalahan
+        if (!form.nama.trim()) {
+            setMessage(t("name_required"));
+            return;
+        }
+        if (!form.email.trim()) {
+            setMessage(t("email_required"));
+            return;
+        }
+        if (!form.username.trim()) {
+            setMessage(t("username_required"));
+            return;
+        }
+        if (form.password.length < 6) {
+            setMessage(t("password_required"));
+            return;
+        }
+        if (!captchaToken) {
+            setMessage(t("captcha_required"));
             return;
         }
 
         setIsSubmitting(true);
         try {
-            // Mengirim data ke backend
             const res = await signup({
                 nama: form.nama,
                 email: form.email,
                 username: form.username,
                 password: form.password,
-                captchaToken, // Sertakan token captcha di sini
+                captchaToken,
             });
 
             if (res.status !== 200) {
-                setMessage(res.message); // Pesan dari backend
+                setMessage(res.message);
                 setIsSubmitting(false);
                 return;
             }
 
-            setNotif(res.message); // Set notifikasi sukses
-            navigate("/login"); // Arahkan ke halaman login
+            setNotif(res.message);
+            navigate("/login");
         } catch (err) {
-            setMessage("Signup failed. Please try again.");
-            console.log(err); // Debugging error
+            setMessage(t("signup_failed"));
+            console.log(err);
         } finally {
             setIsSubmitting(false);
         }
@@ -69,26 +88,26 @@ const Signup = () => {
     return (
         <div className="signup-container">
             <div className="form-box">
-                <h2 className="title">Create an Account</h2>
+                <h2 className="title">{t("create_account")}</h2>
                 <form onSubmit={handleSubmit} className="form">
                     <input
                         type="text"
                         name="nama"
-                        placeholder="Full Name"
+                        placeholder={t("full_name")}
                         onChange={handleChange}
                         required
                     />
                     <input
                         type="email"
                         name="email"
-                        placeholder="Email"
+                        placeholder={t("email")}
                         onChange={handleChange}
                         required
                     />
                     <input
                         type="text"
                         name="username"
-                        placeholder="Username"
+                        placeholder={t("username")}
                         onChange={handleChange}
                         required
                     />
@@ -97,7 +116,7 @@ const Signup = () => {
                         <input
                             type={showPassword ? "text" : "password"}
                             name="password"
-                            placeholder="Password (min. 6 characters)"
+                            placeholder={t("password")}
                             onChange={handleChange}
                             required
                         />
@@ -111,27 +130,31 @@ const Signup = () => {
 
                     <div className="mb-4 text-left">
                         <label className="block text-sm font-medium text-gray-600 mb-1">
-                            Security Verification
+                            {t("security_verification")}
                         </label>
                         <Turnstile
                             sitekey="0x4AAAAAABXrkQIeIGbuJene"
-                            onVerify={(token) => setCaptchaToken(token)} // Tangkap token Captcha
+                            onVerify={(token) => setCaptchaToken(token)}
                         />
                     </div>
 
                     <Tombol
-                        text={isSubmitting ? "Registering..." : "Sign Up"}
+                        text={
+                            isSubmitting
+                                ? "Registering..."
+                                : t("create_account")
+                        }
                         style="kotak"
                         type="submit"
-                        disabled={!isFormValid || isSubmitting} // Disable button jika form tidak valid
+                        disabled={!isFormValid || isSubmitting}
                     />
 
                     <p className="login-link">
-                        Already have an account?{" "}
-                        <a href="/login">Log in here</a>
+                        {t("already_have_account")}{" "}
+                        <a href="/login">{t("login_here")}</a>
                     </p>
                 </form>
-                {message && <p className="error-msg">{message}</p>}{" "}
+                {message && <p className="error-msg">{message}</p>}
             </div>
         </div>
     );

@@ -6,8 +6,10 @@ import { FaPowerOff } from "react-icons/fa";
 import { FiMenu, FiX } from "react-icons/fi";
 import { logout } from "../services/authService";
 import useNotifStore from "../../store/notifStore";
+import { useTranslation } from "react-i18next";
 
 const Navbar = () => {
+    const { t, i18n } = useTranslation();
     const user = useUserStore();
     const navigate = useNavigate();
     const location = useLocation();
@@ -33,10 +35,13 @@ const Navbar = () => {
         navigate("/login");
     };
 
+    const changeLanguage = (lang) => {
+        i18n.changeLanguage(lang);
+    };
+
     return (
         <nav className={`nav ${scrolled ? "scrolled" : "top"}`}>
             <div className="container mx-auto flex justify-between items-center px-4 py-3">
-                {/* Logo */}
                 <Link
                     to="/"
                     className="logo"
@@ -68,14 +73,17 @@ const Navbar = () => {
                                 }
                                 onClick={() => setMenuOpen(false)}
                             >
-                                About Us
+                                {t("about_us")}{" "}
                             </Link>
                         </li>
 
                         {user.token ? (
                             <>
                                 <li className="username">
-                                    <span>Welcome, {user.username}</span>
+                                    <span>
+                                        {t("welcome")}, {user.username}
+                                    </span>{" "}
+                                    {/* Teks diterjemahkan */}
                                 </li>
                                 <li>
                                     <button
@@ -98,7 +106,8 @@ const Navbar = () => {
                                         }
                                         onClick={() => setMenuOpen(false)}
                                     >
-                                        Login
+                                        {t("login")}{" "}
+                                        {/* Gunakan t() untuk teks yang diterjemahkan */}
                                     </Link>
                                 </li>
                                 <li>
@@ -111,11 +120,24 @@ const Navbar = () => {
                                         }
                                         onClick={() => setMenuOpen(false)}
                                     >
-                                        Signup
+                                        {t("signup")}{" "}
+                                        {/* Gunakan t() untuk teks yang diterjemahkan */}
                                     </Link>
                                 </li>
                             </>
                         )}
+
+                        {/* Dropdown untuk memilih bahasa */}
+                        <li className="language-switcher">
+                            <select
+                                className="language-dropdown"
+                                onChange={(e) => changeLanguage(e.target.value)} // Mengubah bahasa
+                                value={i18n.language} // Menentukan bahasa yang sedang aktif
+                            >
+                                <option value="en">English</option>
+                                <option value="id">Bahasa Indonesia</option>
+                            </select>
+                        </li>
                     </ul>
                 </div>
             </div>

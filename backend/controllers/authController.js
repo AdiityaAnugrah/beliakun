@@ -21,13 +21,12 @@ const registerUser = async (req, res) => {
         const ip =
             req.headers["x-forwarded-for"] || req.connection.remoteAddress;
 
-        // Membuat FormData untuk mengirimkan ke Cloudflare Turnstile API
         const formData = new URLSearchParams();
-        formData.append("secret", SECRET_KEY); // Ganti dengan secret key Anda
-        formData.append("response", captchaToken); // Token Captcha dari frontend
-        formData.append("remoteip", ip); // IP address pengguna
-        const idempotencyKey = crypto.randomUUID(); // Membuat idempotency key untuk permintaan yang unik
-        formData.append("idempotency_key", idempotencyKey); // Menambahkan idempotency key
+        formData.append("secret", SECRET_KEY);
+        formData.append("response", captchaToken);
+        formData.append("remoteip", ip);
+        const idempotencyKey = crypto.randomUUID();
+        formData.append("idempotency_key", idempotencyKey);
 
         // Verifikasi Captcha dengan Cloudflare Turnstile
         const verifyRes = await fetch(

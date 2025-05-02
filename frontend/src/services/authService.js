@@ -12,7 +12,7 @@ export const signup = async (data) => {
         const resJson = await res.json();
 
         if (res.ok) {
-            console.log("RESPON DARI SI backend:", resJson); // Log respons dari backend
+            console.log("RESPON DARI SI backend:", resJson);
             return {
                 status: res.status,
                 message: resJson.message,
