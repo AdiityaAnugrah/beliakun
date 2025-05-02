@@ -15,14 +15,14 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-app.get("/", (req, res) => {
+app.get("/api", (req, res) => {
     res.send("Welcome to the API!");
 });
 
-app.use("/auth", authRoutes);
-app.use("/product", productRoutes);
-app.use("/cart", cartRoutes);
-app.use("/payment", paymentRoutes);
+app.use("api/auth", authRoutes);
+app.use("api/product", productRoutes);
+app.use("api/cart", cartRoutes);
+app.use("api/payment", paymentRoutes);
 
 const { initModels } = require("./models/index.js");
 
