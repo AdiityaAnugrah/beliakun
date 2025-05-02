@@ -3,7 +3,7 @@ import { FaFacebookF, FaInstagram, FaTwitter } from "react-icons/fa";
 import { useTranslation } from "react-i18next"; // Impor useTranslation
 
 const Footer = () => {
-    const { t } = useTranslation(); // Menggunakan hook t() untuk teks yang diterjemahkan
+    const { t } = useTranslation();
     return (
         <footer>
             <div className="footer-container">
@@ -43,16 +43,14 @@ const Footer = () => {
                     </div>
                     <div className="footer-legal">
                         <Link to="/terms">{t("terms_conditions")}</Link>{" "}
-                        {/* Teks diterjemahkan */}
                         <Link to="/privacy">{t("privacy_policy")}</Link>{" "}
-                        {/* Teks diterjemahkan */}
                     </div>
                 </div>
             </div>
 
             <p className="footer-copy">
                 &copy; {new Date().getFullYear()} AA_Code.{" "}
-                {t("all_rights_reserved")} {/* Teks diterjemahkan */}
+                {t("all_rights_reserved")}
             </p>
         </footer>
     );

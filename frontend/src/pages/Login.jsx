@@ -5,8 +5,10 @@ import { useNavigate } from "react-router-dom";
 import Notif from "../components/Notif";
 import useNotifStore from "../../store/notifStore";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 
 const Login = () => {
+    const { t } = useTranslation();
     const [form, setForm] = useState({ email: "", password: "" });
     const [message, setMessage] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -14,7 +16,8 @@ const Login = () => {
     const { setNama, setEmail, setUsername, setToken, setRole } =
         useUserStore();
     const navigate = useNavigate();
-    const { teks, show, showNotif } = useNotifStore();
+    const { setNotif } = useNotifStore(); // Ambil setNotif dari store
+    const { teks, show } = useNotifStore(); // Ambil teks dan show dari store
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -26,6 +29,7 @@ const Login = () => {
             const response = await login(form);
             if (response.status !== 200) {
                 setMessage(response.message);
+                setNotif(response.message); // Menampilkan notifikasi error
                 return;
             }
             setNama(response.data.username);
@@ -33,29 +37,36 @@ const Login = () => {
             setUsername(response.data.username);
             setToken(response.data.token);
             setRole(response.data.role);
-            setMessage("Login success!");
+            setMessage(t("login_success"));
+
+            setNotif(t("login_success")); // Menampilkan notifikasi sukses
             navigate("/");
         } catch (err) {
             console.error(err);
-            setMessage("Login failed. Please try again.");
+            setMessage(t("login_failed"));
+            setNotif(t("login_failed")); // Menampilkan notifikasi gagal
         }
     };
 
     useEffect(() => {
-        if (teks) showNotif();
-    }, []);
+        if (teks) {
+            setTimeout(() => {
+                setNotif(""); // Menghapus teks notifikasi setelah 3 detik
+            }, 3000);
+        }
+    }, [teks, setNotif]);
 
     return (
         <>
             <Notif teks={teks} show={show} />
             <div className="signup-container">
                 <div className="form-box">
-                    <h2 className="title">Login to Your Account</h2>
+                    <h2 className="title">{t("login")}</h2>
                     <form onSubmit={handleSubmit} className="form">
                         <input
                             type="email"
                             name="email"
-                            placeholder="Email"
+                            placeholder={t("email")}
                             value={form.email}
                             onChange={handleChange}
                             required
@@ -65,7 +76,7 @@ const Login = () => {
                             <input
                                 type={showPassword ? "text" : "password"}
                                 name="password"
-                                placeholder="Password"
+                                placeholder={t("password")}
                                 value={form.password}
                                 onChange={handleChange}
                                 required
@@ -79,10 +90,11 @@ const Login = () => {
                         </div>
 
                         <button className="btn kotak" type="submit">
-                            Login
+                            {t("login")}
                         </button>
                         <p className="signup-link">
-                            Don’t have an account? <a href="/signup">Sign up</a>
+                            {t("dont_have_account")}{" "}
+                            <a href="/signup">{t("sign_up")}</a>
                         </p>
                     </form>
                     {message && <p className="error-msg">{message}</p>}

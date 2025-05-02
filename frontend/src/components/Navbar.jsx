@@ -15,6 +15,7 @@ const Navbar = () => {
     const location = useLocation();
     const [scrolled, setScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
+    const [dropdownOpen, setDropdownOpen] = useState(false);
     const { setNotif } = useNotifStore();
 
     useEffect(() => {
@@ -30,7 +31,7 @@ const Navbar = () => {
     const handleLogout = async () => {
         await logout(user.token);
         user.emptyUser();
-        setNotif("Logout successful!");
+        setNotif(t("logout_successful"));
         setMenuOpen(false);
         navigate("/login");
     };
@@ -38,6 +39,8 @@ const Navbar = () => {
     const changeLanguage = (lang) => {
         i18n.changeLanguage(lang);
     };
+
+    const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
     return (
         <nav className={`nav ${scrolled ? "scrolled" : "top"}`}>
@@ -55,7 +58,7 @@ const Navbar = () => {
                     />
                 </Link>
 
-                {/* Toggle */}
+                {/* Toggle button for small screen */}
                 <button className="menu-toggle md:hidden" onClick={toggleMenu}>
                     {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
                 </button>
@@ -63,7 +66,7 @@ const Navbar = () => {
                 {/* Menu */}
                 <div className={`menu-container ${menuOpen ? "open" : ""}`}>
                     <ul className="menu-right">
-                        <li>
+                        {/* <li>
                             <Link
                                 to="/about"
                                 className={
@@ -73,25 +76,30 @@ const Navbar = () => {
                                 }
                                 onClick={() => setMenuOpen(false)}
                             >
-                                {t("about_us")}{" "}
+                                {t("about_us")}
                             </Link>
-                        </li>
+                        </li> */}
 
                         {user.token ? (
                             <>
-                                <li className="username">
+                                <li
+                                    className="username"
+                                    onClick={toggleDropdown}
+                                >
                                     <span>
                                         {t("welcome")}, {user.username}
-                                    </span>{" "}
-                                    {/* Teks diterjemahkan */}
-                                </li>
-                                <li>
-                                    <button
-                                        className="btn-auth"
-                                        onClick={handleLogout}
-                                    >
-                                        <FaPowerOff size={18} />
-                                    </button>
+                                    </span>
+                                    {dropdownOpen && (
+                                        <div className="dropdown-menu">
+                                            <button
+                                                className="btn-auth"
+                                                onClick={handleLogout}
+                                            >
+                                                <FaPowerOff size={18} />
+                                                {t("logout")}
+                                            </button>
+                                        </div>
+                                    )}
                                 </li>
                             </>
                         ) : (
@@ -106,8 +114,7 @@ const Navbar = () => {
                                         }
                                         onClick={() => setMenuOpen(false)}
                                     >
-                                        {t("login")}{" "}
-                                        {/* Gunakan t() untuk teks yang diterjemahkan */}
+                                        {t("login")}
                                     </Link>
                                 </li>
                                 <li>
@@ -120,19 +127,16 @@ const Navbar = () => {
                                         }
                                         onClick={() => setMenuOpen(false)}
                                     >
-                                        {t("signup")}{" "}
-                                        {/* Gunakan t() untuk teks yang diterjemahkan */}
+                                        {t("signup")}
                                     </Link>
                                 </li>
                             </>
                         )}
-
-                        {/* Dropdown untuk memilih bahasa */}
                         <li className="language-switcher">
                             <select
                                 className="language-dropdown"
-                                onChange={(e) => changeLanguage(e.target.value)} // Mengubah bahasa
-                                value={i18n.language} // Menentukan bahasa yang sedang aktif
+                                onChange={(e) => changeLanguage(e.target.value)}
+                                value={i18n.language}
                             >
                                 <option value="en">English</option>
                                 <option value="id">Bahasa Indonesia</option>

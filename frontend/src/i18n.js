@@ -1,4 +1,3 @@
-// src/i18n.js
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
@@ -39,6 +38,16 @@ const resources = {
             terms_conditions: "Terms & Conditions",
             privacy_policy: "Privacy Policy",
             all_rights_reserved: "All rights reserved",
+            login_success: "Login success!",
+            login_failed: "Login failed. Please try again.",
+            dont_have_account: "Don’t have an account?",
+            sign_up: "Sign up",
+            welcome_user: "Welcome, {{username}}!",
+            logout: "Logout", // Tambahkan logout
+            profile: "Profile", // Tambahkan profile
+            settings: "Settings", // Tambahkan settings
+            change_password: "Change Password", // Tambahkan change password
+            delete_account: "Delete Account", // Tambahkan delete account
         },
     },
     id: {
@@ -77,6 +86,16 @@ const resources = {
             terms_conditions: "Syarat & Ketentuan",
             privacy_policy: "Kebijakan Privasi",
             all_rights_reserved: "Hak cipta dilindungi",
+            login_success: "Login berhasil!",
+            login_failed: "Login gagal. Silakan coba lagi.",
+            dont_have_account: "Belum punya akun?",
+            sign_up: "Daftar",
+            welcome_user: "Selamat datang, {{username}}!",
+            logout: "Keluar", // Tambahkan logout
+            profile: "Profil", // Tambahkan profile
+            settings: "Pengaturan", // Tambahkan settings
+            change_password: "Ubah Password", // Tambahkan change password
+            delete_account: "Hapus Akun", // Tambahkan delete account
         },
     },
 };

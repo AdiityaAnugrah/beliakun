@@ -3,7 +3,7 @@ nav {
     position: sticky;
     top: 0;
     width: 100%;
-    z-index: 99;
+    z-index: 80;
     padding-block: 1rem;
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
 
@@ -60,7 +60,7 @@ nav {
         font-size: 2rem;
         color: whitesmoke;
         cursor: pointer;
-        z-index: 100;
+        z-index: 90;
     }
 
     .menu-container {
@@ -125,6 +125,41 @@ nav {
 
             .username {
                 color: var(--merah);
+                cursor: pointer;
+                position: relative;
+            }
+
+            .dropdown-menu {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                background-color: white;
+                border: 1px solid #ddd;
+                padding: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                z-index: 91;
+                width: 200px;
+                border-radius: 5px;
+            }
+
+            .dropdown-menu button {
+                background: none;
+                border: none;
+                padding: 10px;
+                width: 100%;
+                text-align: left;
+                cursor: pointer;
+                font-size: 14px;
+                transition: background-color 0.3s ease;
+            }
+
+            .dropdown-menu button:hover {
+                background-color: #f1f1f1;
+            }
+
+            .dropdown-menu.open {
+                display: block;
             }
         }
 
@@ -411,27 +446,29 @@ footer {
 
 .notif {
     position: fixed;
-    top: 0;
-    width: 100%;
-    height: 0px;
-    z-index: 101;
-    background-color: aqua;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
     display: flex;
     justify-content: center;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
 
     div {
-        background-color: var(--merah);
-        width: fit-content;
-        height: fit-content;
+        background-color: var(--hijau); /* Warna notifikasi */
+        color: var(--hitam);
         padding: 1em 2em;
-        transform: translateY(-100px);
-        transition: 0.4s;
+        border-radius: 5px;
+        opacity: 0;
+        transform: translateY(-100px); /* Posisi awal di atas */
+        transition: opacity 0.4s ease, transform 0.4s ease;
     }
 
     &.show {
         div {
-            transform: translateY(20px);
-            transition: 0.4s;
+            opacity: 1;
+            transform: translateY(20px); /* Posisi akhir */
         }
     }
 }
