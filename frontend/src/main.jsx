@@ -7,7 +7,11 @@ import About from "./pages/About.jsx";
 import NotFond from "./pages/NotFond.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
+import Dashboard from "./pages/admin/dashboard.jsx";
+import Products from "./pages/admin/Products.jsx";
 import "./i18n";
+import AppAdmin from "./AppAdmin.jsx";
+import AddProduct from "./pages/admin/AddProduct.jsx";
 
 createRoot(document.getElementById("root")).render(
     <BrowserRouter>
@@ -18,6 +22,11 @@ createRoot(document.getElementById("root")).render(
                 <Route path="login" element={<Login />} />
                 <Route path="signup" element={<Signup />} />
                 <Route path="*" element={<NotFond />} />
+            </Route>
+            <Route path="/admin" element={<AppAdmin />}>
+                <Route index element={<Dashboard />} />
+                <Route path="products" element={<Products />} />
+                <Route path="add" element={<AddProduct />} />
             </Route>
         </Routes>
     </BrowserRouter>

@@ -25,13 +25,14 @@ export const getProducts = async () => {
 // Menambahkan produk baru
 export const addProduct = async (data, token) => {
     try {
+        console.log("ini form data hasil frontend");
+        console.log(data);
         const res = await fetch(`${API_URL}/product`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify(data),
+            body: data, // Send FormData directly
         });
         const resJson = await res.json();
 

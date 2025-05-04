@@ -49,6 +49,16 @@ const resources = {
             change_password: "Change Password",
             delete_account: "Delete Account",
             logout_successful: "Logout successful",
+            search: "Search",
+            submit: "Submit",
+            cancel: "Cancel",
+            update: "Update",
+            delete: "Delete",
+            add_new: "Add New",
+            view_details: "View Details",
+            product_details: "Product Details",
+            add_product: "Add Product",
+            edit_product: "Edit Product",
         },
     },
     id: {
@@ -98,14 +108,24 @@ const resources = {
             change_password: "Ubah Password",
             delete_account: "Hapus Akun",
             logout_successful: "Keluar berhasil",
+            search: "Cari",
+            submit: "Kirim",
+            cancel: "Batal",
+            update: "Perbarui",
+            delete: "Hapus",
+            add_new: "Tambah Baru",
+            view_details: "Lihat Detail",
+            product_details: "Detail Produk",
+            add_product: "Tambah Produk",
+            edit_product: "Edit Produk",
         },
     },
 };
 
 i18n.use(initReactI18next).init({
     resources,
-    lng: "en",
-    fallbackLng: "en",
+    lng: "en", // default language is English
+    fallbackLng: "en", // fallback language when the key is not found
     interpolation: {
         escapeValue: false,
     },

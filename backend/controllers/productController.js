@@ -5,7 +5,6 @@ const addProduct = async (req, res) => {
         nama,
         harga,
         stock,
-        gambar,
         link_shopee,
         status,
         produk_terjual,
@@ -13,17 +12,24 @@ const addProduct = async (req, res) => {
         kategori,
     } = req.body;
 
-    if (!nama || !harga || !stock) {
-        return res
-            .status(400)
-            .json({ message: "Nama, harga, dan stok produk diperlukan" });
+    console.log("Uploaded file:", req.file);
+
+    if (!req.file) {
+        return res.status(400).json({ message: "Product image is required" });
     }
+
+    if (!nama || !harga || !stock || !deskripsi || !kategori) {
+        return res.status(400).json({
+            message: "Nama, harga, stok, deskripsi, dan kategori diperlukan",
+        });
+    }
+
     try {
         const newProduct = await Product.create({
             nama,
             harga,
             stock,
-            gambar,
+            gambar: req.file.filename,
             link_shopee,
             status,
             produk_terjual,
@@ -31,7 +37,7 @@ const addProduct = async (req, res) => {
             kategori,
         });
 
-        res.status(201).json({
+        res.status(200).json({
             message: "Product added successfully",
             product: newProduct,
         });
@@ -45,26 +51,28 @@ const getAllProducts = async (req, res) => {
     let page = parseInt(req.query.page) || 1;
     let limit = parseInt(req.query.limit) || 10;
 
-    // Pastikan page dan limit adalah angka positif
     if (page <= 0) page = 1;
     if (limit <= 0) limit = 10;
 
     const offset = (page - 1) * limit;
-
-    console.log("INI GET ALL PRODUCTS");
 
     try {
         const products = await Product.findAndCountAll({
             limit: limit,
             offset: offset,
         });
-        console.log("INI PRODUK");
-        console.log(products);
+
+        const baseUrl = process.env.BASE_URL || "http://localhost:4000";
+
+        const productsWithFullImageUrl = products.rows.map((product) => ({
+            ...product.dataValues,
+            gambar: `${baseUrl}/uploads/${product.gambar}`,
+        }));
 
         const totalPages = Math.ceil(products.count / limit);
 
         res.status(200).json({
-            products: products.rows,
+            products: productsWithFullImageUrl,
             totalItems: products.count,
             totalPages: totalPages,
             currentPage: page,
@@ -73,7 +81,7 @@ const getAllProducts = async (req, res) => {
         console.error("Get products error:", error);
         res.status(500).json({
             message: "Server error while fetching products",
-            error: error.message, // Menambahkan detail error untuk mempermudah debugging
+            error: error.message,
         });
     }
 };
@@ -86,7 +94,12 @@ const updateProduct = async (req, res) => {
         if (!product) {
             return res.status(404).json({ message: "Product not found" });
         }
+        if (req.file) {
+            product.gambar = req.file.filename;
+        }
+
         await product.update(req.body);
+
         res.status(200).json({
             message: "Product updated successfully",
             product,
@@ -99,7 +112,6 @@ const updateProduct = async (req, res) => {
     }
 };
 
-// Menghapus Produk
 const deleteProduct = async (req, res) => {
     const { id } = req.params;
 
@@ -109,7 +121,13 @@ const deleteProduct = async (req, res) => {
         if (!product) {
             return res.status(404).json({ message: "Product not found" });
         }
+        const fs = require("fs");
+        const path = require("path");
+        const imagePath = path.join(__dirname, "../uploads", product.gambar); // Assuming images are in 'uploads' folder
 
+        if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath);
+        }
         await product.destroy();
         res.status(200).json({
             message: "Product deleted successfully",

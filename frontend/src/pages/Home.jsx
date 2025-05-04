@@ -13,8 +13,6 @@ const Home = () => {
     useEffect(() => {
         const fetchProducts = async () => {
             const result = await getProducts();
-            console.log("ASASASASASA");
-            console.log(result);
             if (result.status === 200) {
                 setProducts(result.data.products);
             } else {
@@ -36,7 +34,9 @@ const Home = () => {
             <div className="product-list">
                 <h1>{t("Welcome to the Product List")}</h1>
                 {loading ? (
-                    <p>Loading...</p>
+                    <div className="loading">
+                        <p>{t("Loading...")}</p>
+                    </div>
                 ) : (
                     <div className="products">
                         {products.length > 0 ? (
@@ -47,11 +47,13 @@ const Home = () => {
                                         alt={product.nama}
                                         className="product-image"
                                     />
-                                    <h3>{product.nama}</h3>
-                                    <p>{product.harga}</p>
-                                    <button className="view-details">
-                                        {t("View Details")}
-                                    </button>
+                                    <div className="product-info">
+                                        <h3>{product.nama}</h3>
+                                        <p className="price">{product.harga}</p>
+                                        <button className="view-details">
+                                            {t("View Details")}
+                                        </button>
+                                    </div>
                                 </div>
                             ))
                         ) : (

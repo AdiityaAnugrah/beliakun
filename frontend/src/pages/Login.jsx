@@ -28,7 +28,7 @@ const Login = () => {
             const response = await login(form);
             if (response.status !== 200) {
                 setMessage(response.message);
-                setNotif(response.message); // Menampilkan notifikasi error
+                setNotif(response.message);
                 return;
             }
             setNama(response.data.username);
@@ -39,14 +39,14 @@ const Login = () => {
             setMessage(t("login_success"));
             setNotif(t("login_success"));
             if (response.data.role == "admin") {
-                navigate("/admin/dashboard");
+                navigate("/admin");
             } else {
                 navigate("/");
             }
         } catch (err) {
             console.error(err);
             setMessage(t("login_failed"));
-            setNotif(t("login_failed")); // Menampilkan notifikasi gagal
+            setNotif(t("login_failed"));
         }
     };
 
