@@ -362,12 +362,13 @@ footer {
 
 // TAMPILAN SIGUP
 .signup-container {
-    min-height: 80vh;
+    // min-height: 80vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 2rem 1rem;
     background-color: #f8f9fa;
+    height: 100%;
 }
 
 .form-box {
