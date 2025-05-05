@@ -101,6 +101,8 @@ const AddProduct = () => {
         const formDataWithImage = new FormData();
         if (location.pathname.includes("edit") && imageFile)
             formDataWithImage.append("image", imageFile);
+        if (location.pathname.includes("add"))
+            formDataWithImage.append("image", imageFile);
         formDataWithImage.append("nama", formData.nama);
         formDataWithImage.append("harga", formData.harga);
         formDataWithImage.append("stock", formData.stock);

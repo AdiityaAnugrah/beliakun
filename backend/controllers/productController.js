@@ -15,14 +15,11 @@ const addProduct = async (req, res) => {
         kategori,
     } = req.body;
 
-    console.log(req.body);
-    console.log("Uploaded file:", req.file);
-
     if (!req.file) {
         return res.status(400).json({ message: "Product image is required" });
     }
 
-    if (!nama || !harga || !stock || !deskripsi || !kategori) {
+    if (!nama || !harga || !stock || !deskripsi) {
         return res.status(400).json({
             message: "Nama, harga, stok, deskripsi, dan kategori diperlukan",
         });
