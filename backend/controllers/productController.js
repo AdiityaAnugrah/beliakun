@@ -15,6 +15,7 @@ const addProduct = async (req, res) => {
         kategori,
     } = req.body;
 
+    console.log(req.body);
     console.log("Uploaded file:", req.file);
 
     if (!req.file) {
