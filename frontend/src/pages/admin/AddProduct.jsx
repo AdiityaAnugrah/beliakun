@@ -1,7 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
-import { addProduct } from "../../services/productService";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+    addProduct,
+    getProducts,
+    updateProduct,
+} from "../../services/productService";
 import useUserStore from "../../../store/userStore";
 
 const AddProduct = () => {
@@ -22,6 +26,35 @@ const AddProduct = () => {
     const [imageFile, setImageFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
+    const location = useLocation();
+    const { id: idProduct } = useParams();
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        if (location.pathname.includes("edit")) {
+            (async () => {
+                const response = await getProducts(idProduct);
+                console.log(response);
+                if (response.status !== 200) {
+                    setError(response.message);
+                } else {
+                    const product = response.data;
+                    setFormData({
+                        ...formData,
+                        nama: product.nama,
+                        harga: product.harga,
+                        stock: product.stock,
+                        link_shopee: product.link_shopee,
+                        status: product.status,
+                        produk_terjual: product.produk_terjual,
+                        deskripsi: product.deskripsi,
+                        kategori: product.kategori,
+                    });
+                    setImageSrc(product.gambar);
+                }
+            })();
+        }
+    }, []);
 
     const handleChange = (e) => {
         if (e.target.name === "image") {
@@ -63,8 +96,11 @@ const AddProduct = () => {
             return;
         }
 
+        console.log(formData);
+
         const formDataWithImage = new FormData();
-        formDataWithImage.append("image", imageFile);
+        if (location.pathname.includes("edit") && imageFile)
+            formDataWithImage.append("image", imageFile);
         formDataWithImage.append("nama", formData.nama);
         formDataWithImage.append("harga", formData.harga);
         formDataWithImage.append("stock", formData.stock);
@@ -76,7 +112,9 @@ const AddProduct = () => {
         formDataWithImage.append("token", token);
 
         try {
-            const response = await addProduct(formDataWithImage, token);
+            const response = location.pathname.includes("add")
+                ? await addProduct(formDataWithImage, token)
+                : await updateProduct(idProduct, formDataWithImage, token);
             if (response.status === 200) {
                 setMessage(t("Product added successfully"));
                 navigate("/admin/products");
@@ -90,9 +128,17 @@ const AddProduct = () => {
         setLoading(false);
     };
 
+    if (error) return <div>{error}</div>;
+
     return (
         <div className="add-product-container">
-            <h1>{t("Add New Product")}</h1>
+            <h1>
+                {t(
+                    location.pathname.includes("add")
+                        ? "Add New Product"
+                        : "Edit Product"
+                )}
+            </h1>
             <form onSubmit={handleSubmit} className="add-product-form">
                 <div className="form-group">
                     <label>{t("Product Name")}</label>
@@ -136,7 +182,9 @@ const AddProduct = () => {
                         name="image"
                         onChange={handleChange}
                         accept="image/*"
-                        required
+                        required={
+                            location.pathname.includes("add") ? true : false
+                        }
                     />
                     {imageSrc && (
                         <div className="image-preview">

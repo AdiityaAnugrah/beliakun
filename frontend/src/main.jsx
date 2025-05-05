@@ -42,6 +42,7 @@ createRoot(document.getElementById("root")).render(
                 <Route index element={<Dashboard />} />
                 <Route path="products" element={<Products />} />
                 <Route path="add" element={<AddProduct />} />
+                <Route path="edit/:id" element={<AddProduct />} />
             </Route>
         </Routes>
     </BrowserRouter>

@@ -1,4 +1,7 @@
+const { where } = require("sequelize");
 const Product = require("../models/productModel.js");
+const fs = require("fs");
+const path = require("path");
 
 const addProduct = async (req, res) => {
     const {
@@ -50,20 +53,29 @@ const addProduct = async (req, res) => {
 const getAllProducts = async (req, res) => {
     let page = parseInt(req.query.page) || 1;
     let limit = parseInt(req.query.limit) || 10;
+    const id = req.params.id;
 
     if (page <= 0) page = 1;
     if (limit <= 0) limit = 10;
 
     const offset = (page - 1) * limit;
+    const baseUrl = process.env.BASE_URL || "http://localhost:4000";
 
     try {
+        if (id) {
+            const product = await Product.findOne({
+                where: { id },
+            });
+            return res.status(200).json({
+                ...product.dataValues,
+                gambar: `${baseUrl}/uploads/${product.gambar}`,
+            });
+        }
+
         const products = await Product.findAndCountAll({
             limit: limit,
             offset: offset,
         });
-
-        const baseUrl = process.env.BASE_URL || "http://localhost:4000";
-
         const productsWithFullImageUrl = products.rows.map((product) => ({
             ...product.dataValues,
             gambar: `${baseUrl}/uploads/${product.gambar}`,
@@ -89,16 +101,31 @@ const getAllProducts = async (req, res) => {
 const updateProduct = async (req, res) => {
     const { id } = req.params;
     try {
-        const product = await Product.findOne({ where: { id } });
+        let product = await Product.findOne({ where: { id } });
+        const produknya = product.dataValues;
 
-        if (!product) {
+        if (!produknya) {
             return res.status(404).json({ message: "Product not found" });
         }
         if (req.file) {
-            product.gambar = req.file.filename;
+            if (
+                fs.existsSync(
+                    path.join(__dirname, "../uploads", produknya.gambar)
+                )
+            ) {
+                fs.unlinkSync(
+                    path.join(__dirname, "../uploads", produknya.gambar)
+                );
+            }
+            produknya.gambar = req.file.filename;
         }
 
-        await product.update(req.body);
+        // Mengupdate req.body dengan gambar yang baru
+        const updatedProductData = {
+            ...req.body,
+            gambar: produknya.gambar,
+        };
+        await Product.update({ ...updatedProductData }, { where: { id } });
 
         res.status(200).json({
             message: "Product edited successfully",

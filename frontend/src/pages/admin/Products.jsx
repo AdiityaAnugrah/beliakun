@@ -74,7 +74,7 @@ const Products = () => {
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
     const handleEdit = (id) => {
         alert(`Edit product with id: ${id}`);
-        navigate(`/admin/products/edit/${id}`);
+        navigate(`/admin/edit/${id}`);
     };
 
     const handleDelete = (id) => {

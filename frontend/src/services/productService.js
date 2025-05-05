@@ -1,10 +1,9 @@
 const API_URL = `${import.meta.env.VITE_URL_BACKEND}`;
 
-export const getProducts = async () => {
+export const getProducts = async (id = false) => {
     try {
-        const res = await fetch(`${API_URL}/product`);
+        const res = await fetch(`${API_URL}/product${id ? `/${id}` : ""}`);
         const resJson = await res.json();
-        console.log(resJson);
 
         if (res.ok) {
             console.log("Produk berhasil diambil:", resJson);
@@ -58,10 +57,9 @@ export const updateProduct = async (id, data, token) => {
         const res = await fetch(`${API_URL}/product/${id}`, {
             method: "PUT",
             headers: {
-                "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify(data),
+            body: data,
         });
         const resJson = await res.json();
 

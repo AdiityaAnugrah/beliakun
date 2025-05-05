@@ -27,7 +27,8 @@ const upload = multer({
 
 router.post("/", filterAdmin, upload, addProduct);
 router.get("/", getAllProducts);
-router.put("/:id", filterAdmin, updateProduct);
+router.get("/:id", getAllProducts);
+router.put("/:id", filterAdmin, upload, updateProduct);
 router.delete("/:id", filterAdmin, deleteProduct);
 
 module.exports = router;
