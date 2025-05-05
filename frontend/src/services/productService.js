@@ -32,7 +32,7 @@ export const addProduct = async (data, token) => {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
-            body: data, // Send FormData directly
+            body: data,
         });
         const resJson = await res.json();
 

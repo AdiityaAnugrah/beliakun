@@ -122,14 +122,13 @@ const loginUser = async (req, res) => {
 };
 
 const logout = async (req, res) => {
+    const token = req.header("Authorization").replace("Bearer ", "");
+    const user = await User.findOne({ where: { token: token } });
     try {
-        const userCurrent = req.user;
-        console.log("ini usef current");
-        console.log(userCurrent);
-        await User.update(
-            { token: "" },
-            { where: { email: userCurrent.email } }
-        );
+        if (!user) {
+            return res.status(400).json({ message: "User not found" });
+        }
+        await User.update({ token: null }, { where: { id: user.id } });
         res.status(200).json({ message: "Logout successful" });
     } catch (error) {
         console.error("Logout error:", error);
