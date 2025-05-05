@@ -12,6 +12,7 @@ import Products from "./pages/admin/Products.jsx";
 import "./i18n";
 import AppAdmin from "./AppAdmin.jsx";
 import AddProduct from "./pages/admin/AddProduct.jsx";
+import FilterRoutes from "./components/FilterRoutes.jsx";
 
 createRoot(document.getElementById("root")).render(
     <BrowserRouter>
@@ -19,11 +20,25 @@ createRoot(document.getElementById("root")).render(
             <Route path="/" element={<App />}>
                 <Route index element={<Home />} />
                 <Route path="about" element={<About />} />
-                <Route path="login" element={<Login />} />
+                <Route
+                    path="login"
+                    element={
+                        <FilterRoutes>
+                            <Login />
+                        </FilterRoutes>
+                    }
+                />
                 <Route path="signup" element={<Signup />} />
                 <Route path="*" element={<NotFond />} />
             </Route>
-            <Route path="/admin" element={<AppAdmin />}>
+            <Route
+                path="/admin"
+                element={
+                    <FilterRoutes users={["admin"]}>
+                        <AppAdmin />
+                    </FilterRoutes>
+                }
+            >
                 <Route index element={<Dashboard />} />
                 <Route path="products" element={<Products />} />
                 <Route path="add" element={<AddProduct />} />
