@@ -7,7 +7,7 @@ import About from "./pages/About.jsx";
 import NotFond from "./pages/NotFond.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
-import Dashboard from "./pages/admin/Dashboard.jsx";
+import HomeAdmin from "./pages/admin/HomeAdmin.jsx";
 import Products from "./pages/admin/Products.jsx";
 import "./i18n";
 import AppAdmin from "./AppAdmin.jsx";
@@ -39,7 +39,7 @@ createRoot(document.getElementById("root")).render(
                     </FilterRoutes>
                 }
             >
-                <Route index element={<Dashboard />} />
+                <Route index element={<HomeAdmin />} />
                 <Route path="products" element={<Products />} />
                 <Route path="add" element={<AddProduct />} />
                 <Route path="edit/:id" element={<AddProduct />} />
