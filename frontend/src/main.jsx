@@ -7,7 +7,7 @@ import About from "./pages/About.jsx";
 import NotFond from "./pages/NotFond.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
-import Dashboard from "./pages/admin/dashboard.jsx";
+import Dashboard from "./pages/admin/Dashboard.jsx";
 import Products from "./pages/admin/Products.jsx";
 import "./i18n";
 import AppAdmin from "./AppAdmin.jsx";
