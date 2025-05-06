@@ -51,10 +51,9 @@ const Navbar = () => {
                     onClick={() => setMenuOpen(false)}
                 >
                     <Img
+                        className="logo-web"
                         src={scrolled ? "/logo-dark.svg" : "/logo-light.svg"}
                         alt="Logo"
-                        width={150}
-                        height={200}
                     />
                 </Link>
                 <button className="menu-toggle md:hidden" onClick={toggleMenu}>
