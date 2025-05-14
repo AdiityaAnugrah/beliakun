@@ -7,6 +7,7 @@ const authRoutes = require("./routes/authRoutes.js");
 const productRoutes = require("./routes/productRoutes.js");
 const cartRoutes = require("./routes/cartRoutes.js");
 const paymentRoutes = require("./routes/paymentRoutes.js");
+const keyRoutes = require("./routes/keyRoutes.js");
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use("/auth", authRoutes);
 app.use("/product", productRoutes);
 app.use("/cart", cartRoutes);
 app.use("/payment", paymentRoutes);
+app.use("/key", keyRoutes);
 
 // Menginisialisasi model
 const { initModels } = require("./models/index.js");

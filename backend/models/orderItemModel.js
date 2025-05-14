@@ -1,10 +1,9 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db.js");
-const User = require("./userModel.js");
 const Product = require("./productModel.js");
 
-const Cart = sequelize.define(
-    "Cart",
+const OrderItem = sequelize.define(
+    "OrderItem",
     {
         quantity: {
             type: DataTypes.INTEGER,
@@ -18,10 +17,10 @@ const Cart = sequelize.define(
     }
 );
 
-Cart.belongsTo(User, { foreignKey: "user_id" });
-User.hasMany(Cart, { foreignKey: "user_id" });
+OrderItem.belongsTo(Product, { foreignKey: "product_id" });
+Product.hasMany(OrderItem, { foreignKey: "product_id" });
 
-Cart.belongsTo(Product, { foreignKey: "product_id" });
-Product.hasMany(Cart, { foreignKey: "product_id" });
+// OrderItem.belongsTo(Order, { foreignKey: "order_id" });
+// Order.hasMany(OrderItem, { foreignKey: "order_id" });
 
-module.exports = Cart;
+module.exports = OrderItem;
