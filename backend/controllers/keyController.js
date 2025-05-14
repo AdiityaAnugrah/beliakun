@@ -118,8 +118,10 @@ const verifikasiCaptcha = async (req, res) => {
         );
 
         const data = await response.json();
+        console.log("ini hasil fetch verifikasi");
+        console.log(data);
 
-        if (data.success) {
+        if (response.status === 200 && data.success) {
             return res.status(200).json({ message: "Verifikasi berhasil!" });
         } else {
             return res.status(400).json({ message: "Verifikasi gagal." });
