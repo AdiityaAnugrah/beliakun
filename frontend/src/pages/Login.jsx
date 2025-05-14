@@ -6,6 +6,8 @@ import Notif from "../components/Notif";
 import useNotifStore from "../../store/notifStore";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { useTranslation } from "react-i18next";
+import { getCart } from "../services/cartService";
+import useCartStore from "../../store/cartStore";
 
 const Login = () => {
     const { t } = useTranslation();
@@ -17,6 +19,7 @@ const Login = () => {
         useUserStore();
     const navigate = useNavigate();
     const { teks, show, setNotif, showNotif } = useNotifStore();
+    const { setCart } = useCartStore();
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -30,6 +33,15 @@ const Login = () => {
                 setMessage(response.message);
                 setNotif(response.message);
                 return;
+            }
+            if (response.data.role == "pelanggan") {
+                const fetchCart = await getCart(response.data.token);
+                if (fetchCart.status !== 200) {
+                    setMessage(fetchCart.message);
+                    setNotif(fetchCart.message);
+                    return;
+                }
+                setCart(fetchCart.data);
             }
             setNama(response.data.username);
             setEmail(response.data.email);

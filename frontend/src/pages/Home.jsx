@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import Notif from "../components/Notif";
 import { getProducts } from "../services/productService";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
 
 const Home = () => {
     const { t } = useTranslation();
     const { showNotif, teks, show } = useNotifStore();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate(); // Initialize useNavigate
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -27,6 +29,9 @@ const Home = () => {
     useEffect(() => {
         if (teks) showNotif();
     }, [teks, showNotif]);
+    const handleViewDetails = (id) => {
+        navigate(`/detail/${id}`);
+    };
 
     return (
         <>
@@ -50,7 +55,12 @@ const Home = () => {
                                     <div className="product-info">
                                         <h3>{product.nama}</h3>
                                         <p className="price">{product.harga}</p>
-                                        <button className="view-details">
+                                        <button
+                                            className="view-details"
+                                            onClick={() =>
+                                                handleViewDetails(product.id)
+                                            } // On click, navigate to the detail page
+                                        >
                                             {t("View Details")}
                                         </button>
                                     </div>

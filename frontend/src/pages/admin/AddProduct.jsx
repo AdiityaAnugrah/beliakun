@@ -29,6 +29,7 @@ const AddProduct = () => {
     const location = useLocation();
     const { id: idProduct } = useParams();
     const [error, setError] = useState("");
+    const user = useUserStore();
 
     useEffect(() => {
         if (location.pathname.includes("edit")) {
@@ -117,6 +118,11 @@ const AddProduct = () => {
             const response = location.pathname.includes("add")
                 ? await addProduct(formDataWithImage, token)
                 : await updateProduct(idProduct, formDataWithImage, token);
+            if (response.status == 401) {
+                user.emptyUser();
+                navigate("/login");
+                return;
+            }
             if (response.status === 200) {
                 setMessage(t("Product added successfully"));
                 navigate("/admin/products");
