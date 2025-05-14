@@ -1,7 +1,5 @@
 require("dotenv").config();
 const Key = require("../models/keyModel.js");
-const axios = require("axios");
-const FormData = require("form-data");
 const crypto = require("crypto");
 
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
@@ -111,10 +109,17 @@ const verifikasiCaptcha = async (req, res) => {
         const idempotencyKey = crypto.randomUUID();
         formData.append("idempotency_key", idempotencyKey);
 
-        const url = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-        const response = await axios.post(url, formData);
+        const response = await fetch(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            {
+                method: "POST",
+                body: formData,
+            }
+        );
 
-        if (response.data.success) {
+        const data = await response.json();
+
+        if (data.success) {
             return res.status(200).json({ message: "Verifikasi berhasil!" });
         } else {
             return res.status(400).json({ message: "Verifikasi gagal." });
