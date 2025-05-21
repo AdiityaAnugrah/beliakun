@@ -7,16 +7,27 @@ import { addToCart } from "../services/cartService";
 import useUserStore from "../../store/userStore";
 import { useNavigate } from "react-router-dom";
 import useCartStore from "../../store/cartStore";
+import useNotifStore from "../../store/notifStore";
+import useWishlistStore from "../../store/wishlistStore";
+import Notif from "../components/Notif";
+import {
+    addToWishlist,
+    removeFromWishlist,
+    getWishlist,
+} from "../services/wishlistService";
 
 const ProductDetail = ({ productId }) => {
-    const { i18n } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [exchangeRate, setExchangeRate] = useState(null);
     const { token, emptyUser } = useUserStore();
     const { setCart } = useCartStore();
+    const { setNotif, showNotif } = useNotifStore();
     const navigate = useNavigate();
+    const { wishlist, setWishlist } = useWishlistStore();
+    const isWishlisted = wishlist.some((item) => item.productId === product.id);
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -24,13 +35,13 @@ const ProductDetail = ({ productId }) => {
             if (result.status === 200) {
                 setProduct(result.data.products[0]);
             } else {
-                setError(result.message || "Something went wrong");
+                setError(result.message || t("error"));
             }
             setLoading(false);
         };
 
         fetchProduct();
-    }, [productId]);
+    }, [productId, t]);
 
     useEffect(() => {
         const fetchExchangeRate = async () => {
@@ -52,15 +63,6 @@ const ProductDetail = ({ productId }) => {
         fetchExchangeRate();
     }, []);
 
-    if (loading) {
-        return (
-            <div className="flex justify-center align-center">Loading...</div>
-        );
-    }
-
-    if (error) {
-        return <div>{error}</div>;
-    }
     const formatPrice = (price) => {
         if (i18n.language === "id" && exchangeRate) {
             const priceInIDR = price * exchangeRate;
@@ -72,30 +74,102 @@ const ProductDetail = ({ productId }) => {
 
     const handleAddToCart = async () => {
         if (!token) {
+            setNotif(t("cart.notLogin"));
+            showNotif();
             navigate("/login");
             return;
         }
+
+        if (product.stock <= 0) {
+            setNotif(t("cart.outOfStock"));
+            showNotif();
+            return;
+        }
+
         try {
             const fetchAddCart = await addToCart(product.id, 1, token);
-            if (fetchAddCart.status == 401) {
+
+            if (fetchAddCart.status === 401) {
                 emptyUser();
                 navigate("/login");
                 return;
             }
+
             if (fetchAddCart.status !== 200) {
-                alert(fetchAddCart.message);
+                setNotif(fetchAddCart.message || t("cart.addFailed"));
+                showNotif();
                 return;
             }
+
             setCart(fetchAddCart.data);
-            alert("Success add to cart");
+            setNotif(t("cart.addSuccess"));
+            showNotif();
         } catch (error) {
             console.error("Failed to add to cart", error);
+            setNotif(t("cart.addFailed"));
+            showNotif();
         }
     };
 
+    const handleToggleWishlist = async () => {
+        if (!token) {
+            setNotif(t("cart.notLogin"));
+            showNotif();
+            navigate("/login");
+            return;
+        }
+
+        if (isWishlisted) {
+            const res = await removeFromWishlist(product.id, token);
+            if (res.status === 401) {
+                emptyUser();
+                navigate("/login");
+                return;
+            }
+
+            setWishlist(
+                wishlist.filter((item) => item.productId !== product.id)
+            );
+            setNotif(t("wishlist_removed") || "Dihapus dari wishlist");
+            showNotif();
+        } else {
+            const res = await addToWishlist(product.id, token);
+            if (res.status === 401) {
+                emptyUser();
+                navigate("/login");
+                return;
+            }
+
+            // Tambah ulang list dari server (biar sinkron)
+            const fetchRes = await getWishlist(token);
+            if (fetchRes.status === 200) {
+                setWishlist(fetchRes.data);
+            }
+
+            setNotif(t("wishlist_added") || "Ditambahkan ke wishlist");
+            showNotif();
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center align-center">
+                {t("loading")}
+            </div>
+        );
+    }
+
+    if (error) {
+        return <div>{error}</div>;
+    }
+
     return (
         <div className="container-product container mx-auto">
-            <img src={product.gambar} alt={product.nama} />
+            <Notif />
+            <img
+                src={product.gambar || "/images/default-product.png"}
+                alt={product.nama}
+            />
             <div className="product-info">
                 <div className="flex justify-between">
                     <h3 className="product-title">{product.nama}</h3>
@@ -103,18 +177,15 @@ const ProductDetail = ({ productId }) => {
                 </div>
                 <div className="product">
                     <div style={{ flex: 1 }} className="flex flex-col">
-                        <h4
-                            style={{
-                                fontSize: "1.5rem",
-                                fontWeight: "bold",
-                            }}
-                        >
+                        <h4 style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
                             {formatPrice(product.harga)}
                         </h4>
-                        <p>Stock: {product.stock}</p>
+                        <p>
+                            {t("cart.stockAvailable", { stok: product.stock })}
+                        </p>
 
                         <div>
-                            <h6>Deskripsi:</h6>
+                            <h6>{t("product_details")}:</h6>
                             <p>{product.deskripsi}</p>
                         </div>
                     </div>
@@ -122,16 +193,19 @@ const ProductDetail = ({ productId }) => {
                         <Tombol
                             style="buy"
                             text=""
-                            icon={<FaHeart />}
-                            onClick={() => {}}
+                            icon={
+                                <FaHeart
+                                    color={isWishlisted ? "red" : "gray"}
+                                />
+                            }
+                            onClick={handleToggleWishlist}
                         />
                         <Tombol
                             style="cart"
                             text=""
                             icon={<FaShoppingCart />}
-                            onClick={() => {
-                                handleAddToCart();
-                            }}
+                            onClick={handleAddToCart}
+                            disabled={product.stock === 0}
                         />
                     </div>
                 </div>

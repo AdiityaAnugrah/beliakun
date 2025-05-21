@@ -2,35 +2,49 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Img } from "react-image";
 import { useState, useEffect } from "react";
 import useUserStore from "../../store/userStore";
-import { FaPowerOff, FaShoppingCart } from "react-icons/fa";
-import { FiMenu, FiX } from "react-icons/fi";
-import { logout } from "../services/authService";
+import useCartStore from "../../store/cartStore";
+import useWishlistStore from "../../store/wishlistStore";
 import useNotifStore from "../../store/notifStore";
+
+import { FaPowerOff, FaShoppingCart, FaHeart } from "react-icons/fa";
+import { FiMenu, FiX } from "react-icons/fi";
+
+import { logout } from "../services/authService";
 import { useTranslation } from "react-i18next";
 import Tombol from "./Tombol";
-import useCartStore from "../../store/cartStore";
 
 const Navbar = () => {
     const { t, i18n } = useTranslation();
     const user = useUserStore();
-    const { cart } = useCartStore();
+    const { cart, setCart } = useCartStore();
+    const { wishlist } = useWishlistStore();
+    const { setNotif } = useNotifStore();
     const navigate = useNavigate();
     const location = useLocation();
+
     const [scrolled, setScrolled] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
-    const { setNotif } = useNotifStore();
-    const { setCart } = useCartStore();
 
     useEffect(() => {
+        let isMounted = true;
+
         const handleScroll = () => {
-            setScrolled(window.scrollY > 50);
+            if (isMounted) {
+                setScrolled(window.scrollY > 50);
+            }
         };
+
         window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
+
+        return () => {
+            isMounted = false;
+            window.removeEventListener("scroll", handleScroll);
+        };
     }, []);
 
     const toggleMenu = () => setMenuOpen((prev) => !prev);
+    const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
     const handleLogout = async () => {
         await logout(user.token);
@@ -38,14 +52,16 @@ const Navbar = () => {
         setCart([]);
         setNotif(t("logout_successful"));
         setMenuOpen(false);
-        navigate("/login");
+
+        // Hindari state update setelah unmount
+        setTimeout(() => {
+            navigate("/login");
+        }, 50);
     };
 
     const changeLanguage = (lang) => {
         i18n.changeLanguage(lang);
     };
-
-    const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
     return (
         <nav className={`nav ${scrolled ? "scrolled" : "top"}`}>
@@ -61,9 +77,11 @@ const Navbar = () => {
                         alt="Logo"
                     />
                 </Link>
+
                 <button className="menu-toggle md:hidden" onClick={toggleMenu}>
                     {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
                 </button>
+
                 <div className={`menu-container ${menuOpen ? "open" : ""}`}>
                     <ul className="menu-right">
                         {user.token ? (
@@ -89,6 +107,47 @@ const Navbar = () => {
                                         </button>
                                     </div>
                                 </li>
+
+                                {/* Wishlist Icon */}
+                                <li>
+                                    <Link
+                                        to="/wishlist"
+                                        className={
+                                            location.pathname === "/wishlist"
+                                                ? "active"
+                                                : ""
+                                        }
+                                        style={{ position: "relative" }}
+                                        onClick={() => setMenuOpen(false)}
+                                    >
+                                        {wishlist.length > 0 && (
+                                            <div
+                                                style={{
+                                                    right: "0",
+                                                    top: "0",
+                                                    fontSize: "12px",
+                                                    position: "absolute",
+                                                    backgroundColor: "#f7374f",
+                                                    width: "20px",
+                                                    height: "20px",
+                                                    display: "flex",
+                                                    justifyContent: "center",
+                                                    alignItems: "center",
+                                                    borderRadius: "50%",
+                                                }}
+                                            >
+                                                {wishlist.length}
+                                            </div>
+                                        )}
+                                        <Tombol
+                                            style="polos"
+                                            text=""
+                                            icon={<FaHeart size={18} />}
+                                        />
+                                    </Link>
+                                </li>
+
+                                {/* Cart Icon */}
                                 <li>
                                     <Link
                                         to="/cart"
@@ -116,9 +175,11 @@ const Navbar = () => {
                                                     borderRadius: "50%",
                                                 }}
                                             >
-                                                {cart.reduce((prev, curr) => {
-                                                    return prev + curr.quantity;
-                                                }, 0)}
+                                                {cart.reduce(
+                                                    (prev, curr) =>
+                                                        prev + curr.quantity,
+                                                    0
+                                                )}
                                             </div>
                                         )}
                                         <Tombol

@@ -9,7 +9,12 @@ import About from "./pages/About.jsx";
 import NotFond from "./pages/NotFond.jsx";
 import Login from "./pages/Login.jsx";
 import Signup from "./pages/Signup.jsx";
+import Product from "./pages/Product.jsx";
 import ProductDetail from "./pages/ProductDetail.jsx";
+import Cart from "./pages/Cart.jsx";
+import Wishlist from "./pages/Wishlist.jsx";
+import Checkout from "./pages/Checkout.jsx";
+import PaymentInfo from "./pages/PaymentInfo.jsx";
 
 // Admin
 import HomeAdmin from "./pages/admin/HomeAdmin.jsx";
@@ -34,7 +39,15 @@ createRoot(document.getElementById("root")).render(
                     }
                 />
                 <Route path="signup" element={<Signup />} />
+                <Route path="product" element={<Product />} />
                 <Route path="detail/:id" element={<ProductDetail />} />
+                <Route path="cart" element={<Cart />} />
+                <Route path="wishlist" element={<Wishlist />} />
+                <Route path="checkout" element={<Checkout />} />
+                <Route
+                    path="/payment-info/:orderId"
+                    element={<PaymentInfo />}
+                />
                 <Route path="*" element={<NotFond />} />
             </Route>
             <Route

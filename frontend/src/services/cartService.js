@@ -52,3 +52,33 @@ export const getCart = async (token) => {
         return { status: 500, message: "Server error. Please try again." };
     }
 };
+
+export const updateCartQuantity = async (productId, quantity, token) => {
+    try {
+        const res = await fetch(`${API_URL}/cart`, {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ productId, quantity }),
+        });
+        return await res.json();
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+export const deleteCartItem = async (productId, token) => {
+    try {
+        const res = await fetch(`${API_URL}/cart/${productId}`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        return await res.json();
+    } catch (err) {
+        console.error(err);
+    }
+};

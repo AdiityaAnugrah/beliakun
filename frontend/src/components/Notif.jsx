@@ -1,4 +1,8 @@
-const Notif = ({ teks, show }) => {
+import useNotifStore from "../../store/notifStore"; // atau sesuai path kamu
+
+const Notif = () => {
+    const { teks, show } = useNotifStore((state) => state);
+
     return (
         <div className={`notif ${show ? "show" : ""}`}>
             <div>

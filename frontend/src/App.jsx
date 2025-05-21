@@ -10,7 +10,7 @@ function App() {
             <div style={{ flex: 1, position: "relative" }}>
                 <div
                     style={{
-                        position: "absolute",
+                        // position: "absolute",
                         top: "0",
                         left: "0",
                         width: "100%",
