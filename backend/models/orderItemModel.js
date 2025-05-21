@@ -10,17 +10,23 @@ const OrderItem = sequelize.define(
             defaultValue: 1,
             allowNull: false,
         },
+        order_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
+        product_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+        },
     },
     {
-        tableName: "carts",
+        tableName: "order_items", // ✅ ubah dari 'carts'
         timestamps: true,
     }
 );
 
+// Relasi
 OrderItem.belongsTo(Product, { foreignKey: "product_id" });
 Product.hasMany(OrderItem, { foreignKey: "product_id" });
-
-// OrderItem.belongsTo(Order, { foreignKey: "order_id" });
-// Order.hasMany(OrderItem, { foreignKey: "order_id" });
 
 module.exports = OrderItem;

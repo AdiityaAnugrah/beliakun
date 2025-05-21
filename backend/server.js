@@ -6,8 +6,11 @@ const path = require("path");
 const authRoutes = require("./routes/authRoutes.js");
 const productRoutes = require("./routes/productRoutes.js");
 const cartRoutes = require("./routes/cartRoutes.js");
+const wishlistRoutes = require("./routes/wishlistRoutes");
+const checkoutRoutes = require("./routes/checkoutRoutes.js");
 const paymentRoutes = require("./routes/paymentRoutes.js");
 const keyRoutes = require("./routes/keyRoutes.js");
+const orderRoutes = require("./routes/orderRoutes.js");
 const tokenAdsRoutes = require("./routes/tokenAdsRoutes.js");
 
 dotenv.config();
@@ -25,7 +28,10 @@ app.get("/", (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/product", productRoutes);
 app.use("/cart", cartRoutes);
+app.use("/wishlist", wishlistRoutes);
+app.use("/checkout", checkoutRoutes);
 app.use("/payment", paymentRoutes);
+app.use("/order", orderRoutes);
 app.use("/key", keyRoutes);
 app.use("/token", tokenAdsRoutes);
 

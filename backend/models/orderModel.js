@@ -8,6 +8,12 @@ const OrderItem = require("./orderItemModel.js");
 const Order = sequelize.define(
     "Order",
     {
+        data_mid: {
+            type: DataTypes.JSON,
+        },
+        midtrans_id: {
+            type: DataTypes.TEXT(50),
+        },
         email: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -15,6 +21,18 @@ const Order = sequelize.define(
         status: {
             type: DataTypes.ENUM("pending", "success", "failed"),
             defaultValue: "pending",
+        },
+        nama: {
+            type: DataTypes.STRING,
+        },
+        alamat: {
+            type: DataTypes.STRING,
+        },
+        catatan: {
+            type: DataTypes.TEXT,
+        },
+        total_harga: {
+            type: DataTypes.INTEGER,
         },
     },
     {
