@@ -246,7 +246,8 @@ const updateOrder = async (req, res) => {
         }
         await Order.update({ status }, { where: { midtrans_id: order_id } });
 
-        const socket = new WebSocket(`ws://localhost:8000`);
+        console.log(process.env.URL_WEBSOCKET);
+        const socket = new WebSocket(process.env.URL_WEBSOCKET);
         socket.on("open", () => {
             const message = {
                 type: "order_update",

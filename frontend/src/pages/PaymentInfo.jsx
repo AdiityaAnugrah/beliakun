@@ -25,7 +25,7 @@ const PaymentInfo = () => {
     // const setNotif = useNotifStore((state) => state.setNotif); // Set notifikasi
     // const showNotif = useNotifStore((state) => state.showNotif); // Show notifikasi
     const { show, teks, setNotif, showNotif } = useNotifStore();
-    const socket = useRef(new WebSocket("ws://localhost:8000"));
+    const socket = useRef(new WebSocket(import.meta.env.VITE_URL_WEBSOCKET));
 
     socket.current.onopen = () => {
         console.log("WebSocket connection established");
