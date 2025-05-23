@@ -246,18 +246,19 @@ const updateOrder = async (req, res) => {
         }
         await Order.update({ status }, { where: { midtrans_id: order_id } });
 
-        console.log(process.env.URL_WEBSOCKET);
-        const socket = new WebSocket(process.env.URL_WEBSOCKET);
-        socket.on("open", () => {
-            const message = {
-                type: "order_update",
-                data: {
-                    order_id,
-                    status,
-                },
-            };
-            socket.send(JSON.stringify(message));
-        });
+        if (status != "pending") {
+            const socket = new WebSocket(process.env.URL_WEBSOCKET);
+            socket.on("open", () => {
+                const message = {
+                    type: "order_update",
+                    data: {
+                        order_id,
+                        status,
+                    },
+                };
+                socket.send(JSON.stringify(message));
+            });
+        }
 
         res.status(200).json({
             message: status_message,
