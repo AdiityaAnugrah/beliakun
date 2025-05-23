@@ -13,6 +13,8 @@ import {
     FaClipboard,
 } from "react-icons/fa"; // Import icons
 import "./PaymentInfo.scss"; // Importing SCSS for styling
+import { useRef } from "react";
+import Notif from "../components/Notif";
 
 const PaymentInfo = () => {
     const { orderId } = useParams();
@@ -20,8 +22,39 @@ const PaymentInfo = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [timer, setTimer] = useState(null);
-    const setNotif = useNotifStore((state) => state.setNotif); // Set notifikasi
-    const showNotif = useNotifStore((state) => state.showNotif); // Show notifikasi
+    // const setNotif = useNotifStore((state) => state.setNotif); // Set notifikasi
+    // const showNotif = useNotifStore((state) => state.showNotif); // Show notifikasi
+    const { show, teks, setNotif, showNotif } = useNotifStore();
+    const socket = useRef(new WebSocket("ws://localhost:8000"));
+
+    socket.current.onopen = () => {
+        console.log("WebSocket connection established");
+    };
+    socket.current.onmessage = (event) => {
+        // const message = {
+        //     type: "order_update",
+        //     data: {
+        //         order_id,
+        //         status,
+        //     },
+        // };
+
+        const message = JSON.parse(event.data);
+        console.log("Received message:");
+        console.log(message);
+        if (
+            message.type === "order_update" &&
+            message.data.order_id === orderId
+        ) {
+            setNotif(
+                `Status pembayaran untuk Order ID ${orderId} telah diperbarui menjadi ${message.data.status}`
+            );
+            showNotif();
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        }
+    };
 
     useEffect(() => {
         (async () => {
@@ -85,175 +118,183 @@ const PaymentInfo = () => {
     const transactionStatus = data.data_mid.transaction_status;
 
     return (
-        <div className="payment-info-page flex flex-col">
-            <h1 className="text-center mb-8">Informasi Pembayaran</h1>
-            <p className="order-id text-center mb-4">Order ID: {orderId}</p>
+        <>
+            <Notif teks={teks} show={show} />
+            <div className="payment-info-page flex flex-col">
+                <h1 className="text-center mb-8">Informasi Pembayaran</h1>
+                <p className="order-id text-center mb-4">Order ID: {orderId}</p>
 
-            <div className="order-details flex flex-col gap-8">
-                {/* Menampilkan Status Pembayaran */}
-                <div className="status">
-                    <p>
-                        <strong>Status Pembayaran: </strong>
-                        {paymentStatus === "pending" ? (
-                            <FaClock className="icon-pending" />
-                        ) : paymentStatus === "success" ? (
-                            <FaCheck className="icon-success" />
-                        ) : (
-                            <FaTimesCircle className="icon-failed" />
-                        )}
-                        {paymentStatus}
-                    </p>
-                </div>
-
-                {/* Menampilkan Harga yang Harus Dibayar */}
-                <div className="order-summary">
-                    <h3>Rincian Pemesanan</h3>
-                    <div className="item-list">
-                        {data.items.map((item) => (
-                            <div
-                                className="item flex items-center gap-5 p-4 bg-gray-100 rounded-lg shadow-md"
-                                key={item.productId}
-                            >
-                                <img
-                                    src={item.gambar}
-                                    alt={item.nama}
-                                    className="item-image w-20 h-20 object-cover rounded-md"
-                                />
-                                <div className="item-info flex flex-col">
-                                    <h4>{item.nama}</h4>
-                                    <p>
-                                        Harga: Rp {item.harga.toLocaleString()}
-                                    </p>
-                                    <p>Quantity: {item.quantity}</p>
-                                </div>
-                            </div>
-                        ))}
+                <div className="order-details flex flex-col gap-8">
+                    {/* Menampilkan Status Pembayaran */}
+                    <div className="status">
+                        <p>
+                            <strong>Status Pembayaran: </strong>
+                            {paymentStatus === "pending" ? (
+                                <FaClock className="icon-pending" />
+                            ) : paymentStatus === "success" ? (
+                                <FaCheck className="icon-success" />
+                            ) : (
+                                <FaTimesCircle className="icon-failed" />
+                            )}
+                            {paymentStatus}
+                        </p>
                     </div>
-                </div>
 
-                {/* Menampilkan VA atau QRIS untuk status pending */}
-                {paymentStatus === "pending" && (
-                    <>
-                        <div className="payment-method">
-                            <h3>Segera Lakukan Pembayaran</h3>
-                            <p>
-                                Pembayaran Anda masih dalam status pending.
-                                Silakan segera lakukan pembayaran untuk
-                                mengonfirmasi transaksi.
-                            </p>
-                            <p>
-                                <strong>Waktu Expired: </strong>
-                                {formattedTimeRemaining}
-                            </p>
-                            <p>
-                                <strong>
-                                    Total Harga yang Harus Dibayar:{" "}
-                                </strong>
-                                Rp {data.total_harga.toLocaleString()}
-                            </p>
+                    {/* Menampilkan Harga yang Harus Dibayar */}
+                    <div className="order-summary">
+                        <h3>Rincian Pemesanan</h3>
+                        <div className="item-list">
+                            {data.items.map((item) => (
+                                <div
+                                    className="item flex items-center gap-5 p-4 bg-gray-100 rounded-lg shadow-md"
+                                    key={item.productId}
+                                >
+                                    <img
+                                        src={item.gambar}
+                                        alt={item.nama}
+                                        className="item-image w-20 h-20 object-cover rounded-md"
+                                    />
+                                    <div className="item-info flex flex-col">
+                                        <h4>{item.nama}</h4>
+                                        <p>
+                                            Harga: Rp{" "}
+                                            {item.harga.toLocaleString()}
+                                        </p>
+                                        <p>Quantity: {item.quantity}</p>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
+                    </div>
 
-                        {transactionStatus === "pending" && (
-                            <>
-                                {isVA &&
-                                    data.data_mid.va_numbers?.length > 0 && (
-                                        <div className="payment-method flex flex-col gap-3 p-4 bg-white shadow-lg rounded-md">
-                                            <h3>
-                                                <FaMoneyBillWave /> Transfer ke:
-                                            </h3>
-                                            <p>
-                                                <strong>Bank:</strong>{" "}
-                                                {data.data_mid.va_numbers[0].bank.toUpperCase()}
-                                            </p>
-                                            <p>
-                                                <strong>Nomor VA:</strong>{" "}
-                                                {
-                                                    data.data_mid.va_numbers[0]
-                                                        .va_number
-                                                }
-                                            </p>
-                                            <button
-                                                className="copy-button"
-                                                onClick={() =>
-                                                    copyToClipboard(
+                    {/* Menampilkan VA atau QRIS untuk status pending */}
+                    {paymentStatus === "pending" && (
+                        <>
+                            <div className="payment-method">
+                                <h3>Segera Lakukan Pembayaran</h3>
+                                <p>
+                                    Pembayaran Anda masih dalam status pending.
+                                    Silakan segera lakukan pembayaran untuk
+                                    mengonfirmasi transaksi.
+                                </p>
+                                <p>
+                                    <strong>Waktu Expired: </strong>
+                                    {formattedTimeRemaining}
+                                </p>
+                                <p>
+                                    <strong>
+                                        Total Harga yang Harus Dibayar:{" "}
+                                    </strong>
+                                    Rp {data.total_harga.toLocaleString()}
+                                </p>
+                            </div>
+
+                            {transactionStatus === "pending" && (
+                                <>
+                                    {isVA &&
+                                        data.data_mid.va_numbers?.length >
+                                            0 && (
+                                            <div className="payment-method flex flex-col gap-3 p-4 bg-white shadow-lg rounded-md">
+                                                <h3>
+                                                    <FaMoneyBillWave /> Transfer
+                                                    ke:
+                                                </h3>
+                                                <p>
+                                                    <strong>Bank:</strong>{" "}
+                                                    {data.data_mid.va_numbers[0].bank.toUpperCase()}
+                                                </p>
+                                                <p>
+                                                    <strong>Nomor VA:</strong>{" "}
+                                                    {
                                                         data.data_mid
                                                             .va_numbers[0]
-                                                            .va_number,
-                                                        "Nomor VA berhasil disalin!"
-                                                    )
-                                                }
-                                            >
-                                                <FaClipboard /> Salin Nomor VA
-                                            </button>
-                                        </div>
-                                    )}
+                                                            .va_number
+                                                    }
+                                                </p>
+                                                <button
+                                                    className="copy-button"
+                                                    onClick={() =>
+                                                        copyToClipboard(
+                                                            data.data_mid
+                                                                .va_numbers[0]
+                                                                .va_number,
+                                                            "Nomor VA berhasil disalin!"
+                                                        )
+                                                    }
+                                                >
+                                                    <FaClipboard /> Salin Nomor
+                                                    VA
+                                                </button>
+                                            </div>
+                                        )}
 
-                                {isQRIS && data.actions?.length > 0 && (
-                                    <div className="payment-method">
-                                        <h3>
-                                            <FaQrcode /> QRIS
-                                        </h3>
-                                        <img
-                                            src={
-                                                data.actions.find(
-                                                    (a) =>
-                                                        a.name ===
-                                                        "generate-qr-code"
-                                                )?.url
-                                            }
-                                            alt="QRIS"
-                                            width={250}
-                                        />
-                                        <button
-                                            className="copy-button"
-                                            onClick={() =>
-                                                copyToClipboard(
+                                    {isQRIS && data.actions?.length > 0 && (
+                                        <div className="payment-method">
+                                            <h3>
+                                                <FaQrcode /> QRIS
+                                            </h3>
+                                            <img
+                                                src={
                                                     data.actions.find(
                                                         (a) =>
                                                             a.name ===
                                                             "generate-qr-code"
-                                                    )?.url,
-                                                    "QRIS berhasil disalin!"
-                                                )
-                                            }
-                                        >
-                                            <FaClipboard /> Salin QRIS
-                                        </button>
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </>
-                )}
+                                                    )?.url
+                                                }
+                                                alt="QRIS"
+                                                width={250}
+                                            />
+                                            <button
+                                                className="copy-button"
+                                                onClick={() =>
+                                                    copyToClipboard(
+                                                        data.actions.find(
+                                                            (a) =>
+                                                                a.name ===
+                                                                "generate-qr-code"
+                                                        )?.url,
+                                                        "QRIS berhasil disalin!"
+                                                    )
+                                                }
+                                            >
+                                                <FaClipboard /> Salin QRIS
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </>
+                    )}
 
-                {/* Menampilkan Pesan untuk status pembayaran success */}
-                {paymentStatus === "success" && (
-                    <div className="status-message success flex items-center justify-center bg-green-100 p-4 rounded-lg">
-                        <FaCheck className="icon-success mr-4" />
-                        <p>
-                            Transaksi Anda berhasil! Terima kasih atas
-                            pembayaran Anda.
-                        </p>
-                    </div>
-                )}
+                    {/* Menampilkan Pesan untuk status pembayaran success */}
+                    {paymentStatus === "success" && (
+                        <div className="status-message success flex items-center justify-center bg-green-100 p-4 rounded-lg">
+                            <FaCheck className="icon-success mr-4" />
+                            <p>
+                                Transaksi Anda berhasil! Terima kasih atas
+                                pembayaran Anda.
+                            </p>
+                        </div>
+                    )}
 
-                {/* Menampilkan Pesan untuk status pembayaran failed */}
-                {paymentStatus === "failed" && (
-                    <div className="status-message failed flex items-center justify-center bg-red-100 p-4 rounded-lg">
-                        <FaTimesCircle className="icon-failed mr-4" />
-                        <p>
-                            Maaf, pembayaran Anda gagal. Silakan coba lagi atau
-                            hubungi customer support.
-                        </p>
-                    </div>
-                )}
+                    {/* Menampilkan Pesan untuk status pembayaran failed */}
+                    {paymentStatus === "failed" && (
+                        <div className="status-message failed flex items-center justify-center bg-red-100 p-4 rounded-lg">
+                            <FaTimesCircle className="icon-failed mr-4" />
+                            <p>
+                                Maaf, pembayaran Anda gagal. Silakan coba lagi
+                                atau hubungi customer support.
+                            </p>
+                        </div>
+                    )}
 
-                <p className="text-center">
-                    Silakan lakukan pembayaran dan jangan tutup halaman ini
-                    sebelum selesai.
-                </p>
+                    <p className="text-center">
+                        Silakan lakukan pembayaran dan jangan tutup halaman ini
+                        sebelum selesai.
+                    </p>
+                </div>
             </div>
-        </div>
+        </>
     );
 };
 

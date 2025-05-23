@@ -5,6 +5,7 @@ const OrderItem = require("../models/orderItemModel.js");
 const key = require("../models/keyModel.js");
 const { where } = require("sequelize");
 const baseUrl = process.env.BASE_URL || "http://localhost:4000";
+const WebSocket = require("ws");
 
 // Menambahkan produk ke keranjang
 
@@ -237,13 +238,26 @@ const updateOrder = async (req, res) => {
                 .join("\n");
 
             // Kirim email ke pembeli
-            sendEmail(orderCur.user_email, orderDetails, orderCur);
+            // sendEmail(orderCur.user_email, orderDetails, orderCur);
         } else if (transaction_status == "pending") {
             status = "pending";
         } else {
             status = "failed";
         }
         await Order.update({ status }, { where: { midtrans_id: order_id } });
+
+        const socket = new WebSocket(`ws://localhost:8000`);
+        socket.on("open", () => {
+            const message = {
+                type: "order_update",
+                data: {
+                    order_id,
+                    status,
+                },
+            };
+            socket.send(JSON.stringify(message));
+        });
+
         res.status(200).json({
             message: status_message,
         });

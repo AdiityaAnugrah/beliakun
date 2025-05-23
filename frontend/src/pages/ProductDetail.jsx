@@ -5,7 +5,7 @@ import Tombol from "../components/Tombol";
 import { useTranslation } from "react-i18next";
 import { addToCart } from "../services/cartService";
 import useUserStore from "../../store/userStore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import useCartStore from "../../store/cartStore";
 import useNotifStore from "../../store/notifStore";
 import useWishlistStore from "../../store/wishlistStore";
@@ -16,7 +16,7 @@ import {
     getWishlist,
 } from "../services/wishlistService";
 
-const ProductDetail = ({ productId }) => {
+const ProductDetail = () => {
     const { t, i18n } = useTranslation();
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -27,13 +27,14 @@ const ProductDetail = ({ productId }) => {
     const { setNotif, showNotif } = useNotifStore();
     const navigate = useNavigate();
     const { wishlist, setWishlist } = useWishlistStore();
+    const { id: productId } = useParams();
     const isWishlisted = wishlist.some((item) => item.productId === product.id);
 
     useEffect(() => {
         const fetchProduct = async () => {
             const result = await getProducts(productId);
             if (result.status === 200) {
-                setProduct(result.data.products[0]);
+                setProduct(result.data);
             } else {
                 setError(result.message || t("error"));
             }

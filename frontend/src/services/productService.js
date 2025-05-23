@@ -6,10 +6,8 @@ export const getProducts = async (id = false) => {
         const resJson = await res.json();
 
         if (res.ok) {
-            console.log("Produk berhasil diambil:", resJson);
             return { status: res.status, data: resJson };
         } else {
-            console.log("Gagal mengambil produk:", resJson);
             return {
                 status: res.status,
                 message: resJson.message || "Failed to fetch products",
