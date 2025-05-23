@@ -69,7 +69,7 @@ const sendEmail = async (userEmail, orderDetails, orderCur) => {
             const productName = "PUBG"; // Nama produk yang dicari
             const product = await Product.findOne({
                 where: {
-                    nama: productName, // Cari produk berdasarkan nama
+                    nama: productName,
                 },
             });
 
