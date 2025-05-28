@@ -10,6 +10,7 @@ import Notif from "../components/Notif";
 import useNotifStore from "../../store/notifStore";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import Topbar from "../components/Topbar";
 
 const Cart = () => {
     const [loading, setLoading] = useState(true);
@@ -91,79 +92,84 @@ const Cart = () => {
     );
 
     return (
-        <div className="cart-container">
-            <Notif />
-            <h1>{t("cart.title")}</h1>
-            {loading ? (
-                <p>{t("cart.loading")}</p>
-            ) : cart.length === 0 ? (
-                <p>{t("cart.empty")}</p>
-            ) : (
-                <>
-                    <div className="cart-list">
-                        {cart.map((item) => (
-                            <div className="cart-item" key={item.productId}>
-                                <img src={item.gambar} alt={item.nama} />
-                                <div className="item-info">
-                                    <h3>{item.nama}</h3>
-                                    <p>
-                                        Rp {item.harga.toLocaleString("id-ID")}
-                                    </p>
-                                    <p>
-                                        {t("cart.stockAvailable", {
-                                            stok: item.stok,
-                                        })}
-                                    </p>
-                                </div>
-                                <div className="quantity-control">
+        <>
+            <Topbar title={t("cart.title")} />
+            <div className="cart-container">
+                <Notif />
+                {loading ? (
+                    <p>{t("cart.loading")}</p>
+                ) : cart.length === 0 ? (
+                    <p>{t("cart.empty")}</p>
+                ) : (
+                    <>
+                        <div className="cart-list">
+                            {cart.map((item) => (
+                                <div className="cart-item" key={item.productId}>
+                                    <img src={item.gambar} alt={item.nama} />
+                                    <div className="item-info">
+                                        <h3>{item.nama}</h3>
+                                        <p>
+                                            Rp{" "}
+                                            {item.harga.toLocaleString("id-ID")}
+                                        </p>
+                                        <p>
+                                            {t("cart.stockAvailable", {
+                                                stok: item.stok,
+                                            })}
+                                        </p>
+                                    </div>
+                                    <div className="quantity-control">
+                                        <button
+                                            onClick={() =>
+                                                handleReduce(
+                                                    item.productId,
+                                                    item.quantity
+                                                )
+                                            }
+                                        >
+                                            -
+                                        </button>
+                                        <span>{item.quantity}</span>
+                                        <button
+                                            onClick={() =>
+                                                handleAdd(
+                                                    item.productId,
+                                                    item.quantity,
+                                                    item.stok
+                                                )
+                                            }
+                                        >
+                                            +
+                                        </button>
+                                    </div>
                                     <button
+                                        className="delete-btn"
                                         onClick={() =>
-                                            handleReduce(
-                                                item.productId,
-                                                item.quantity
-                                            )
+                                            handleDelete(item.productId)
                                         }
                                     >
-                                        -
-                                    </button>
-                                    <span>{item.quantity}</span>
-                                    <button
-                                        onClick={() =>
-                                            handleAdd(
-                                                item.productId,
-                                                item.quantity,
-                                                item.stok
-                                            )
-                                        }
-                                    >
-                                        +
+                                        {t("cart.removeItem")}
                                     </button>
                                 </div>
-                                <button
-                                    className="delete-btn"
-                                    onClick={() => handleDelete(item.productId)}
-                                >
-                                    {t("cart.removeItem")}
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="cart-summary">
-                        <div className="total-price">
-                            {t("cart.total")}: Rp{" "}
-                            {total.toLocaleString("id-ID")}
+                            ))}
                         </div>
-                        <button
-                            className="checkout-btn"
-                            onClick={() => navigate("/checkout")}
-                        >
-                            {t("cart.checkout")}
-                        </button>
-                    </div>
-                </>
-            )}
-        </div>
+
+                        <div className="cart-summary">
+                            <div className="total-price">
+                                {t("cart.total")}: Rp{" "}
+                                {total.toLocaleString("id-ID")}
+                            </div>
+                            <button
+                                className="checkout-btn"
+                                onClick={() => navigate("/checkout")}
+                            >
+                                {t("cart.checkout")}
+                            </button>
+                        </div>
+                    </>
+                )}
+            </div>
+        </>
     );
 };
 

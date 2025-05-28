@@ -15,6 +15,8 @@ import Cart from "./pages/Cart.jsx";
 import Wishlist from "./pages/Wishlist.jsx";
 import Checkout from "./pages/Checkout.jsx";
 import PaymentInfo from "./pages/PaymentInfo.jsx";
+import Profile from "./pages/Profile.jsx";
+import Setting from "./pages/Setting";
 
 // Admin
 import HomeAdmin from "./pages/admin/HomeAdmin.jsx";
@@ -44,6 +46,8 @@ createRoot(document.getElementById("root")).render(
                 <Route path="cart" element={<Cart />} />
                 <Route path="wishlist" element={<Wishlist />} />
                 <Route path="checkout" element={<Checkout />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="setting" element={<Setting />} />
                 <Route
                     path="/payment-info/:orderId"
                     element={<PaymentInfo />}

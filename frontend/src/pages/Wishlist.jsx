@@ -6,6 +6,7 @@ import useWishlistStore from "../../store/wishlistStore";
 import { getWishlist, removeFromWishlist } from "../services/wishlistService";
 import useNotifStore from "../../store/notifStore";
 import Notif from "../components/Notif";
+import Topbar from "../components/Topbar";
 
 const Wishlist = () => {
     const { token, emptyUser } = useUserStore();
@@ -54,58 +55,61 @@ const Wishlist = () => {
     };
 
     return (
-        <div className="container mx-auto py-6">
-            <Notif />
-            <h1 className="text-2xl font-bold mb-4">{t("wishlist_title")}</h1>
-            {loading ? (
-                <p>{t("loading")}</p>
-            ) : wishlist.length === 0 ? (
-                <p>{t("cart.empty")}</p>
-            ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                    {wishlist.map((item) => (
-                        <div
-                            key={item.productId}
-                            className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col"
-                        >
-                            <img
-                                src={item.gambar}
-                                alt={item.nama}
-                                className="w-full h-48 object-cover"
-                            />
-                            <div className="p-4 flex flex-col justify-between flex-1">
-                                <h3 className="text-lg font-semibold mb-1">
-                                    {item.nama}
-                                </h3>
-                                <p className="text-red-600 font-bold mb-2">
-                                    Rp {item.harga.toLocaleString("id-ID")}
-                                </p>
-                                <div className="flex justify-between items-center mt-auto">
-                                    <button
-                                        className="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded"
-                                        onClick={() =>
-                                            navigate(
-                                                `/product/${item.productId}`
-                                            )
-                                        }
-                                    >
-                                        {t("view_details")}
-                                    </button>
-                                    <button
-                                        className="text-sm text-red-600 hover:underline"
-                                        onClick={() =>
-                                            handleRemove(item.productId)
-                                        }
-                                    >
-                                        {t("cart.removeItem")}
-                                    </button>
+        <>
+            <Topbar title={t("wishlist_title")} />
+
+            <div className="container mx-auto py-6">
+                <Notif />
+                {loading ? (
+                    <p>{t("loading")}</p>
+                ) : wishlist.length === 0 ? (
+                    <p>{t("cart.empty")}</p>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        {wishlist.map((item) => (
+                            <div
+                                key={item.productId}
+                                className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col"
+                            >
+                                <img
+                                    src={item.gambar}
+                                    alt={item.nama}
+                                    className="w-full h-48 object-cover"
+                                />
+                                <div className="p-4 flex flex-col justify-between flex-1">
+                                    <h3 className="text-lg font-semibold mb-1">
+                                        {item.nama}
+                                    </h3>
+                                    <p className="text-red-600 font-bold mb-2">
+                                        Rp {item.harga.toLocaleString("id-ID")}
+                                    </p>
+                                    <div className="flex justify-between items-center mt-auto">
+                                        <button
+                                            className="text-sm bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded"
+                                            onClick={() =>
+                                                navigate(
+                                                    `/product/${item.productId}`
+                                                )
+                                            }
+                                        >
+                                            {t("view_details")}
+                                        </button>
+                                        <button
+                                            className="text-sm text-red-600 hover:underline"
+                                            onClick={() =>
+                                                handleRemove(item.productId)
+                                            }
+                                        >
+                                            {t("cart.removeItem")}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </>
     );
 };
 

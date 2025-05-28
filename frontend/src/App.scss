@@ -1413,3 +1413,164 @@ footer {
         transform: rotate(360deg);
     }
 }
+
+// ===================
+// Profile Page
+.profile-container {
+    max-width: 380px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 22px;
+    box-shadow: 0 2px 12px #eaeaea;
+    padding: 32px 20px 18px 20px;
+    position: relative;
+}
+.profile-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 26px;
+}
+.profile-avatar {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 8px #e0e0e0;
+    margin-bottom: 12px;
+}
+.profile-user h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: bold;
+}
+.profile-user .username {
+    color: #b0b0b0;
+    font-size: 14px;
+}
+.edit-btn {
+    margin-top: 10px;
+    background: #fa5858;
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.edit-btn:hover {
+    background: #e84040;
+}
+.profile-menu {
+    list-style: none;
+    padding: 0;
+    margin: 24px 0 18px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+.profile-menu li {
+    display: flex;
+    align-items: center;
+    padding: 14px 0;
+    font-size: 16px;
+    border-bottom: 1px solid #f8f8f8;
+}
+.profile-menu li .icon {
+    font-size: 18px;
+    margin-right: 14px;
+}
+.logout-btn {
+    width: 100%;
+    background: none;
+    border: 1px solid #fa5858;
+    color: #fa5858;
+    padding: 10px 0;
+    border-radius: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 16px;
+    transition: background 0.2s, color 0.2s;
+}
+.logout-btn:hover {
+    background: #fa5858;
+    color: #fff;
+}
+// ENd of Profile Page
+// ===================
+
+// ===================
+// settings page
+.page-container {
+    max-width: 400px;
+    margin: 40px auto;
+    // background: #fff;
+    border-radius: 22px;
+    // box-shadow: 0 2px 12px #eaeaea;
+    padding: 32px 20px 18px 20px;
+    position: relative;
+    transition: all 0.2s;
+}
+@media (min-width: 768px) {
+    .page-container {
+        max-width: 100%;
+        padding: 56px 48px 32px 48px;
+        border-radius: 32px;
+        font-size: 1.14rem;
+    }
+}
+@media (max-width: 500px) {
+    .page-container {
+        max-width: 98vw;
+        padding: 16px 4vw 12px 4vw;
+        border-radius: 14px;
+        font-size: 0.98rem;
+    }
+}
+// ===================
+// settings page
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    border-radius: 0 0 18px 18px;
+    box-shadow: 0 2px 10px #f0f0f0;
+    padding: 18px 0 12px 0;
+    margin-bottom: 18px;
+    z-index: 9;
+    min-height: 52px;
+}
+
+.topbar-back {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 1.35rem;
+    color: #0c1631;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.topbar-title {
+    font-weight: bold;
+    font-size: 1.18rem;
+    color: #23283a;
+    letter-spacing: 0.03em;
+}
+
+/* Desktop (width >= 768px) */
+@media (min-width: 768px) {
+    .topbar {
+        display: none;
+    }
+}
