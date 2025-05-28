@@ -52,8 +52,6 @@ const Navbar = () => {
         setCart([]);
         setNotif(t("logout_successful"));
         setMenuOpen(false);
-
-        // Hindari state update setelah unmount
         setTimeout(() => {
             navigate("/login");
         }, 50);

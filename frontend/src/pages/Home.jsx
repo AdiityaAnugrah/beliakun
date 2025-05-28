@@ -1,9 +1,8 @@
-const Home = () => {
-    return (
-        <div>
-            <h1>Home</h1>
-        </div>
-    );
-};
+const Home = () => (
+    <div className="container">
+        <h1>Welcome to Home Page</h1>
+        <p>Silakan kembangkan konten disini!</p>
+    </div>
+);
 
 export default Home;

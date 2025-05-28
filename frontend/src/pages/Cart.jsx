@@ -17,13 +17,14 @@ const Cart = () => {
     const { showNotif, setNotif } = useNotifStore();
     const { t } = useTranslation();
     const navigate = useNavigate();
-
-    const { cart, setCart } = useCartStore(); // ✅ Zustand store
+    // Menggunakan Zustand store untuk cart
+    const { cart, setCart } = useCartStore();
 
     const fetchCart = async () => {
         if (!token) {
-            alert(t("cart.notLogin"));
-            setLoading(false);
+            setNotif(t("cart.notLogin"));
+            showNotif();
+            navigate("/login");
             return;
         }
 
@@ -35,11 +36,11 @@ const Cart = () => {
         }
 
         if (res.status === 200) {
-            setCart(res.data); // ✅ update Zustand
+            setCart(res.data); // ✅ otomatis trigger setCart() di Zustand
         } else {
-            alert(res.message);
+            setNotif(t("cart.errorFetch"));
+            showNotif();
         }
-
         setLoading(false);
     };
 
