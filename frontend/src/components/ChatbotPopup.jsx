@@ -57,8 +57,8 @@ export default function ChatbotPopup() {
             setError(
                 `Bot ${bot === "chatgpt" ? "ChatGPT" : "Gemini"} error. ${
                     bot === "chatgpt"
-                        ? "Try switching to Gemini."
-                        : "Try switching to ChatGPT."
+                        ? "Try switching to Agent Ghost."
+                        : "Try switching to Agent Lucky."
                 }`
             );
         }
