@@ -20,6 +20,8 @@ export default function ChatbotPopup() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const chatRef = useRef(null);
+
+    // Deteksi mobile
     const [isMobile, setIsMobile] = useState(window.innerWidth < 540);
     useEffect(() => {
         function handleResize() {
@@ -73,7 +75,6 @@ export default function ChatbotPopup() {
         setError("");
     };
 
-    // Bubble Chat
     function Bubble({ text, isUser }) {
         return (
             <div
@@ -137,6 +138,13 @@ export default function ChatbotPopup() {
         );
     }
 
+    // ==== POSISI CHATBOT ====
+    // Ganti 76 jika menu bawah/mobile nav lebih tinggi
+    const mobileBottomOffset = 90;
+    const chatbotPositionStyle = isMobile
+        ? { bottom: mobileBottomOffset, right: 16 }
+        : { bottom: 32, right: 32 };
+
     return (
         <>
             <style>{`
@@ -154,18 +162,19 @@ export default function ChatbotPopup() {
                 className="chatbot-popup-custom"
                 style={{
                     position: "fixed",
-                    bottom: isMobile ? 0 : 24,
-                    right: isMobile ? 0 : 24,
-                    zIndex: 9999,
-                    width: isMobile ? "100vw" : "auto",
+                    ...chatbotPositionStyle,
+                    zIndex: 1200,
+                    width: "auto",
+                    maxWidth: isMobile ? "96vw" : "390px",
+                    transition: "all .2s cubic-bezier(.22,1,.36,1)",
                 }}
             >
                 {!open && (
                     <button
                         onClick={() => setOpen(true)}
                         style={{
-                            width: 48,
-                            height: 48,
+                            width: isMobile ? 44 : 54,
+                            height: isMobile ? 44 : 54,
                             borderRadius: "50%",
                             background: "var(--merah)",
                             border: "none",
@@ -178,8 +187,8 @@ export default function ChatbotPopup() {
                         title="Open Chatbot"
                     >
                         <svg
-                            width="24"
-                            height="24"
+                            width={isMobile ? "22" : "24"}
+                            height={isMobile ? "22" : "24"}
                             viewBox="0 0 32 32"
                             fill="#fff"
                         >
@@ -201,22 +210,25 @@ export default function ChatbotPopup() {
                         </svg>
                     </button>
                 )}
+
                 {open && (
                     <div
                         style={{
-                            width: isMobile ? "100vw" : 390,
-                            height: isMobile ? "100dvh" : 600,
+                            width: isMobile ? "96vw" : 390,
+                            height: isMobile ? "64vh" : 600,
                             background: "var(--abu)",
                             boxShadow: "0 8px 24px #2222",
-                            borderRadius: isMobile ? 0 : 22,
+                            borderRadius: isMobile ? 12 : 22,
                             display: "flex",
                             flexDirection: "column",
                             overflow: "hidden",
                             position: "relative",
                             border: "1.5px solid var(--merah)",
-                            maxHeight: isMobile ? "100dvh" : "90vh",
+                            maxHeight: isMobile ? "75vh" : "90vh",
+                            minWidth: isMobile ? 0 : 340,
                         }}
                     >
+                        {/* === HEADER CHATBOX === */}
                         <div
                             style={{
                                 padding: isMobile
@@ -259,6 +271,7 @@ export default function ChatbotPopup() {
                                 &times;
                             </button>
                         </div>
+                        {/* === BOT SWITCHER & INFO === */}
                         <div
                             style={{
                                 background: "var(--abu2)",
@@ -269,9 +282,6 @@ export default function ChatbotPopup() {
                                 alignItems: "center",
                             }}
                         >
-                            <label
-                                style={{ fontSize: 13, fontWeight: 500 }}
-                            ></label>
                             <select
                                 value={bot}
                                 onChange={handleChangeBot}
@@ -302,7 +312,7 @@ export default function ChatbotPopup() {
                                 Powered by BeliAkun
                             </span>
                         </div>
-                        {/* Chat Area */}
+                        {/* === ISI CHAT === */}
                         <div
                             ref={chatRef}
                             style={{
@@ -324,14 +334,6 @@ export default function ChatbotPopup() {
                                 >
                                     Hello! You can ask about digital products,
                                     accounts, promos, and more.
-                                    <br />
-                                    <span
-                                        style={{
-                                            fontSize: 13,
-                                            color: "var(--merah)",
-                                            fontWeight: 500,
-                                        }}
-                                    ></span>
                                 </div>
                             )}
                             {messages.map((msg, i) => (
@@ -356,7 +358,7 @@ export default function ChatbotPopup() {
                                 </div>
                             )}
                         </div>
-                        {/* Input */}
+                        {/* === INPUT BAR === */}
                         <div
                             style={{
                                 display: "flex",

@@ -225,8 +225,8 @@ const resources = {
 // ========================
 i18n.use(initReactI18next).init({
     resources,
-    lng: "id", // ganti ke "en" jika ingin default bahasa Inggris
-    fallbackLng: "en",
+    lng: "en", // ganti ke "en" jika ingin default bahasa Inggris
+    fallbackLng: "id",
     interpolation: {
         escapeValue: false,
     },
