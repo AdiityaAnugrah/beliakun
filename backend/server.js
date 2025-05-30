@@ -13,6 +13,7 @@ const keyRoutes = require("./routes/keyRoutes.js");
 const orderRoutes = require("./routes/orderRoutes.js");
 const tokenAdsRoutes = require("./routes/tokenAdsRoutes.js");
 const chatgptRoutes = require("./routes/chatgptRoutes.js");
+const geminiRoutes = require("./routes/geminiRoutes.js");
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use("/order", orderRoutes);
 app.use("/key", keyRoutes);
 app.use("/token", tokenAdsRoutes);
 app.use("/api", chatgptRoutes);
+app.use("/api", geminiRoutes);
 
 // Menginisialisasi model
 const { initModels } = require("./models/index.js");

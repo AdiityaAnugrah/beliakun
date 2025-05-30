@@ -19,7 +19,7 @@ function App() {
                 <Outlet />
             </div>
             <NavbarMobile />
-            {/* <ChatbotPopup /> */}
+            <ChatbotPopup />
             <div className="footer-desktop">
                 <Footer />
             </div>
