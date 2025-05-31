@@ -14,6 +14,7 @@ const orderRoutes = require("./routes/orderRoutes.js");
 const tokenAdsRoutes = require("./routes/tokenAdsRoutes.js");
 const chatgptRoutes = require("./routes/chatgptRoutes.js");
 const geminiRoutes = require("./routes/geminiRoutes.js");
+const categoryRoutes = require("./routes/categoryRoutes.js");
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.get("/", (req, res) => {
 
 app.use("/auth", authRoutes);
 app.use("/product", productRoutes);
+app.use("/category", categoryRoutes);
 app.use("/cart", cartRoutes);
 app.use("/wishlist", wishlistRoutes);
 app.use("/checkout", checkoutRoutes);

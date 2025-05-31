@@ -32,9 +32,13 @@ const SidebarAdmin = ({ isSidebarOpen }) => {
                     <Link to="/admin/orders">Manage Orders</Link>
                 </li>
                 <li>
+                    <Link to="/admin/category">Categories</Link>
+                </li>
+                <li>
                     <Link to="/admin/settings">Settings</Link>
                 </li>
             </ul>
+
             <div style={{ flex: 1 }}></div>
             <Tombol
                 className="btn kotak"

@@ -709,347 +709,6 @@ footer {
 //     }
 // }
 
-.bapak-product {
-    width: 100%;
-    height: 100svh;
-    max-height: 600px;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    /* Efek tambahan jika diperlukan */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.bg-benner-product {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 600px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1;
-
-    & img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        filter: brightness(
-            0.6
-        ); /* Menambahkan filter untuk membuat teks lebih jelas */
-    }
-}
-
-.search-product {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 3;
-    color: white;
-    text-align: center;
-    padding: 0 20px;
-
-    & h1 {
-        font-size: 2rem;
-        font-weight: 600;
-        margin-bottom: 20px;
-    }
-}
-
-.search-container {
-    display: flex;
-    justify-content: center;
-    width: 70%;
-}
-
-.search-product input {
-    width: 100%;
-    padding: 0.8rem;
-    border-radius: 5px 0px 0px 5px;
-    border: 1px solid #fff;
-    font-size: 1.1rem;
-    background-color: rgba(255, 255, 255, 0.8);
-    color: #333;
-    transition: background-color 0.3s ease, border 0.3s ease;
-
-    &:focus {
-        background-color: #fff;
-        border: 1px solid #f7374f;
-        outline: none;
-    }
-}
-
-.search-product button {
-    background-color: #f7374f;
-    color: white;
-    padding: 0.6rem 1.2rem;
-    border: none;
-    border-radius: 0px 5px 5px 0px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.3s ease;
-
-    &:hover {
-        background-color: #d02a3c;
-    }
-}
-
-/* Kategori Produk */
-.category-product {
-    margin-top: 30px;
-    padding: 20px;
-    text-align: center;
-
-    & h2 {
-        font-size: 1.8rem;
-        font-weight: 600;
-        margin-bottom: 20px;
-    }
-
-    .category-nav {
-        display: block;
-        position: relative;
-        width: 100%;
-        height: 300px;
-        // background-color: aqua;
-
-        .category-list {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            overflow-x: scroll;
-            gap: 20px;
-            width: 100%;
-            scroll-snap-type: x mandatory;
-            padding-block: 10px;
-
-            .category-card {
-                flex: 0 0 calc((100% / 3) - 13px);
-                height: 100%;
-                background-color: #fff;
-                border-radius: 10px;
-                // box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                // padding: 20px;
-                cursor: pointer;
-                text-align: center;
-                transition: transform 0.3s ease, box-shadow 0.3s ease;
-                scroll-snap-align: center;
-                position: relative;
-                border-radius: 10px;
-                overflow: hidden;
-
-                &:hover {
-                    transform: translateY(-5px);
-                    // box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-                }
-
-                img {
-                    width: 100%;
-                    height: 100%;
-                    position: absolute;
-                    z-index: 1;
-                    object-fit: cover;
-                }
-
-                .content {
-                    position: absolute;
-                    width: 100%;
-                    height: 100%;
-                    z-index: 2;
-
-                    h3 {
-                        font-size: 1.2rem;
-                        font-weight: 500;
-                        color: #333;
-                    }
-                }
-            }
-        }
-        .button-kanan-kiri {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 0;
-            width: 100%;
-            position: absolute;
-        }
-    }
-}
-
-/* Produk dalam Kartu */
-.card-product {
-    flex: 3;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-    padding: 20px;
-}
-
-.product-item {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    padding: 15px;
-    text-align: center;
-    cursor: pointer;
-
-    &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-    }
-}
-
-.product-image {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 8px;
-}
-
-.product-info {
-    margin-top: 15px;
-
-    h3 {
-        font-size: 1.2rem;
-        font-weight: 600;
-    }
-
-    .price {
-        color: #f7374f;
-        font-size: 1.2rem;
-        font-weight: 600;
-        margin: 10px 0;
-    }
-
-    .add-to-cart {
-        background-color: #f7374f;
-        color: white;
-        padding: 0.6rem 1.2rem;
-        border: none;
-        border-radius: 5px;
-        margin-top: 10px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-
-        &:hover {
-            background-color: #d02a3c;
-        }
-    }
-}
-
-/* Filter Harga */
-.fitur-harga {
-    flex: 1;
-    padding: 20px;
-
-    select {
-        width: 100%;
-        padding: 0.8rem;
-        font-size: 1rem;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-        margin-top: 20px;
-        background-color: #fff;
-        cursor: pointer;
-        transition: border-color 0.3s ease;
-
-        &:focus {
-            border-color: #f7374f;
-            outline: none;
-        }
-    }
-}
-
-/* Pagination */
-.pagination {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-    gap: 10px;
-
-    .page-button {
-        padding: 0.6rem 1.2rem;
-        background-color: #f7374f;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-
-        &:hover {
-            background-color: #d02a3c;
-        }
-
-        &.active {
-            background-color: #d02a3c;
-        }
-    }
-}
-
-/* Responsivitas */
-@media (max-width: 768px) {
-    .bapak-product {
-        height: auto;
-        max-height: none;
-    }
-
-    .bg-benner-product img {
-        height: 300px;
-    }
-
-    .search-product h1 {
-        font-size: 1.5rem;
-    }
-
-    .search-container {
-        flex-direction: column; /* Input dan button berada satu kolom di perangkat kecil */
-        width: 100%;
-    }
-
-    .search-product input {
-        width: 100%;
-        padding: 1rem;
-    }
-
-    .search-product button {
-        width: 100%;
-        padding: 1rem;
-    }
-
-    .card-product {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .search-product h1 {
-        font-size: 1.5rem;
-    }
-
-    .search-container {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .search-product input {
-        width: 100%;
-        padding: 1rem;
-    }
-
-    .search-product button {
-        width: 100%;
-        padding: 1rem;
-    }
-}
-
 // DETAIL PRODUCT
 .container-product {
     display: flex;
@@ -1572,5 +1231,148 @@ footer {
 @media (min-width: 768px) {
     .topbar {
         display: none;
+    }
+}
+
+// ===================
+// CategoryCarousel
+// CATEGORY CAROUSEL (custom modern style)
+.category-section {
+    margin: 32px 0 36px 0;
+    color: var(--hitam);
+    .category-header {
+        color: var(--hitam);
+        font-size: 1rem;
+        font-weight: bold;
+        margin-bottom: 12px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        padding-left: 6px;
+    }
+    .category-carousel {
+        display: flex;
+        align-items: center;
+        position: relative;
+    }
+    .carousel-arrow {
+        background: rgba(36, 36, 36, 0.46);
+        border: none;
+        color: var(--putih);
+        font-size: 2rem;
+        width: 48px;
+        height: 90px;
+        border-radius: 10px;
+        cursor: pointer;
+        z-index: 2;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        &:hover {
+            background: var(--merah);
+        }
+        &:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        &.left {
+            margin-right: 10px;
+        }
+        &.right {
+            margin-left: 10px;
+        }
+        @media (max-width: 600px) {
+            width: 34px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+    }
+    .category-list {
+        display: flex;
+        gap: 22px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding: 16px 0;
+        width: 100%;
+        &::-webkit-scrollbar {
+            display: none;
+        }
+    }
+    .category-card {
+        min-width: 220px;
+        max-width: 240px;
+        height: 180px;
+        background: var(--abu2);
+        border-radius: 18px;
+        box-shadow: 0 2px 10px #0004;
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+        scroll-snap-align: center;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        transition: transform 0.15s;
+        &:hover {
+            transform: translateY(-3px) scale(1.03);
+        }
+        img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+        .category-gradient {
+            position: absolute;
+            z-index: 2;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            top: 0;
+            background: linear-gradient(
+                to top,
+                rgba(247, 55, 79, 0.38) 65%,
+                rgba(247, 55, 79, 0.12) 100%
+            );
+            pointer-events: none;
+        }
+        .category-label {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 24px;
+            z-index: 3;
+            display: flex;
+            justify-content: center;
+            .category-label-inner {
+                background: var(--putih);
+                color: var(--merah);
+                padding: 8px 24px;
+                border-radius: 7px;
+                font-weight: bold;
+                font-size: 1.09rem;
+                text-transform: uppercase;
+                box-shadow: 0 2px 14px #2223;
+                letter-spacing: 1px;
+                display: inline-block;
+            }
+        }
+    }
+    .carousel-dots {
+        margin-top: 14px;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        .dot {
+            width: 16px;
+            height: 7px;
+            border-radius: 6px;
+            background: var(--abu-abu-gelap);
+            transition: background 0.18s;
+            &.active {
+                background: var(--merah);
+            }
+        }
     }
 }

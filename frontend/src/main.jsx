@@ -21,6 +21,7 @@ import Setting from "./pages/Setting";
 // Admin
 import HomeAdmin from "./pages/admin/HomeAdmin.jsx";
 import Products from "./pages/admin/Products.jsx";
+import AdminCategory from "./pages/admin/AdminCategory";
 import "./i18n";
 import AppAdmin from "./AppAdmin.jsx";
 import AddProduct from "./pages/admin/AddProduct.jsx";
@@ -66,6 +67,7 @@ createRoot(document.getElementById("root")).render(
                 <Route path="products" element={<Products />} />
                 <Route path="add" element={<AddProduct />} />
                 <Route path="edit/:id" element={<AddProduct />} />
+                <Route path="category" element={<AdminCategory />} />
             </Route>
         </Routes>
     </BrowserRouter>

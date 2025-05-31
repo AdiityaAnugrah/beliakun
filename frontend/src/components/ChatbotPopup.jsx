@@ -12,6 +12,67 @@ const bubbleAnimStyle = {
     willChange: "transform,opacity",
 };
 
+function Bubble({ text, isUser, animate }) {
+    return (
+        <div
+            style={{
+                display: "flex",
+                justifyContent: isUser ? "flex-end" : "flex-start",
+                marginBottom: 10,
+                fontFamily: "'Inter', sans-serif",
+            }}
+        >
+            {!isUser && (
+                <div
+                    style={{
+                        width: 30,
+                        height: 30,
+                        borderRadius: 15,
+                        background: "var(--bubble-bot)",
+                        border: "2px solid var(--merah)",
+                        color: "var(--merah)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: 8,
+                        fontWeight: 700,
+                        fontSize: 16,
+                        boxShadow: "0 2px 7px #f7374f18",
+                        ...(animate ? bubbleAnimStyle : {}),
+                    }}
+                >
+                    B
+                </div>
+            )}
+            <span
+                style={{
+                    maxWidth: window.innerWidth < 540 ? 200 : 260,
+                    background: isUser
+                        ? "var(--bubble-user)"
+                        : "var(--bubble-bot)",
+                    color: isUser
+                        ? "var(--bubble-user-text)"
+                        : "var(--bubble-bot-text)",
+                    borderRadius: 16,
+                    border: isUser ? "none" : "1px solid var(--merah, #f7374f)",
+                    padding: "11px 18px",
+                    fontSize: window.innerWidth < 540 ? 14 : 15,
+                    boxShadow: isUser
+                        ? "0 1px 5px #f7374f18"
+                        : "0 1px 7px #eee",
+                    borderBottomRightRadius: isUser ? 4 : 16,
+                    borderBottomLeftRadius: !isUser ? 4 : 16,
+                    fontFamily: "'Inter', sans-serif",
+                    ...(animate ? bubbleAnimStyle : {}),
+                }}
+            >
+                {text}
+            </span>
+            {isUser && <div style={{ width: 40 }} />}
+        </div>
+    );
+}
+
 export default function ChatbotPopup() {
     const [bot, setBot] = useState(BOT_OPTIONS[1].key);
     const [open, setOpen] = useState(false);
@@ -21,7 +82,13 @@ export default function ChatbotPopup() {
     const [error, setError] = useState("");
     const chatRef = useRef(null);
 
-    // Deteksi mobile
+    // Language selector
+    const [language, setLanguage] = useState(() => {
+        return localStorage.getItem("cb_language") || "";
+    });
+    const [showLangSelect, setShowLangSelect] = useState(false);
+
+    // Mobile detection
     const [isMobile, setIsMobile] = useState(window.innerWidth < 540);
     useEffect(() => {
         function handleResize() {
@@ -32,8 +99,74 @@ export default function ChatbotPopup() {
     }, []);
 
     useEffect(() => {
-        if (open) chatRef.current?.scrollTo(0, chatRef.current.scrollHeight);
+        if (open && !language) {
+            setShowLangSelect(true);
+        }
+    }, [open, language]);
+
+    // Scroll only when new message arrives
+    const prevMessagesCount = useRef(messages.length);
+    useEffect(() => {
+        if (open && messages.length !== prevMessagesCount.current) {
+            chatRef.current?.scrollTo(0, chatRef.current.scrollHeight);
+            prevMessagesCount.current = messages.length;
+        }
     }, [messages, open]);
+
+    useEffect(() => {
+        if (language) {
+            localStorage.setItem("cb_language", language);
+        }
+    }, [language]);
+
+    // Expired chat logic (5 min or ending message)
+    const [expired, setExpired] = useState(false);
+    const timerRef = useRef(null);
+    const EXPIRE_MS = 5 * 60 * 1000; // 5 minutes
+
+    function isEndingMessage(msg) {
+        const endings = [
+            "selesai",
+            "cukup",
+            "terima kasih",
+            "thanks",
+            "thank you",
+            "done",
+            "ok",
+            "oke",
+            "udah",
+        ];
+        return endings.some((end) => msg.toLowerCase().includes(end));
+    }
+
+    useEffect(() => {
+        if (!open) return;
+        if (expired) return;
+        if (messages.length === 0) return;
+
+        // Cek keyword ending
+        const lastMsg = messages[messages.length - 1];
+        if (lastMsg.role === "user" && isEndingMessage(lastMsg.text)) {
+            setExpired(true);
+            return;
+        }
+
+        // Timer
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            setExpired(true);
+        }, EXPIRE_MS);
+
+        return () => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+        };
+    }, [messages, open, expired]);
+
+    // Reset expired ketika chatbox ditutup
+    const handleClose = () => {
+        setOpen(false);
+        setExpired(false);
+    };
 
     const sendMessage = async () => {
         if (!input.trim()) return;
@@ -46,9 +179,9 @@ export default function ChatbotPopup() {
         try {
             let reply;
             if (bot === "chatgpt") {
-                reply = await askChatGpt(input, newMessages);
+                reply = await askChatGpt(input, newMessages, language);
             } else if (bot === "gemini") {
-                reply = await askGemini(input, newMessages);
+                reply = await askGemini(input, newMessages, language);
             }
             if (!reply) throw new Error("Bot did not respond.");
             setMessages([...newMessages, { role: "bot", text: reply, bot }]);
@@ -75,71 +208,7 @@ export default function ChatbotPopup() {
         setError("");
     };
 
-    function Bubble({ text, isUser }) {
-        return (
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: isUser ? "flex-end" : "flex-start",
-                    marginBottom: 10,
-                    fontFamily: "'Inter', sans-serif",
-                }}
-            >
-                {!isUser && (
-                    <div
-                        style={{
-                            width: 30,
-                            height: 30,
-                            borderRadius: 15,
-                            background: "var(--bubble-bot)",
-                            border: "2px solid var(--merah)",
-                            color: "var(--merah)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            marginRight: 8,
-                            fontWeight: 700,
-                            fontSize: 16,
-                            boxShadow: "0 2px 7px #f7374f18",
-                            ...bubbleAnimStyle,
-                        }}
-                    >
-                        B
-                    </div>
-                )}
-                <span
-                    style={{
-                        maxWidth: isMobile ? 200 : 260,
-                        background: isUser
-                            ? "var(--bubble-user)"
-                            : "var(--bubble-bot)",
-                        color: isUser
-                            ? "var(--bubble-user-text)"
-                            : "var(--bubble-bot-text)",
-                        borderRadius: 16,
-                        border: isUser
-                            ? "none"
-                            : "1px solid var(--merah, #f7374f)",
-                        padding: "11px 18px",
-                        fontSize: isMobile ? 14 : 15,
-                        boxShadow: isUser
-                            ? "0 1px 5px #f7374f18"
-                            : "0 1px 7px #eee",
-                        borderBottomRightRadius: isUser ? 4 : 16,
-                        borderBottomLeftRadius: !isUser ? 4 : 16,
-                        fontFamily: "'Inter', sans-serif",
-                        ...bubbleAnimStyle,
-                    }}
-                >
-                    {text}
-                </span>
-                {isUser && <div style={{ width: 40 }} />}
-            </div>
-        );
-    }
-
     // ==== POSISI CHATBOT ====
-    // Ganti 76 jika menu bawah/mobile nav lebih tinggi
     const mobileBottomOffset = 90;
     const chatbotPositionStyle = isMobile
         ? { bottom: mobileBottomOffset, right: 16 }
@@ -228,6 +297,93 @@ export default function ChatbotPopup() {
                             minWidth: isMobile ? 0 : 340,
                         }}
                     >
+                        {/* === LANGUAGE SELECTOR MODAL === */}
+                        {showLangSelect && (
+                            <div
+                                style={{
+                                    position: "fixed",
+                                    inset: 0,
+                                    background: "rgba(0,0,0,0.13)",
+                                    zIndex: 2001,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        background: "#fff",
+                                        borderRadius: 14,
+                                        padding: 28,
+                                        boxShadow: "0 3px 32px #2222",
+                                        minWidth: 240,
+                                        textAlign: "center",
+                                        fontFamily: "'Inter',sans-serif",
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            fontSize: 18,
+                                            fontWeight: 600,
+                                            marginBottom: 18,
+                                        }}
+                                    >
+                                        Pilih Bahasa / Choose Language
+                                    </div>
+                                    <button
+                                        style={{
+                                            margin: 8,
+                                            padding: "9px 24px",
+                                            borderRadius: 8,
+                                            border: "1.5px solid var(--merah)",
+                                            background:
+                                                language === "id"
+                                                    ? "var(--merah)"
+                                                    : "#fff",
+                                            color:
+                                                language === "id"
+                                                    ? "#fff"
+                                                    : "var(--merah)",
+                                            fontWeight: 600,
+                                            cursor: "pointer",
+                                            fontSize: 15,
+                                        }}
+                                        onClick={() => {
+                                            setLanguage("id");
+                                            setShowLangSelect(false);
+                                        }}
+                                    >
+                                        Bahasa Indonesia
+                                    </button>
+                                    <button
+                                        style={{
+                                            margin: 8,
+                                            padding: "9px 24px",
+                                            borderRadius: 8,
+                                            border: "1.5px solid var(--merah)",
+                                            background:
+                                                language === "en"
+                                                    ? "var(--merah)"
+                                                    : "#fff",
+                                            color:
+                                                language === "en"
+                                                    ? "#fff"
+                                                    : "var(--merah)",
+                                            fontWeight: 600,
+                                            cursor: "pointer",
+                                            fontSize: 15,
+                                        }}
+                                        onClick={() => {
+                                            setLanguage("en");
+                                            setShowLangSelect(false);
+                                        }}
+                                    >
+                                        English
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {/* === HEADER CHATBOX === */}
                         <div
                             style={{
@@ -257,7 +413,7 @@ export default function ChatbotPopup() {
                                 </span>
                             </span>
                             <button
-                                onClick={() => setOpen(false)}
+                                onClick={handleClose}
                                 style={{
                                     background: "transparent",
                                     border: "none",
@@ -332,19 +488,34 @@ export default function ChatbotPopup() {
                                         fontFamily: "'Inter',sans-serif",
                                     }}
                                 >
-                                    Hello! You can ask about digital products,
-                                    accounts, promos, and more.
+                                    {language === "id"
+                                        ? "Halo! Anda bisa bertanya seputar produk digital, akun, promo, dan lainnya."
+                                        : language === "en"
+                                        ? "Hello! You can ask about digital products, accounts, promos, and more."
+                                        : "Hello! You can ask about digital products, accounts, promos, and more."}
                                 </div>
                             )}
                             {messages.map((msg, i) => (
                                 <Bubble
-                                    key={i + "-" + msg.text.slice(0, 8)}
+                                    key={`${msg.role}-${i}-${msg.text.slice(
+                                        0,
+                                        10
+                                    )}`}
                                     text={msg.text}
                                     isUser={msg.role === "user"}
+                                    animate={i === messages.length - 1}
                                 />
                             ))}
                             {loading && (
-                                <Bubble text="Typing..." isUser={false} />
+                                <Bubble
+                                    text={
+                                        language === "id"
+                                            ? "Mengetik..."
+                                            : "Typing..."
+                                    }
+                                    isUser={false}
+                                    animate={false}
+                                />
                             )}
                             {error && (
                                 <div
@@ -355,6 +526,50 @@ export default function ChatbotPopup() {
                                     }}
                                 >
                                     {error}
+                                </div>
+                            )}
+                            {/* === WhatsApp CTA if chat expired === */}
+                            {expired && (
+                                <div
+                                    style={{
+                                        textAlign: "center",
+                                        margin: "24px 0",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        gap: 12,
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            color: "#f7374f",
+                                            fontWeight: 600,
+                                            fontSize: 16,
+                                        }}
+                                    >
+                                        {language === "id"
+                                            ? "Sesi chat telah berakhir.\nButuh bantuan lebih lanjut?"
+                                            : "Chat session ended.\nNeed more help?"}
+                                    </div>
+                                    <a
+                                        href="https://wa.me/+254776837641"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            display: "inline-block",
+                                            background: "#25d366",
+                                            color: "#fff",
+                                            borderRadius: 8,
+                                            padding: "10px 20px",
+                                            fontWeight: 700,
+                                            fontSize: 15,
+                                            boxShadow: "0 2px 12px #2221",
+                                            textDecoration: "none",
+                                            transition: "background .1s",
+                                        }}
+                                    >
+                                        WhatsApp Official BeliAkun
+                                    </a>
                                 </div>
                             )}
                         </div>
@@ -381,15 +596,26 @@ export default function ChatbotPopup() {
                                     background: "var(--input-bg)",
                                     fontFamily: "'Inter', sans-serif",
                                 }}
-                                placeholder="Type a message..."
+                                placeholder={
+                                    language === "id"
+                                        ? "Tulis pesan di sini..."
+                                        : language === "en"
+                                        ? "Type a message..."
+                                        : "Type a message..."
+                                }
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                disabled={loading}
+                                disabled={loading || !language || expired}
                             />
                             <button
                                 onClick={sendMessage}
-                                disabled={loading || !input.trim()}
+                                disabled={
+                                    loading ||
+                                    !input.trim() ||
+                                    !language ||
+                                    expired
+                                }
                                 style={{
                                     marginLeft: 9,
                                     background: "var(--merah)",
@@ -399,12 +625,15 @@ export default function ChatbotPopup() {
                                     padding: isMobile ? "0 13px" : "0 22px",
                                     fontWeight: "bold",
                                     fontSize: isMobile ? 14 : 15,
-                                    cursor: loading ? "not-allowed" : "pointer",
+                                    cursor:
+                                        loading || !language || expired
+                                            ? "not-allowed"
+                                            : "pointer",
                                     boxShadow: "0 1px 7px #fa585811",
                                     fontFamily: "'Inter', sans-serif",
                                 }}
                             >
-                                Send
+                                {language === "id" ? "Kirim" : "Send"}
                             </button>
                         </div>
                     </div>

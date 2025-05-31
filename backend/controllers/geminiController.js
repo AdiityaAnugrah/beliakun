@@ -18,15 +18,11 @@ exports.geminiChat = async (req, res) => {
                 .json({ reply: "API Key Gemini tidak ditemukan." });
         }
 
-        const { message, history = [] } = req.body;
+        const { message, history = [], language = "en" } = req.body;
         if (!message || message.trim() === "") {
             return res.status(400).json({ reply: "Pesan tidak boleh kosong." });
         }
-
-        // Limit produk, misal 7
         const LIMIT_PRODUK = 5;
-
-        // 1. Query produk berdasarkan kata kunci di pesan user
         let products = [];
         let where = { status: "dijual" };
         const keywords = [
@@ -60,25 +56,43 @@ exports.geminiChat = async (req, res) => {
                 limit: LIMIT_PRODUK,
             });
         }
-
-        // 2. Ringkasan produk (deskripsi diringkas max 100 karakter)
         let productListText =
-            "Berikut adalah produk digital/tools yang tersedia di BeliAkun:\n";
+            language === "en"
+                ? "Here are the digital products/tools currently available at BeliAkun:\n"
+                : "Berikut adalah produk digital/tools yang tersedia di BeliAkun:\n";
+
         if (!products || products.length === 0) {
             productListText +=
-                "Saat ini belum ada produk yang sesuai dengan pencarianmu.\n";
+                language === "en"
+                    ? "Currently, there are no products matching your search.\n"
+                    : "Saat ini belum ada produk yang sesuai dengan pencarianmu.\n";
         } else {
             products.forEach((p, idx) => {
                 productListText += `${idx + 1}. ${
                     p.nama
                 } - Rp${p.harga.toLocaleString("id-ID")}\n`;
-                productListText += `Stok: ${p.stock}\n`;
-                productListText += `Deskripsi: ${ringkas(p.deskripsi)}\n\n`;
+                productListText +=
+                    language === "en"
+                        ? `Stock: ${p.stock}\n`
+                        : `Stok: ${p.stock}\n`;
+                productListText +=
+                    language === "en"
+                        ? `Description: ${ringkas(p.deskripsi)}\n\n`
+                        : `Deskripsi: ${ringkas(p.deskripsi)}\n\n`;
             });
         }
+        let bahasaInfo = "";
+        if (language === "en") {
+            bahasaInfo =
+                "ALWAYS answer ONLY in English. Use clear, simple English. NEVER use Indonesian, even if the user's message is in Indonesian.";
+        } else {
+            bahasaInfo =
+                "Jawab SELALU dalam Bahasa Indonesia yang sopan dan jelas. Jangan gunakan bahasa Inggris, meskipun pesan user menggunakan bahasa Inggris.";
+        }
 
-        // 3. Context website (TANPA PROMO)
         const initialContext = `
+${bahasaInfo}
+
 Kamu adalah asisten untuk website BeliAkun, toko digital yang menjual berbagai produk digital & tools gamers, seperti akun premium, cheat, dsb.
 Jawab semua pertanyaan user SEAKURAT mungkin berdasarkan info dan daftar produk berikut.
 Jika user bertanya produk spesifik, jawab berdasarkan daftar produk.

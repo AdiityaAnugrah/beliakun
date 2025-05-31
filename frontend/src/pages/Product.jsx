@@ -3,14 +3,16 @@ import Notif from "../components/Notif";
 import { getProducts } from "../services/productService";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { FiSearch } from "react-icons/fi";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FiSearch, FiShoppingCart } from "react-icons/fi";
+import "./Product.scss";
+import CategoryCarousel from "../components/CategoryCarousel";
 
 const Product = () => {
     const { t } = useTranslation();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [sortedProducts, setSortedProducts] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -24,15 +26,33 @@ const Product = () => {
             }
             setLoading(false);
         };
-
         fetchProducts();
     }, []);
 
+    useEffect(() => {
+        let filtered = [...products];
+        if (selectedCategory) {
+            filtered = filtered.filter(
+                (p) =>
+                    p.kategori &&
+                    p.kategori.toLowerCase() === selectedCategory.toLowerCase()
+            );
+        }
+        setSortedProducts(filtered);
+    }, [selectedCategory, products]);
+
     const handleSearch = (e) => {
         const query = e.target.value.toLowerCase();
-        const filteredProducts = products.filter((product) =>
+        let filteredProducts = products.filter((product) =>
             product.nama.toLowerCase().includes(query)
         );
+        if (selectedCategory) {
+            filteredProducts = filteredProducts.filter(
+                (p) =>
+                    p.kategori &&
+                    p.kategori.toLowerCase() === selectedCategory.toLowerCase()
+            );
+        }
         setSortedProducts(filteredProducts);
     };
 
@@ -48,118 +68,52 @@ const Product = () => {
     };
 
     const handleViewDetails = (id) => {
-        navigate(`/detail/${id}`); // Navigate to the detail page of the product
+        navigate(`/detail/${id}`);
     };
 
     const handleAddToCart = (id) => {
-        // Handle add to cart logic
+        // Cart logic
         console.log("Added to cart: ", id);
     };
 
     return (
-        <>
+        <div className="product-page">
             <div className="bapak-product">
                 <div className="bg-benner-product">
                     <img
                         src="https://i.pinimg.com/736x/d0/fb/6b/d0fb6bb42ee9c83632aeac8a87bba197.jpg"
-                        alt="Product Banner"
+                        alt="Digital Products Banner"
                     />
                 </div>
-                <div className="search-product">
-                    <h1>Groceries Delivered in 90 Minutes</h1>
-                    <div className="search-container">
-                        <input
-                            type="text"
-                            placeholder="Search product"
-                            onChange={handleSearch}
-                        />
-                        <button>
-                            <FiSearch size={18} />
-                        </button>
+                <div className="banner-overlay-card">
+                    <div className="banner-content">
+                        <h1>
+                            <span className="emoji">🎮</span> BeliAkun
+                        </h1>
+                        <p className="subtitle">
+                            Akun Game, Tools, & Produk Digital Paling Lengkap!
+                        </p>
+                        <div className="search-container">
+                            <FiSearch size={20} className="search-icon" />
+                            <input
+                                type="text"
+                                placeholder="Cari produk digital atau nama game..."
+                                onChange={handleSearch}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div className="category-product">
-                <h2>Product Categories</h2>
-                <div className="category-nav">
-                    <div className="category-list">
-                        <div className="category-card">
-                            <img
-                                src="https://i.pinimg.com/736x/d0/fb/6b/d0fb6bb42ee9c83632aeac8a87bba197.jpg"
-                                alt="Category Image"
-                                className="category-image"
-                            />
-                            <div className="content">
-                                <h3>Fruits</h3>
-                            </div>
-                        </div>
-                        <div className="category-card">
-                            <img
-                                src="https://i.pinimg.com/736x/d0/fb/6b/d0fb6bb42ee9c83632aeac8a87bba197.jpg"
-                                alt="Category Image"
-                                className="category-image"
-                            />
-                            <div className="content">
-                                <h3>Fruits</h3>
-                            </div>
-                        </div>
-                        <div className="category-card">
-                            <img
-                                src="https://i.pinimg.com/736x/d0/fb/6b/d0fb6bb42ee9c83632aeac8a87bba197.jpg"
-                                alt="Category Image"
-                                className="category-image"
-                            />
-                            <div className="content">
-                                <h3>Fruits</h3>
-                            </div>
-                        </div>
-                        <div className="category-card">
-                            <img
-                                src="https://i.pinimg.com/736x/d0/fb/6b/d0fb6bb42ee9c83632aeac8a87bba197.jpg"
-                                alt="Category Image"
-                                className="category-image"
-                            />
-                            <div className="content">
-                                <h3>Fruits</h3>
-                            </div>
-                        </div>
-                        <div className="category-card">
-                            <img
-                                src="https://i.pinimg.com/736x/d0/fb/6b/d0fb6bb42ee9c83632aeac8a87bba197.jpg"
-                                alt="Category Image"
-                                className="category-image"
-                            />
-                            <div className="content">
-                                <h3>Fruits</h3>
-                            </div>
-                        </div>
-                        <div className="category-card">
-                            <img
-                                src="https://i.pinimg.com/736x/d0/fb/6b/d0fb6bb42ee9c83632aeac8a87bba197.jpg"
-                                alt="Category Image"
-                                className="category-image"
-                            />
-                            <div className="content">
-                                <h3>Fruits</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="button-kanan-kiri">
-                        <button>
-                            <FaChevronLeft size={18} />
-                        </button>
-                        <button>
-                            <FaChevronRight size={18} />
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <CategoryCarousel
+                selected={selectedCategory}
+                onSelect={setSelectedCategory}
+            />
 
-            {/* Filter and Products */}
-            <div className="w-full h-full flex">
-                <div className="fitur-harga">
-                    <h3>{t("Sort by Price")}</h3>
+            {/* FILTER BAR */}
+            <div className="product-filter-bar">
+                <div className="filter-card">
+                    <span className="filter-title">{t("Sort by Price")}</span>
                     <select onChange={handleSort}>
                         <option value="priceLowToHigh">
                             {t("Price: Low to High")}
@@ -168,46 +122,71 @@ const Product = () => {
                             {t("Price: High to Low")}
                         </option>
                     </select>
+                    {selectedCategory && (
+                        <button
+                            className="btn-reset-filter"
+                            onClick={() => setSelectedCategory("")}
+                        >
+                            {t("Show All")}
+                        </button>
+                    )}
+                    {selectedCategory && (
+                        <span className="chip selected-cat">
+                            {selectedCategory}
+                        </span>
+                    )}
                 </div>
+            </div>
 
-                <div className="card-product">
-                    {loading ? (
-                        <div className="loading">
-                            <p>{t("Loading...")}</p>
-                        </div>
-                    ) : sortedProducts.length > 0 ? (
-                        sortedProducts.map((product) => (
-                            <div
-                                key={product.id}
-                                className="product-item"
-                                onClick={() => handleViewDetails(product.id)}
-                            >
+            {/* PRODUCT GRID */}
+            <div className="product-grid">
+                {loading ? (
+                    <div className="loading">
+                        <p>{t("Loading...")}</p>
+                    </div>
+                ) : sortedProducts.length > 0 ? (
+                    sortedProducts.map((product) => (
+                        <div
+                            key={product.id}
+                            className="product-item"
+                            onClick={() => handleViewDetails(product.id)}
+                        >
+                            <div className="product-image-container">
                                 <img
                                     src={product.gambar}
                                     alt={product.nama}
                                     className="product-image"
                                 />
-                                <div className="product-info">
-                                    <h3>{product.nama}</h3>
-                                    <p className="price">{product.harga}</p>
-                                    <button
-                                        className="add-to-cart"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleAddToCart(product.id);
-                                        }}
-                                    >
-                                        {t("Add to Cart")}
-                                    </button>
-                                </div>
                             </div>
-                        ))
-                    ) : (
+                            <div className="product-info">
+                                <h3>{product.nama}</h3>
+                                <p className="price">
+                                    {product.harga.toLocaleString("id-ID", {
+                                        style: "currency",
+                                        currency: "IDR",
+                                        minimumFractionDigits: 0,
+                                    })}
+                                </p>
+                                <button
+                                    className="add-to-cart"
+                                    title={t("Add to Cart")}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleAddToCart(product.id);
+                                    }}
+                                >
+                                    <FiShoppingCart size={22} />
+                                </button>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="no-products">
                         <p>{t("No products available.")}</p>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
-        </>
+        </div>
     );
 };
 
