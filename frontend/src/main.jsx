@@ -26,6 +26,7 @@ import "./i18n";
 import AppAdmin from "./AppAdmin.jsx";
 import AddProduct from "./pages/admin/AddProduct.jsx";
 import FilterRoutes from "./components/FilterRoutes.jsx";
+import BennerHomeAdmin from "./pages/admin/BennerHomeAdmin.jsx";
 
 createRoot(document.getElementById("root")).render(
     <BrowserRouter>
@@ -68,6 +69,7 @@ createRoot(document.getElementById("root")).render(
                 <Route path="add" element={<AddProduct />} />
                 <Route path="edit/:id" element={<AddProduct />} />
                 <Route path="category" element={<AdminCategory />} />
+                <Route path="benner" element={<BennerHomeAdmin />} />
             </Route>
         </Routes>
     </BrowserRouter>

@@ -15,6 +15,7 @@ const tokenAdsRoutes = require("./routes/tokenAdsRoutes.js");
 const chatgptRoutes = require("./routes/chatgptRoutes.js");
 const geminiRoutes = require("./routes/geminiRoutes.js");
 const categoryRoutes = require("./routes/categoryRoutes.js");
+const bennerHomeRoutes = require("./routes/bennerHomeRoutes.js");
 
 dotenv.config();
 
@@ -40,6 +41,7 @@ app.use("/key", keyRoutes);
 app.use("/token", tokenAdsRoutes);
 app.use("/api", chatgptRoutes);
 app.use("/api", geminiRoutes);
+app.use("/bennerhome", bennerHomeRoutes);
 
 // Menginisialisasi model
 const { initModels } = require("./models/index.js");

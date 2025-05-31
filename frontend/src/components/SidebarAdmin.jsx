@@ -35,6 +35,10 @@ const SidebarAdmin = ({ isSidebarOpen }) => {
                     <Link to="/admin/category">Categories</Link>
                 </li>
                 <li>
+                    <Link to="/admin/benner">Banner Home</Link>
+                </li>
+
+                <li>
                     <Link to="/admin/settings">Settings</Link>
                 </li>
             </ul>

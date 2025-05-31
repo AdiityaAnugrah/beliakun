@@ -72,7 +72,6 @@ const Product = () => {
     };
 
     const handleAddToCart = (id) => {
-        // Cart logic
         console.log("Added to cart: ", id);
     };
 
@@ -110,7 +109,6 @@ const Product = () => {
                 onSelect={setSelectedCategory}
             />
 
-            {/* FILTER BAR */}
             <div className="product-filter-bar">
                 <div className="filter-card">
                     <span className="filter-title">{t("Sort by Price")}</span>
@@ -138,7 +136,6 @@ const Product = () => {
                 </div>
             </div>
 
-            {/* PRODUCT GRID */}
             <div className="product-grid">
                 {loading ? (
                     <div className="loading">

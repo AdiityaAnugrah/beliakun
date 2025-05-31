@@ -9,6 +9,10 @@ const OrderItem = require("./orderItemModel");
 const TokenAds = require("./tokenAdsModel");
 const User = require("./userModel");
 const Wishlist = require("./wishlistModel");
+const BennerHome = require("./bennerHomeModel")(
+    sequelize,
+    require("sequelize").DataTypes
+);
 
 // RELASI (optional, bisa tambah lain kalau mau)
 Product.belongsTo(Category, { foreignKey: "categoryId", as: "category" });
@@ -38,5 +42,6 @@ module.exports = {
     TokenAds,
     User,
     Wishlist,
+    BennerHome,
     initModels,
 };
