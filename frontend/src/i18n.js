@@ -7,7 +7,7 @@ import { initReactI18next } from "react-i18next";
 const resources = {
     en: {
         translation: {
-            // Auth & Account
+            // ===== Existing Keys (tidak diubah) =====
             create_account: "Create an Account",
             full_name: "Full Name",
             email: "Email",
@@ -92,7 +92,8 @@ const resources = {
             wishlist_added: "Added to wishlist!",
             wishlist_removed: "Removed from wishlist!",
             wishlist_notLogin: "You need to log in to add to wishlist.",
-            wishlist_sessionExpired: "Your session has expired. Please log in again.",
+            wishlist_sessionExpired:
+                "Your session has expired. Please log in again.",
 
             // Checkout
             checkout: {
@@ -111,12 +112,26 @@ const resources = {
                 processing: "Processing...",
                 failed: "Checkout failed.",
             },
+
+            // ===== New Keys for Verification OTP =====
+            verification: "Verification",
+            enter_code: "Please enter the code that we provide via Email",
+            enter_otp_sent_to: "Please enter the code sent to",
+            otp_placeholder: "Enter 6-digit code",
+            otp_required: "OTP is required.",
+            verify: "Verify",
+            verifying: "Verifying...",
+            verify_failed: "Verification failed. Please try again.",
+            verify_success: "Email verified successfully.",
+            please_wait: "Please wait",
+            seconds_to_resend: "seconds to resend",
+            resend_code: "Resend Code",
         },
     },
 
     id: {
         translation: {
-            // Auth & Akun
+            // ===== Existing Keys (tidak diubah) =====
             create_account: "Buat Akun Baru",
             full_name: "Nama Lengkap",
             email: "Email",
@@ -201,7 +216,8 @@ const resources = {
             wishlist_added: "Ditambahkan ke wishlist!",
             wishlist_removed: "Dihapus dari wishlist!",
             wishlist_notLogin: "Silakan login untuk menambah ke wishlist.",
-            wishlist_sessionExpired: "Sesi Anda telah berakhir. Silakan login kembali.",
+            wishlist_sessionExpired:
+                "Sesi Anda telah berakhir. Silakan login kembali.",
 
             // Checkout
             checkout: {
@@ -220,6 +236,20 @@ const resources = {
                 closed: "Kamu menutup pembayaran.",
                 failed: "Checkout gagal.",
             },
+
+            // ===== New Keys for Verification OTP =====
+            verification: "Verifikasi",
+            enter_code: "Masukkan kode yang kami kirim via Email",
+            enter_otp_sent_to: "Masukkan kode yang dikirim ke",
+            otp_placeholder: "Masukkan kode 6-digit",
+            otp_required: "OTP harus diisi.",
+            verify: "Verifikasi",
+            verifying: "Memverifikasi...",
+            verify_failed: "Verifikasi gagal. Silakan coba lagi.",
+            verify_success: "Email berhasil diverifikasi.",
+            please_wait: "Mohon tunggu",
+            seconds_to_resend: "detik untuk kirim ulang",
+            resend_code: "Kirim Ulang",
         },
     },
 };
@@ -229,7 +259,7 @@ const resources = {
 // ========================
 i18n.use(initReactI18next).init({
     resources,
-    lng: "en", // ganti ke "en" jika ingin default bahasa Inggris
+    lng: "en", // Default language
     fallbackLng: "id",
     interpolation: {
         escapeValue: false,

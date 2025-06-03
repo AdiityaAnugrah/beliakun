@@ -35,6 +35,37 @@ export const signup = async (data) => {
     }
 };
 
+export const verify = async (data) => {
+    try {
+        const res = await fetch(`${API_URL}/auth/verify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data), // { email, code }
+        });
+        const resJson = await res.json();
+
+        if (res.ok) {
+            console.log("RESPON DARI BACKEND (verify):", resJson);
+            return {
+                status: res.status,
+                message: resJson.message,
+            };
+        } else {
+            console.log("Error response dari backend (verify):", resJson);
+            return {
+                status: res.status,
+                message: resJson.message || "Verifikasi gagal!",
+            };
+        }
+    } catch (err) {
+        console.error("Request error (verify):", err);
+        return {
+            status: 500,
+            message: "Verification request failed. Please try again.",
+        };
+    }
+};
+
 export const login = async (data) => {
     const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",

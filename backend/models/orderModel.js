@@ -12,7 +12,7 @@ const Order = sequelize.define(
             type: DataTypes.JSON,
         },
         midtrans_id: {
-            type: DataTypes.TEXT(50),
+            type: DataTypes.TEXT,
         },
         email: {
             type: DataTypes.STRING,

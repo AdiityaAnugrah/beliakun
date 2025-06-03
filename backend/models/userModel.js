@@ -38,6 +38,14 @@ const User = sequelize.define(
             allowNull: true,
             defaultValue: null,
         },
+        verificationCode: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+        isVerified: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
     },
     {
         tableName: "users", // supaya sama dengan struktur yang kamu sebut

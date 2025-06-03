@@ -1,3 +1,5 @@
+// src/components/Signup.jsx
+
 import { useState } from "react";
 import { signup } from "../services/authService";
 import { useNavigate } from "react-router-dom";
@@ -5,12 +7,13 @@ import useNotifStore from "../../store/notifStore";
 import Tombol from "../components/Tombol";
 import Turnstile from "react-turnstile";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { useTranslation } from "react-i18next"; // Import hook useTranslation
+import { useTranslation } from "react-i18next";
 
 const Signup = () => {
-    const { t } = useTranslation(); // Menggunakan hook useTranslation untuk akses teks yang diterjemahkan
+    const { t } = useTranslation();
     const { setNotif } = useNotifStore();
     const navigate = useNavigate();
+
     const [form, setForm] = useState({
         nama: "",
         email: "",
@@ -36,6 +39,7 @@ const Signup = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setMessage("");
 
         // Validasi dan pengecekan kesalahan
         if (!form.nama.trim()) {
@@ -75,8 +79,9 @@ const Signup = () => {
                 return;
             }
 
+            // Setelah signup berhasil, kirim notifikasi dan arahkan ke /verify
             setNotif(res.message);
-            navigate("/login");
+            navigate("/verify", { state: { email: form.email } });
         } catch (err) {
             setMessage(t("signup_failed"));
             console.log(err);

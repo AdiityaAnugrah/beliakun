@@ -27,6 +27,7 @@ import AppAdmin from "./AppAdmin.jsx";
 import AddProduct from "./pages/admin/AddProduct.jsx";
 import FilterRoutes from "./components/FilterRoutes.jsx";
 import BennerHomeAdmin from "./pages/admin/BennerHomeAdmin.jsx";
+import Verify from "./components/Verify.jsx";
 
 createRoot(document.getElementById("root")).render(
     <BrowserRouter>
@@ -43,6 +44,7 @@ createRoot(document.getElementById("root")).render(
                     }
                 />
                 <Route path="signup" element={<Signup />} />
+                <Route path="verify" element={<Verify />} />
                 <Route path="product" element={<Product />} />
                 <Route path="detail/:id" element={<ProductDetail />} />
                 <Route path="cart" element={<Cart />} />
