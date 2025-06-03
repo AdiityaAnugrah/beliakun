@@ -91,6 +91,8 @@ const resources = {
 
             wishlist_added: "Added to wishlist!",
             wishlist_removed: "Removed from wishlist!",
+            wishlist_notLogin: "You need to log in to add to wishlist.",
+            wishlist_sessionExpired: "Your session has expired. Please log in again.",
 
             // Checkout
             checkout: {
@@ -198,6 +200,8 @@ const resources = {
 
             wishlist_added: "Ditambahkan ke wishlist!",
             wishlist_removed: "Dihapus dari wishlist!",
+            wishlist_notLogin: "Silakan login untuk menambah ke wishlist.",
+            wishlist_sessionExpired: "Sesi Anda telah berakhir. Silakan login kembali.",
 
             // Checkout
             checkout: {

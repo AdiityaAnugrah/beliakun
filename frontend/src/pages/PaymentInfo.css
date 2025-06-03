@@ -1,0 +1,208 @@
+.payment-info-page {
+  background-color: #f4f7fc;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  max-width: 1100px;
+  margin: 50px auto;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  font-family: "Roboto", sans-serif;
+  /* Media Query for Responsiveness */
+}
+.payment-info-page h1 {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: 700;
+}
+.payment-info-page .order-id {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.payment-info-page .order-details {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+.payment-info-page .order-details .status {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 1.2rem;
+}
+.payment-info-page .order-details .status p {
+  color: #333;
+  font-weight: 500;
+}
+.payment-info-page .order-details .status p strong {
+  color: #007bff;
+  font-weight: 600;
+}
+.payment-info-page .order-details .status p .icon-pending {
+  color: #ff9800;
+  font-size: 2rem;
+  margin-right: 15px;
+  animation: rotate 1s linear infinite;
+}
+.payment-info-page .order-details .status p .icon-success {
+  color: #4caf50;
+  font-size: 2rem;
+  margin-right: 15px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.payment-info-page .order-details .status p .icon-failed {
+  color: #f44336;
+  font-size: 2rem;
+  margin-right: 15px;
+}
+.payment-info-page .order-details .status.pending {
+  background-color: #fff3cd;
+  border-left: 5px solid #ff9800;
+}
+.payment-info-page .order-details .status.success {
+  background-color: #e8f7e8;
+  border-left: 5px solid #4caf50;
+}
+.payment-info-page .order-details .status.failed {
+  background-color: #f8d7da;
+  border-left: 5px solid #f44336;
+}
+.payment-info-page .order-details .payment-method {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+.payment-info-page .order-details .payment-method h3 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+}
+.payment-info-page .order-details .payment-method p {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 8px 0;
+}
+.payment-info-page .order-details .payment-method img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-top: 15px;
+}
+.payment-info-page .order-details .payment-method .copy-button {
+  background-color: #007bff;
+  color: #fff;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.payment-info-page .order-details .payment-method .copy-button:hover {
+  background-color: #0056b3;
+}
+.payment-info-page .order-details .status-message {
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 20px;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+.payment-info-page .order-details .status-message.success {
+  background-color: #e8f7e8;
+  color: #4caf50;
+}
+.payment-info-page .order-details .status-message.failed {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+.payment-info-page .order-details .status-message.pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+.payment-info-page .order-details .status-message .icon-success,
+.payment-info-page .order-details .status-message .icon-failed,
+.payment-info-page .order-details .status-message .icon-pending {
+  font-size: 2.5rem;
+  margin-right: 20px;
+}
+.payment-info-page .order-details .loading-spinner {
+  text-align: center;
+  font-size: 3rem;
+  margin-top: 50px;
+  color: #007bff;
+}
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@media (max-width: 768px) {
+  .payment-info-page .payment-info-page {
+    padding: 15px;
+    margin: 30px;
+  }
+  .payment-info-page h1 {
+    font-size: 2rem;
+  }
+  .payment-info-page .order-summary {
+    padding: 15px;
+  }
+  .payment-info-page .payment-method {
+    padding: 15px;
+  }
+  .payment-info-page .item-info h4 {
+    font-size: 1em;
+  }
+  .payment-info-page .order-details {
+    gap: 20px;
+  }
+}
+@media (max-width: 480px) {
+  .payment-info-page .payment-info-page {
+    padding: 10px;
+    margin: 10px;
+  }
+  .payment-info-page h1 {
+    font-size: 1.5rem;
+  }
+  .payment-info-page .status-message {
+    font-size: 1.1rem;
+  }
+  .payment-info-page .item-info p {
+    font-size: 0.9rem;
+  }
+}/*# sourceMappingURL=PaymentInfo.css.map */

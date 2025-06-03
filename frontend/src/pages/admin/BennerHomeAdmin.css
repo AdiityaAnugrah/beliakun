@@ -1,0 +1,315 @@
+:root {
+  --primary: #f7374f;
+  --primary-dark: #88304e;
+  --accent: #bb3e00;
+  --success: #52b86a;
+  --bg-light: #f8f9fa;
+  --bg-dark: #23222b;
+  --text-dark: #232323;
+  --text-light: #fff;
+  --border: #e6e6e6;
+  --table-header: #f6f7fb;
+  --modal-bg: #fff;
+  --modal-bg-dark: #23222b;
+}
+
+/* Dark mode vars */
+body.dark-mode,
+html[data-theme=dark] {
+  --modal-bg: var(--bg-dark);
+  --text-dark: var(--text-light);
+  --border: #34344a;
+  --table-header: #292836;
+}
+
+.benner-admin {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 32px 12px;
+  background: #fff;
+  border-radius: 22px;
+  box-shadow: 0 4px 32px #e9e9e9;
+  /* Modal Styles */
+}
+.benner-admin .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.benner-admin .header h2 {
+  font-size: 2.3rem;
+  color: #f7374f;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+.benner-admin .header .add-btn {
+  background: #f7374f;
+  color: #fff;
+  font-weight: 600;
+  padding: 13px 30px;
+  border-radius: 13px;
+  font-size: 1.07rem;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 8px rgba(252, 92, 119, 0.2509803922);
+  transition: background 0.2s;
+}
+.benner-admin .header .add-btn:hover {
+  background: #bb3e00;
+}
+.benner-admin .table-wrap {
+  overflow-x: auto;
+  border-radius: 14px;
+  background: #fafcff;
+  box-shadow: 0 2px 14px #f7f7f7;
+  margin-bottom: 32px;
+  padding: 14px 0;
+}
+.benner-admin .table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.benner-admin .table-wrap table th,
+.benner-admin .table-wrap table td {
+  padding: 12px 17px;
+}
+.benner-admin .table-wrap table th {
+  background: #f6f7fb;
+  color: #f7374f;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border-bottom: 2px solid rgba(247, 55, 79, 0.0705882353);
+  text-align: left;
+  letter-spacing: 0.03em;
+}
+.benner-admin .table-wrap table td {
+  border-bottom: 1px solid #ececec;
+  vertical-align: middle;
+  font-size: 1rem;
+  color: #272727;
+  background: #fff;
+}
+.benner-admin .table-wrap table tr:last-child td {
+  border-bottom: none;
+}
+.benner-admin .table-wrap table img {
+  border-radius: 7px;
+  width: 90px;
+  height: 54px;
+  -o-object-fit: cover;
+     object-fit: cover;
+  border: 1.5px solid #f6f7fb;
+  background: #f6f7fb;
+}
+.benner-admin .table-wrap .aksi-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.benner-admin .table-wrap .aksi-btns .edit-btn,
+.benner-admin .table-wrap .aksi-btns .del-btn {
+  padding: 7px 19px;
+  border: none;
+  border-radius: 9px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 1px 5px rgba(247, 188, 188, 0.0666666667);
+  transition: background 0.14s;
+}
+.benner-admin .table-wrap .aksi-btns .edit-btn {
+  background: #bb3e00;
+}
+.benner-admin .table-wrap .aksi-btns .edit-btn:hover {
+  background: #f7374f;
+}
+.benner-admin .table-wrap .aksi-btns .del-btn {
+  background: #f7374f;
+}
+.benner-admin .table-wrap .aksi-btns .del-btn:hover {
+  background: #bb3e00;
+}
+.benner-admin .table-wrap .active-label {
+  color: #52b86a;
+  font-weight: bold;
+  font-size: 1.07em;
+}
+.benner-admin .benner-modal__backdrop {
+  position: fixed;
+  z-index: 200;
+  inset: 0;
+  background: rgba(25, 25, 33, 0.37);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-backdrop-filter: blur(2.5px);
+          backdrop-filter: blur(2.5px);
+  animation: fadein-bg 0.18s;
+}
+@keyframes fadein-bg {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.benner-admin .benner-modal {
+  background: var(--modal-bg);
+  color: var(--text-dark);
+  min-width: 350px;
+  max-width: 430px;
+  border-radius: 18px;
+  box-shadow: 0 4px 28px rgba(15, 15, 18, 0.1254901961);
+  padding: 28px 26px 24px 26px;
+  position: relative;
+  animation: modal-zoom 0.24s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+@keyframes modal-zoom {
+  from {
+    opacity: 0;
+    transform: translateY(60px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.benner-admin .benner-modal h3 {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--primary);
+  margin-bottom: 18px;
+}
+.benner-admin .benner-modal .close-btn {
+  position: absolute;
+  top: 8px;
+  right: 17px;
+  font-size: 2rem;
+  color: var(--primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0.87;
+}
+.benner-admin .benner-modal .close-btn:hover {
+  color: var(--primary-dark);
+}
+.benner-admin .benner-modal .form-row {
+  margin-bottom: 15px;
+}
+.benner-admin .benner-modal .form-row label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 7px;
+}
+.benner-admin .benner-modal .form-row input,
+.benner-admin .benner-modal .form-row select {
+  border: 1.5px solid var(--border);
+  padding: 9px 14px;
+  font-size: 1rem;
+  border-radius: 7px;
+  background: var(--table-header);
+  color: var(--text-dark);
+  outline: none;
+  width: 100%;
+  margin-bottom: 0;
+}
+.benner-admin .benner-modal .form-row input:focus,
+.benner-admin .benner-modal .form-row select:focus {
+  border-color: var(--primary);
+}
+.benner-admin .benner-modal .form-row input[type=file] {
+  padding: 3px 0;
+}
+.benner-admin .benner-modal .form-row input[type=checkbox] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+}
+.benner-admin .benner-modal .form-row .preview-label {
+  color: var(--accent);
+  font-size: 0.93em;
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+.benner-admin .benner-modal .form-row .preview {
+  margin: 8px 0 4px 0;
+  border-radius: 7px;
+  background: #f7f7fa;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.benner-admin .benner-modal .form-row .preview img,
+.benner-admin .benner-modal .form-row .preview video,
+.benner-admin .benner-modal .form-row .preview iframe {
+  border-radius: 6px;
+  max-height: 148px;
+  width: 100%;
+  -o-object-fit: contain;
+     object-fit: contain;
+}
+.benner-admin .benner-modal .modal-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+.benner-admin .benner-modal .modal-btn-row button {
+  padding: 9px 26px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.14s;
+}
+.benner-admin .benner-modal .modal-btn-row .batal-btn {
+  background: #ededed;
+  color: #262727;
+}
+.benner-admin .benner-modal .modal-btn-row .batal-btn:hover {
+  background: #dadada;
+}
+.benner-admin .benner-modal .modal-btn-row .submit-btn {
+  background: var(--primary);
+  color: #fff;
+}
+.benner-admin .benner-modal .modal-btn-row .submit-btn:hover {
+  background: var(--primary-dark);
+}
+@media (max-width: 540px) {
+  .benner-admin {
+    padding: 11px 2vw;
+  }
+  .benner-admin .header h2 {
+    font-size: 24px;
+  }
+  .benner-admin .add-btn {
+    padding: 9px 14px;
+    font-size: 0.98rem;
+  }
+  .benner-admin .benner-modal {
+    min-width: 92vw;
+    max-width: 98vw;
+    padding: 12px 4vw 14px 4vw;
+  }
+  .benner-admin table th,
+  .benner-admin table td {
+    padding: 7px 3px !important;
+    font-size: 0.97rem !important;
+  }
+  .benner-admin .aksi-btns button {
+    padding: 6px 10px;
+    font-size: 0.95rem;
+  }
+  .benner-admin .preview {
+    min-height: 80px;
+  }
+}/*# sourceMappingURL=BennerHomeAdmin.css.map */

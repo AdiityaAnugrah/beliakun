@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getAllBannerHome } from "../services/bennerHomeService";
+import { useNavigate } from "react-router-dom"; // Tambahkan ini
 
 function getYouTubeId(url) {
     const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\\?v=)([^#&?]*).*/;
@@ -13,8 +14,8 @@ export default function BennerHome() {
     const [bannerData, setBannerData] = useState([]);
     const [loading, setLoading] = useState(true);
     const intervalRef = useRef();
+    const navigate = useNavigate();
 
-    // Fetch data dari backend
     useEffect(() => {
         getAllBannerHome()
             .then((data) => {
@@ -57,14 +58,33 @@ export default function BennerHome() {
         startIntervalBanner();
     };
 
+    // Handler jika area utama banner diklik
+    const handleBannerClick = (banner) => {
+        if (!banner.link) return;
+        if (banner.link.startsWith("http")) {
+            window.open(banner.link, "_blank", "noopener");
+        } else {
+            navigate(banner.link);
+        }
+    };
+
     if (loading) return <div>Loading banner...</div>;
     if (!bannerData.length) return <div>Belum ada banner.</div>;
 
+    // Temukan banner yang sedang aktif
+    const activeBanner = bannerData.find((b) => b.active);
+
     return (
-        <div className="container-negara" onMouseLeave={startIntervalBanner}>
+        <div
+            className="container-negara"
+            onMouseLeave={startIntervalBanner}
+            onClick={() => handleBannerClick(activeBanner)}
+            style={{
+                cursor: activeBanner?.link ? "pointer" : "default",
+            }}
+        >
             <div className="content">
                 <div className="anak-content">
-                    {/* Dots slider */}
                     <div className="slider">
                         <div
                             className="w-full flex justify-center py-6"
@@ -77,14 +97,16 @@ export default function BennerHome() {
                                 {bannerData.map((n, ind_n) => (
                                     <span
                                         key={ind_n}
-                                        onClick={() => handleClickBanner(ind_n)}
+                                        onClick={(e) => {
+                                            e.stopPropagation(); // biar klik dot gak trigger link banner
+                                            handleClickBanner(ind_n);
+                                        }}
                                         className={n.active ? "active" : ""}
                                     ></span>
                                 ))}
                             </div>
                         </div>
                     </div>
-                    {/* Teks konten */}
                     <div className="isi">
                         <div className="anak-isi">
                             {bannerData.map((n, ind_n) => (
@@ -103,18 +125,30 @@ export default function BennerHome() {
                                             : "Game"}
                                     </p>
                                     <h1
-                                        style={{
-                                            maxWidth: "500px",
-                                            width: "80%",
-                                        }}
                                         className="text-white text-center"
+                                        style={{
+                                            fontSize: 20,
+                                            fontWeight: "bold",
+                                            maxWidth: "500px",
+                                            width: "60%",
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleBannerClick(n);
+                                        }}
+                                        title={n.nama}
                                     >
                                         {n.nama}
                                     </h1>
                                     {n.deskripsi && (
                                         <p
                                             className="text-white text-center"
-                                            style={{ marginTop: 4 }}
+                                            style={{
+                                                marginTop: 4,
+                                                maxWidth: "500px",
+                                                width: "60%",
+                                                fontSize: 14,
+                                            }}
                                         >
                                             {n.deskripsi}
                                         </p>
@@ -123,7 +157,6 @@ export default function BennerHome() {
                             ))}
                         </div>
                     </div>
-                    {/* Background gradient */}
                     <div className="background">
                         <div className="container mx-auto pt-5">
                             <hr
@@ -134,7 +167,6 @@ export default function BennerHome() {
                     </div>
                 </div>
             </div>
-            {/* Media */}
             <div className="gambar">
                 {bannerData.map((n, ind_n) => {
                     if (n.tipe_media === "image") {

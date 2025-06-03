@@ -20,12 +20,14 @@ export default function BennerHomeAdmin() {
         urutan: 0,
         active: false,
         media_file: null,
+        link: "",
     };
     const [form, setForm] = useState(initialForm);
     const [previewUrl, setPreviewUrl] = useState("");
 
     useEffect(() => {
         loadBanner();
+        // eslint-disable-next-line
     }, []);
 
     const loadBanner = () => {
@@ -64,9 +66,16 @@ export default function BennerHomeAdmin() {
             urutan: b.urutan || 0,
             active: !!b.active,
             media_file: null,
+            link: b.link || "",
         });
         setEditId(b.id);
-        setPreviewUrl(b.media_url || "");
+        setPreviewUrl(
+            b.media_url
+                ? b.media_url.startsWith("http")
+                    ? b.media_url
+                    : `${import.meta.env.VITE_URL_BACKEND}${b.media_url}`
+                : ""
+        );
         setModalOpen(true);
     };
 
@@ -97,12 +106,62 @@ export default function BennerHomeAdmin() {
         }
     };
 
+    // Helper YouTube
     function getYouTubeId(url) {
         const regExp =
             /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#&?]*).*/;
         const match = url.match(regExp);
         return match && match[2].length === 11 ? match[2] : null;
     }
+
+    // --- MODAL PREVIEW SUPPORT IMAGE, VIDEO, YOUTUBE EMBED ---
+    const renderPreview = () => {
+        if (!previewUrl) return null;
+        if (form.tipe_media === "image") {
+            return <img src={previewUrl} alt="preview" />;
+        }
+        // Youtube
+        if (
+            previewUrl.includes("youtube.com") ||
+            previewUrl.includes("youtu.be")
+        ) {
+            return (
+                <iframe
+                    src={
+                        previewUrl.includes("embed")
+                            ? previewUrl
+                            : `https://www.youtube.com/embed/${getYouTubeId(
+                                  previewUrl
+                              )}`
+                    }
+                    title="Preview"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                    style={{ width: "100%", minHeight: 200, border: 0 }}
+                />
+            );
+        }
+        // MP4 (direct)
+        if (
+            previewUrl.endsWith(".mp4") ||
+            previewUrl.startsWith("blob:") ||
+            previewUrl.startsWith("http")
+        ) {
+            return (
+                <video
+                    src={previewUrl}
+                    controls
+                    style={{
+                        width: "100%",
+                        minHeight: 200,
+                        background: "#1a1a1a",
+                    }}
+                />
+            );
+        }
+        // Fallback
+        return <span>Format tidak didukung</span>;
+    };
 
     const renderModal = () => (
         <div
@@ -172,27 +231,7 @@ export default function BennerHomeAdmin() {
                     {previewUrl && (
                         <div className="form-row">
                             <span className="preview-label">Preview:</span>
-                            <div className="preview">
-                                {form.tipe_media === "image" ? (
-                                    <img src={previewUrl} alt="preview" />
-                                ) : previewUrl.includes("youtube.com") ||
-                                  previewUrl.includes("youtu.be") ? (
-                                    <iframe
-                                        src={
-                                            previewUrl.includes("embed")
-                                                ? previewUrl
-                                                : `https://www.youtube.com/embed/${getYouTubeId(
-                                                      previewUrl
-                                                  )}`
-                                        }
-                                        title="Preview"
-                                        allow="autoplay; encrypted-media"
-                                        allowFullScreen
-                                    />
-                                ) : (
-                                    <video src={previewUrl} controls />
-                                )}
-                            </div>
+                            <div className="preview">{renderPreview()}</div>
                         </div>
                     )}
                     <div className="form-row">
@@ -210,6 +249,15 @@ export default function BennerHomeAdmin() {
                             type="number"
                             value={form.urutan}
                             onChange={handleChange}
+                        />
+                    </div>
+                    <div className="form-row">
+                        <label>Link Tujuan</label>
+                        <input
+                            name="link"
+                            value={form.link}
+                            onChange={handleChange}
+                            placeholder="e.g. /produk/123 atau https://website.com"
                         />
                     </div>
                     <div className="form-row" style={{ marginTop: 6 }}>
@@ -257,19 +305,20 @@ export default function BennerHomeAdmin() {
                             <th>Deskripsi</th>
                             <th>Urutan</th>
                             <th>Aktif</th>
+                            <th>Link</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
                             <tr>
-                                <td colSpan={6} style={{ textAlign: "center" }}>
+                                <td colSpan={7} style={{ textAlign: "center" }}>
                                     Loading...
                                 </td>
                             </tr>
                         ) : banners.length === 0 ? (
                             <tr>
-                                <td colSpan={6} style={{ textAlign: "center" }}>
+                                <td colSpan={7} style={{ textAlign: "center" }}>
                                     Belum ada data banner
                                 </td>
                             </tr>
@@ -280,8 +329,48 @@ export default function BennerHomeAdmin() {
                                     <td>
                                         {b.tipe_media === "image" ? (
                                             <img
-                                                src={b.media_url}
+                                                src={
+                                                    b.media_url.startsWith(
+                                                        "http"
+                                                    )
+                                                        ? b.media_url
+                                                        : `${
+                                                              import.meta.env
+                                                                  .VITE_URL_BACKEND
+                                                          }${b.media_url}`
+                                                }
                                                 alt={b.nama}
+                                                style={{
+                                                    maxWidth: 90,
+                                                    maxHeight: 54,
+                                                    objectFit: "cover",
+                                                    borderRadius: 7,
+                                                    border: "1.5px solid #f6f7fb",
+                                                    background: "#f6f7fb",
+                                                }}
+                                            />
+                                        ) : b.tipe_media === "video" &&
+                                          (b.media_url.endsWith(".mp4") ||
+                                              b.media_url.startsWith(
+                                                  "/uploads/"
+                                              )) ? (
+                                            <video
+                                                src={
+                                                    b.media_url.startsWith(
+                                                        "http"
+                                                    )
+                                                        ? b.media_url
+                                                        : `${
+                                                              import.meta.env
+                                                                  .VITE_URL_BACKEND
+                                                          }${b.media_url}`
+                                                }
+                                                controls
+                                                style={{
+                                                    maxWidth: 90,
+                                                    maxHeight: 54,
+                                                    borderRadius: 7,
+                                                }}
                                             />
                                         ) : (
                                             <a
@@ -308,6 +397,27 @@ export default function BennerHomeAdmin() {
                                             </span>
                                         ) : (
                                             "Tidak"
+                                        )}
+                                    </td>
+                                    <td style={{ fontSize: "0.92em" }}>
+                                        {b.link ? (
+                                            <a
+                                                href={b.link}
+                                                target={
+                                                    b.link.startsWith("http")
+                                                        ? "_blank"
+                                                        : "_self"
+                                                }
+                                                rel="noopener noreferrer"
+                                                style={{
+                                                    color: "#2b91ff",
+                                                    textDecoration: "underline",
+                                                }}
+                                            >
+                                                {b.link}
+                                            </a>
+                                        ) : (
+                                            "-"
                                         )}
                                     </td>
                                     <td>

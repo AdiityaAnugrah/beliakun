@@ -21,6 +21,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.INTEGER,
             defaultValue: 0,
         },
+        link: {
+            type: DataTypes.STRING,
+            allowNull: true, // bisa kosong
+        },
         active: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
