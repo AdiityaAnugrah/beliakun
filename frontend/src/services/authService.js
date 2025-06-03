@@ -66,6 +66,32 @@ export const verify = async (data) => {
     }
 };
 
+export const updateEmail = async (data) => {
+    try {
+        const res = await fetch(`${API_URL}/auth/update-email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data), // { oldEmail, newEmail }
+        });
+        const resJson = await res.json();
+        if (res.ok) {
+            return {
+                status: res.status,
+                message: resJson.message,
+                newEmail: resJson.newEmail,
+            };
+        } else {
+            return {
+                status: res.status,
+                message: resJson.message || "Email update failed",
+            };
+        }
+    } catch (err) {
+        console.error("Request error (updateEmail):", err);
+        return { status: 500, message: "Email update failed" };
+    }
+};
+
 export const login = async (data) => {
     const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",

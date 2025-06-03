@@ -4,6 +4,7 @@ const {
     loginUser,
     logout,
     verifyCode,
+    updateEmail,
 } = require("../controllers/authController.js");
 const { filterAll } = require("./filterAuth.js");
 
@@ -11,6 +12,7 @@ const { filterAll } = require("./filterAuth.js");
 
 router.post("/signup", registerUser);
 router.post("/verify", verifyCode);
+router.post("/update-email", updateEmail);
 router.post("/login", loginUser);
 router.post("/logout", filterAll, logout);
 

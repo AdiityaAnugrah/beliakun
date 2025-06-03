@@ -161,6 +161,111 @@ const registerUser = async (req, res) => {
     }
 };
 
+const updateEmail = async (req, res) => {
+    const { oldEmail, newEmail } = req.body;
+
+    if (!oldEmail || !newEmail) {
+        return res
+            .status(400)
+            .json({ message: "oldEmail and newEmail are required" });
+    }
+
+    try {
+        // Cari user berdasarkan oldEmail
+        const user = await User.findOne({ where: { email: oldEmail } });
+        if (!user) {
+            return res
+                .status(404)
+                .json({ message: "Original email not found" });
+        }
+
+        // Kalau user sudah verify, tidak bisa mengubah email (opsional)
+        if (user.isVerified) {
+            return res
+                .status(400)
+                .json({ message: "Cannot change email after verification" });
+        }
+
+        // Cek apakah newEmail sudah ada di database
+        const existing = await User.findOne({ where: { email: newEmail } });
+        if (existing) {
+            return res
+                .status(400)
+                .json({ message: "New email already in use" });
+        }
+
+        // Generate kode verifikasi baru
+        const newCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Update user: email dan kode verifikasi
+        user.email = newEmail;
+        user.verificationCode = newCode;
+        await user.save();
+
+        // Kirim email verifikasi baru ke newEmail
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+
+        const mailOptions = {
+            from: `"Account Verification" <${process.env.EMAIL_USER}>`,
+            to: newEmail,
+            subject: "Your New Verification Code",
+            html: `
+        <div style="
+          font-family: Arial, sans-serif;
+          color: #333;
+          line-height: 1.5;
+          padding: 20px;
+        ">
+          <h2 style="color: #2c3e50; margin-bottom: 10px;">Account Verification</h2>
+          <p>Hello <strong>${user.nama}</strong>,</p>
+          <p>You requested to change your email. Please use the code below to verify your new email address:</p>
+          <div style="
+            background: #f4f4f4;
+            padding: 15px;
+            text-align: center;
+            border-radius: 6px;
+            margin: 20px 0;
+          ">
+            <code style="
+              font-family: 'Courier New', Courier, monospace;
+              font-size: 24px;
+              letter-spacing: 4px;
+              display: inline-block;
+              user-select: all;
+              cursor: text;
+            ">${newCode}</code>
+          </div>
+          <p style="font-size: 14px; color: #555;">
+            If you did not request this change, please contact support.
+          </p>
+          <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+          <p style="font-size: 14px; color: #555;">
+            Best regards,<br>
+            <em>Your Team</em>
+          </p>
+        </div>
+      `,
+        };
+
+        await transporter.sendMail(mailOptions);
+
+        return res.status(200).json({
+            message:
+                "Email updated successfully. A new verification code was sent.",
+            newEmail,
+        });
+    } catch (err) {
+        console.error("Update email error:", err);
+        return res.status(500).json({ message: "Server error" });
+    }
+};
+
 // LOGIN: tambahkan pengecekan isVerified
 const loginUser = async (req, res) => {
     const { email, password } = req.body;
@@ -264,4 +369,5 @@ module.exports = {
     loginUser,
     logout,
     verifyCode,
+    updateEmail,
 };

@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { verify } from "../services/authService";
+import { verify, updateEmail } from "../services/authService";
 import useNotifStore from "../../store/notifStore";
-import { FiX } from "react-icons/fi"; // ikon close (X)
+import { FiX, FiEdit2 } from "react-icons/fi";
 import { useTranslation } from "react-i18next";
 
 const Verify = () => {
@@ -13,79 +13,75 @@ const Verify = () => {
     const { setNotif } = useNotifStore();
     const location = useLocation();
 
-    // Ambil email dari state (dikirimkan dari Signup)
-    const emailKirim = location.state?.email || "";
+    // Ambil email awal dari state (dikirim dari Signup)
+    const initialEmail = location.state?.email || "";
+    const [emailKirim, setEmailKirim] = useState(initialEmail);
 
-    // State untuk masing‐masing digit OTP (6 digit)
+    // State OTP dan verifikasi
     const [codes, setCodes] = useState(["", "", "", "", "", ""]);
-    // State untuk error message
     const [message, setMessage] = useState("");
-    // State untuk loading verifikasi
     const [isVerifying, setIsVerifying] = useState(false);
 
-    // Timer countdown (dalam detik). Contoh: 180 detik = 3 menit.
+    // State untuk edit email
+    const [isEditing, setIsEditing] = useState(false);
+    const [emailInput, setEmailInput] = useState(emailKirim);
+    const [editError, setEditError] = useState("");
+
+    // Countdown timer (dalam detik)
     const [secondsLeft, setSecondsLeft] = useState(180);
 
-    // Refs untuk setiap input (agar bisa auto‐focus pindah)
+    // Refs untuk masing-masing kotak OTP
     const inputRefs = useRef([]);
 
-    // Jika user membuka /verify tanpa mengirimkan email di location.state, redirect ke register
+    // Jika user membuka /verify tanpa email di state, redirect ke /register
     useEffect(() => {
-        if (!emailKirim) {
+        if (!initialEmail) {
             navigate("/register");
         }
-    }, [emailKirim, navigate]);
+    }, [initialEmail, navigate]);
 
-    // Jalankan countdown: kurangi setiap detik hingga 0
+    // Jalankan countdown timer
     useEffect(() => {
         if (secondsLeft <= 0) return;
-
         const timer = setInterval(() => {
             setSecondsLeft((s) => s - 1);
         }, 1000);
-
         return () => clearInterval(timer);
     }, [secondsLeft]);
 
-    // Fungsi untuk “mem‐mask” tampilan email (misal: dyh*****@mailscode.com)
+    // Masking email (misal: jo*****@mail.com)
     const maskEmail = (email) => {
-        const [localPart, domain] = email.split("@");
-        if (!localPart || !domain) return email;
-        const visibleChars = Math.max(1, Math.floor(localPart.length / 3));
+        const [local, domain] = email.split("@");
+        if (!local || !domain) return email;
+        const keep = Math.max(1, Math.floor(local.length / 3));
         const masked =
-            localPart.substring(0, visibleChars) +
-            "*".repeat(localPart.length - visibleChars);
+            local.substring(0, keep) + "*".repeat(local.length - keep);
         return `${masked}@${domain}`;
     };
 
-    // Ketika user mengetik di salah satu kotak:
+    // Handle perubahan karakter di kotak OTP
     const handleChange = (e, idx) => {
         const val = e.target.value;
-        if (!/^[0-9]?$/.test(val)) return; // hanya angka 0‐9 atau kosong
-
+        if (!/^[0-9]?$/.test(val)) return;
         const newCodes = [...codes];
         newCodes[idx] = val;
         setCodes(newCodes);
-
-        if (val && idx < inputRefs.current.length - 1) {
-            // jika ada input & bukan kotak terakhir, pindah otomatis ke kotak berikutnya
+        if (val && idx < 5) {
             inputRefs.current[idx + 1].focus();
         }
-
-        // Jika semua kotak terisi otomatis “submit”
         if (newCodes.every((c) => c !== "")) {
             handleSubmitOTP(newCodes.join(""));
         }
     };
 
-    // Jika user menekan backspace di kotak kosong, pindah ke kotak sebelumnya
+    // Handle backspace agar pindah ke kotak sebelumnya jika kosong
     const handleKeyDown = (e, idx) => {
         if (e.key === "Backspace" && codes[idx] === "" && idx > 0) {
             inputRefs.current[idx - 1].focus();
         }
     };
 
-    // Fungsi submit OTP ketika 6 digit terisi
+    // Submit OTP untuk verifikasi
     const handleSubmitOTP = async (otpCode) => {
         setMessage("");
         setIsVerifying(true);
@@ -93,40 +89,70 @@ const Verify = () => {
             const res = await verify({ email: emailKirim, code: otpCode });
             if (res.status !== 200) {
                 setMessage(
-                    res.message || t("verify_failed") || "Verifikasi gagal."
+                    res.message || t("verify_failed") || "Verification failed."
                 );
                 setIsVerifying(false);
-                // Kosongkan semua kotak
                 setCodes(["", "", "", "", "", ""]);
                 inputRefs.current[0].focus();
                 return;
             }
             setNotif(
-                res.message || t("verify_success") || "Akun terverifikasi."
+                res.message ||
+                    t("verify_success") ||
+                    "Email verified successfully."
             );
-            setTimeout(() => {
-                navigate("/login");
-            }, 1500);
+            setTimeout(() => navigate("/login"), 1500);
         } catch (err) {
             console.error(err);
-            setMessage(t("verify_failed") || "Verifikasi gagal. Coba lagi.");
+            setMessage(t("verify_failed") || "Verification failed. Try again.");
             setIsVerifying(false);
         }
     };
 
-    // Fungsi untuk resend kode (jika timer = 0)
+    // Resend kode (reset timer)
     const handleResend = () => {
-        // Contoh: logika ulang memanggil backend untuk resend kode
-        // Untuk sekarang kita reset timer saja
         setSecondsLeft(180);
         setMessage("");
-        // Jika ada endpoint resend di backend, panggil di sini:
+        // Jika backend menyediakan endpoint resend, panggil di sini:
         // await resendCode({ email: emailKirim });
+    };
+
+    // Simpan perubahan email baru
+    const handleSaveEmail = async () => {
+        setEditError("");
+        if (!emailInput.trim()) {
+            setEditError("Email cannot be empty.");
+            return;
+        }
+        if (emailInput === emailKirim) {
+            setIsEditing(false);
+            return;
+        }
+        try {
+            const res = await updateEmail({
+                oldEmail: emailKirim,
+                newEmail: emailInput,
+            });
+            if (res.status !== 200) {
+                setEditError(res.message || "Failed to update email.");
+                return;
+            }
+            // Berhasil: perbarui emailKirim, reset OTP + timer
+            setEmailKirim(res.newEmail);
+            setCodes(["", "", "", "", "", ""]);
+            inputRefs.current[0].focus();
+            setSecondsLeft(180);
+            setIsEditing(false);
+            setNotif(res.message);
+        } catch (err) {
+            console.error(err);
+            setEditError("Server error. Try again.");
+        }
     };
 
     return (
         <div className="verify-container">
-            {/* Button Close (X) */}
+            {/* Tombol Close */}
             <button
                 className="close-btn"
                 onClick={() => navigate("/register")}
@@ -137,10 +163,44 @@ const Verify = () => {
 
             <div className="form-box">
                 <h2 className="title">{t("verification") || "Verification"}</h2>
-                <p className="subtext">
-                    {t("enter_code")} <strong>{maskEmail(emailKirim)}</strong>
-                </p>
 
+                {/* Baris email dengan tombol edit */}
+                <div className="email-row">
+                    <span>
+                        {t("enter_otp_sent_to") ||
+                            "Please enter the code sent to"}{" "}
+                        <strong>{maskEmail(emailKirim)}</strong>
+                    </span>
+                    <button
+                        className="edit-email-btn"
+                        onClick={() => {
+                            setIsEditing(true);
+                            setEmailInput(emailKirim);
+                            setEditError("");
+                        }}
+                        title="Edit Email"
+                    >
+                        <FiEdit2 />
+                    </button>
+                </div>
+
+                {/* Form Edit Email */}
+                {isEditing && (
+                    <div className="edit-email-container">
+                        <input
+                            type="email"
+                            value={emailInput}
+                            onChange={(e) => setEmailInput(e.target.value)}
+                            placeholder={t("email") || "Email"}
+                        />
+                        <button onClick={handleSaveEmail}>
+                            {t("save") || "Save"}
+                        </button>
+                        {editError && <p className="error-msg">{editError}</p>}
+                    </div>
+                )}
+
+                {/* Input OTP 6 digit */}
                 <div className="otp-inputs">
                     {codes.map((digit, idx) => (
                         <input
@@ -159,6 +219,7 @@ const Verify = () => {
 
                 {message && <p className="error-msg">{message}</p>}
 
+                {/* Resend / Countdown */}
                 <div
                     className={`resend-text ${
                         secondsLeft > 0 ? "disabled" : "enabled"
@@ -166,14 +227,13 @@ const Verify = () => {
                 >
                     {secondsLeft > 0 ? (
                         <span>
-                            {t("please_wait") || "Mohon tunggu dalam"}{" "}
+                            {t("please_wait") || "Please wait"}{" "}
                             <strong>{secondsLeft}</strong>{" "}
-                            {t("seconds_to_resend") ||
-                                "detik untuk kirim ulang"}
+                            {t("seconds_to_resend") || "seconds to resend"}
                         </span>
                     ) : (
                         <button className="resend-btn" onClick={handleResend}>
-                            {t("resend_code") || "Kirim Ulang"}
+                            {t("resend_code") || "Resend Code"}
                         </button>
                     )}
                 </div>
