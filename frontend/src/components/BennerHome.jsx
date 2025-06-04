@@ -121,8 +121,8 @@ export default function BennerHome() {
                                         style={{ fontWeight: "bold" }}
                                     >
                                         {n.tipe_media === "video"
-                                            ? "Video"
-                                            : "Game"}
+                                            ? " "
+                                            : " "}
                                     </p>
                                     <h1
                                         className="text-white text-center"

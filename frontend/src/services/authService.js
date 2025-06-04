@@ -11,7 +11,7 @@ export const signup = async (data) => {
         // Cek apakah status respons adalah 2xx
         const resJson = await res.json();
 
-        if (res.ok) {
+        if (res.status >= 200 && res.status < 300) {
             console.log("RESPON DARI SI backend:", resJson);
             return {
                 status: res.status,
@@ -44,7 +44,7 @@ export const verify = async (data) => {
         });
         const resJson = await res.json();
 
-        if (res.ok) {
+        if (res.status >= 200 && res.status < 300) {
             console.log("RESPON DARI BACKEND (verify):", resJson);
             return {
                 status: res.status,
@@ -74,7 +74,8 @@ export const updateEmail = async (data) => {
             body: JSON.stringify(data), // { oldEmail, newEmail }
         });
         const resJson = await res.json();
-        if (res.ok) {
+        if (res.status >= 200 && res.status < 300) {
+            console.log("RESPON DARI BACKEND (updateEmail):", resJson);
             return {
                 status: res.status,
                 message: resJson.message,

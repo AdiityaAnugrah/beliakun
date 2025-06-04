@@ -13,6 +13,7 @@ const SECRET_KEY = "0x4AAAAAABXrkULWnDa5SdueNc1uZEGBHhk"; // Bisa diletakkan jug
 // REGISTER: tambah verifikasiCode + kirim email
 const registerUser = async (req, res) => {
     const { nama, email, username, password, captchaToken } = req.body;
+    
 
     if (!captchaToken) {
         return res.status(400).json({ message: "Captcha token is required" });
@@ -51,12 +52,15 @@ const registerUser = async (req, res) => {
         }
 
         // Cek apakah email sudah terdaftar
+
         const existing = await User.findOne({ where: { email } });
+        
         if (existing) {
             return res.status(400).json({ message: "Email already exists" });
         }
 
-        const existingUsername = await User.findOne({ whare: { username } });
+        const existingUsername = await User.findOne({ where: { username } });
+        
         if (existingUsername) {
             return res.status(400).json({ message: "Username already taken" });
         }
@@ -156,7 +160,6 @@ const registerUser = async (req, res) => {
                 "User registered successfully. Please check your email for the verification code.",
         });
     } catch (error) {
-        console.error("Register error:", error);
         return res.status(500).json({ message: "Server error" });
     }
 };
@@ -261,7 +264,6 @@ const updateEmail = async (req, res) => {
             newEmail,
         });
     } catch (err) {
-        console.error("Update email error:", err);
         return res.status(500).json({ message: "Server error" });
     }
 };
@@ -312,7 +314,7 @@ const loginUser = async (req, res) => {
             },
         });
     } catch (error) {
-        console.error("Login error:", error);
+
         return res.status(500).json({ message: "Server error" });
     }
 };
@@ -328,7 +330,6 @@ const logout = async (req, res) => {
         await User.update({ token: null }, { where: { id: user.id } });
         return res.status(200).json({ message: "Logout successful" });
     } catch (error) {
-        console.error("Logout error:", error);
         return res.status(500).json({ message: "Server error" });
     }
 };
@@ -359,7 +360,6 @@ const verifyCode = async (req, res) => {
 
         return res.status(200).json({ message: "Email verified successfully" });
     } catch (error) {
-        console.error("Verification error:", error);
         return res.status(500).json({ message: "Server error" });
     }
 };
