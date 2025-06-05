@@ -2,24 +2,16 @@ const { where } = require("sequelize");
 const Product = require("../models/productModel.js");
 const fs = require("fs");
 const path = require("path");
+const Category = require("../models/categoryModel.js");
 
 const addProduct = async (req, res) => {
-    const {
-        nama,
-        harga,
-        stock,
-        link_shopee,
-        status,
-        produk_terjual,
-        deskripsi,
-        kategori,
-    } = req.body;
+    const { nama, harga, stock, link_shopee, status, produk_terjual, deskripsi, categoryId } = req.body;
 
     if (!req.file) {
         return res.status(400).json({ message: "Product image is required" });
     }
 
-    if (!nama || !harga || !stock || !deskripsi) {
+    if (!nama || !harga || !stock || !deskripsi || !categoryId) {
         return res.status(400).json({
             message: "Nama, harga, stok, deskripsi, dan kategori diperlukan",
         });
@@ -30,21 +22,79 @@ const addProduct = async (req, res) => {
             nama,
             harga,
             stock,
-            gambar: req.file.filename,
+            gambar: req.file.filename, 
             link_shopee,
             status,
-            produk_terjual,
+            produk_terjual,     
             deskripsi,
-            kategori,
+            categoryId,
         });
 
+        // Kembalikan response sukses
         res.status(200).json({
             message: "Product added successfully",
             product: newProduct,
         });
     } catch (error) {
-        console.error("Add product error:", error);
         res.status(500).json({ message: "Server error while adding product" });
+    }
+};
+
+const updateProduct = async (req, res) => {
+    const { id } = req.params;
+    try {
+        let product = await Product.findOne({ where: { id } });
+
+        if (!product) {
+            return res.status(404).json({ message: "Product not found" });
+        }
+
+        if (req.file) {
+            const imagePath = path.join(__dirname, "../uploads", product.gambar);
+            if (fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
+            }
+            product.gambar = req.file.filename;
+        }
+
+        const updatedProductData = { ...req.body, gambar: product.gambar };
+
+        await Product.update(updatedProductData, { where: { id } });
+
+        res.status(200).json({
+            message: "Product updated successfully",
+            product,
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Server error while updating product",
+        });
+    }
+};
+
+const deleteProduct = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const product = await Product.findOne({ where: { id } });
+
+        if (!product) {
+            return res.status(404).json({ message: "Product not found" });
+        }
+
+        const imagePath = path.join(__dirname, "../uploads", product.gambar);
+        if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath);
+        }
+        await product.destroy();
+
+        res.status(200).json({
+            message: "Product deleted successfully",
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Server error while deleting product",
+        });
     }
 };
 
@@ -61,8 +111,14 @@ const getAllProducts = async (req, res) => {
 
     try {
         if (id) {
-            const product = await Product.findOne({
-                where: { id },
+            const product = await Product.findByPk(id, {
+                include: [
+                    {
+                        model: Category,
+                        as: "category",
+                        attributes: ["id", "label"],
+                    },
+                ],
             });
             return res.status(200).json({
                 ...product.dataValues,
@@ -71,6 +127,13 @@ const getAllProducts = async (req, res) => {
         }
 
         const products = await Product.findAndCountAll({
+            include: [
+                {
+                    model: Category,
+                    as: "category",
+                    attributes: ["id", "label"],
+                },
+            ],
             limit: limit,
             offset: offset,
         });
@@ -88,7 +151,6 @@ const getAllProducts = async (req, res) => {
             currentPage: page,
         });
     } catch (error) {
-        console.error("Get products error:", error);
         res.status(500).json({
             message: "Server error while fetching products",
             error: error.message,
@@ -96,73 +158,26 @@ const getAllProducts = async (req, res) => {
     }
 };
 
-const updateProduct = async (req, res) => {
-    const { id } = req.params;
+const getProductLaris = async (req, res) => {
     try {
-        let product = await Product.findOne({ where: { id } });
-        const produknya = product.dataValues;
-
-        if (!produknya) {
-            return res.status(404).json({ message: "Product not found" });
-        }
-        if (req.file) {
-            if (
-                fs.existsSync(
-                    path.join(__dirname, "../uploads", produknya.gambar)
-                )
-            ) {
-                fs.unlinkSync(
-                    path.join(__dirname, "../uploads", produknya.gambar)
-                );
-            }
-            produknya.gambar = req.file.filename;
-        }
-
-        // Mengupdate req.body dengan gambar yang baru
-        const updatedProductData = {
-            ...req.body,
-            gambar: produknya.gambar,
-        };
-        await Product.update({ ...updatedProductData }, { where: { id } });
-
-        res.status(200).json({
-            message: "Product edited successfully",
-            product,
+        const baseUrl = `${req.protocol}://${req.get('host')}`; // Mendapatkan base URL server
+        const products = await Product.findAll({
+            order: [["produk_terjual", "DESC"]],
+            limit: 4,
         });
+        const productsWithFullImageUrl = products.map((product) => ({
+            ...product.dataValues,
+            gambar: `${baseUrl}/uploads/${product.gambar}`, // Menambahkan path gambar lengkap
+        }));
+        res.status(200).json(productsWithFullImageUrl);
     } catch (error) {
-        console.error("Update product error:", error);
         res.status(500).json({
-            message: "Server error while updating product",
+            message: "Server error while fetching products laris",
+            error: error.message,
         });
     }
 };
 
-const deleteProduct = async (req, res) => {
-    const { id } = req.params;
 
-    try {
-        const product = await Product.findOne({ where: { id } });
 
-        if (!product) {
-            return res.status(404).json({ message: "Product not found" });
-        }
-        const fs = require("fs");
-        const path = require("path");
-        const imagePath = path.join(__dirname, "../uploads", product.gambar); // Assuming images are in 'uploads' folder
-
-        if (fs.existsSync(imagePath)) {
-            fs.unlinkSync(imagePath);
-        }
-        await product.destroy();
-        res.status(200).json({
-            message: "Product deleted successfully",
-        });
-    } catch (error) {
-        console.error("Delete product error:", error);
-        res.status(500).json({
-            message: "Server error while deleting product",
-        });
-    }
-};
-
-module.exports = { addProduct, getAllProducts, updateProduct, deleteProduct };
+module.exports = { addProduct, getAllProducts, updateProduct, deleteProduct, getProductLaris };

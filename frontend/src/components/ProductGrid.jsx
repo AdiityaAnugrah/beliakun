@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { getProducts } from "../services/productService"; // Menggunakan service Anda
+import { getProductLaris } from "../services/productService"; // Menggunakan service Anda
 import { addToCart, getCart } from "../services/cartService"; // Menggunakan service Anda
 import {
   addToWishlist,
@@ -12,7 +12,7 @@ import useCartStore from "../../store/cartStore"; // Sesuaikan path jika perlu
 import { FiHeart, FiShoppingCart } from "react-icons/fi";
 import "./ProductGrid.scss"; // Pastikan file SCSS ini ada dan path-nya benar
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function ProductGrid() {
   const { token, emptyUser } = useUserStore();
@@ -38,7 +38,12 @@ export default function ProductGrid() {
     async function fetchData() {
       setLoading(true);
       try {
-        const productResponse = await getProducts(); // Mengambil semua produk
+        const productResponse = await getProductLaris(); // Menggunakan service Anda untuk mendapatkan produk laris
+        if (!productResponse || productResponse.status !== 200) {
+          console.error("Gagal mengambil produk laris:", productResponse.message);
+          stableSetNotif(t("error.fetchProducts", "Gagal memuat produk."));
+          stableShowNotif();
+        }
         let fetchedProducts = [];
         if (productResponse.status === 200 && productResponse.data) {
           // Asumsi productResponse.data adalah array produk jika id tidak diberikan
@@ -180,10 +185,6 @@ export default function ProductGrid() {
     }
   };
 
-  const handleProductClick = (productId) => {
-    navigate(`/detail/${productId}`); // Mengarahkan ke /detail/:id
-  };
-
   if (loading) {
     return (
       <div className="product-grid-container"> {/* Tambahkan container jika perlu untuk styling loading */}
@@ -204,55 +205,57 @@ export default function ProductGrid() {
     <>
       {/* Komponen Notif idealnya ada di App.js atau layout utama */}
       {/* <Notif /> */}
-      <div className="product-grid">
-        {products.map((p) => (
-          <div
-            className="product-card"
-            key={p.id}
-            onClick={() => handleProductClick(p.id)}
-            role="link"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleProductClick(p.id);}}
-          >
-            <div className="product-img-wrap"> {/* Pastikan kelas ini sesuai dengan SCSS Anda */}
-              <img
-                src={p.gambar || "https://placehold.co/300x200/e0e0e0/757575?text=Gambar+Produk"}
-                alt={p.nama}
-                onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src="https://placehold.co/300x200/e0e0e0/757575?text=Error";
-                }}
-              />
-              <div className="product-actions">
-                <button
-                  className={`fav-btn ${wishlistIds.includes(p.id) ? "active" : ""}`}
-                  onClick={(e) => handleWishlist(e, p.id)}
-                  aria-label={wishlistIds.includes(p.id) ? t('wishlist.removeFromWishlist') : t('wishlist.addToWishlist')}
-                  disabled={processing === `wishlist-${p.id}`}
-                >
-                  <FiHeart />
-                </button>
-                <button
-                  className="cart-btn"
-                  onClick={(e) => handleAddCart(e, p.id)}
-                  aria-label={t('cart.addToCart', 'Tambah ke Keranjang')}
-                  disabled={processing === `cart-${p.id}`}
-                >
-                  <FiShoppingCart />
-                </button>
+      
+      <div className="container mx-auto py-10">
+        <div className="category-header">BROWSE BY BEST SELLER</div>
+        <div className="product-grid">
+          {products.map((p) => (
+            <Link
+              className="product-card"
+              key={p.id}
+              to={`/detail/${p.id}`}
+              tabIndex={0}
+            >
+              <div className="product-img-wrap"> {/* Pastikan kelas ini sesuai dengan SCSS Anda */}
+                <img
+                  src={p.gambar || `https://placehold.co/300x200/e0e0e0/757575?text=${encodeURIComponent(p.nama)}`}
+                  alt={p.nama}
+                  onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src=`https://placehold.co/300x200/e0e0e0/757575?text=Error+Loading+Image`;
+                  }}
+                />
+                <div className="product-actions">
+                  <button
+                    className={`fav-btn ${wishlistIds.includes(p.id) ? "active" : ""}`}
+                    onClick={(e) => handleWishlist(e, p.id)}
+                    aria-label={wishlistIds.includes(p.id) ? t('wishlist.removeFromWishlist') : t('wishlist.addToWishlist')}
+                    disabled={processing === `wishlist-${p.id}`}
+                  >
+                    <FiHeart />
+                  </button>
+                  <button
+                    className="cart-btn"
+                    onClick={(e) => handleAddCart(e, p.id)}
+                    aria-label={t('cart.addToCart', 'Tambah ke Keranjang')}
+                    disabled={processing === `cart-${p.id}`}
+                  >
+                    <FiShoppingCart />
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="product-info">
-              <div className="product-category">
-                {p.kategori ? (typeof p.kategori === 'string' ? p.kategori.toLowerCase() : p.kategori.nama?.toLowerCase()) : ""}
+              <div className="product-info">
+                <div className="product-category">
+                  {p.kategori ? (typeof p.kategori === 'string' ? p.kategori.toLowerCase() : p.kategori.nama?.toLowerCase()) : ""}
+                </div>
+                <h3 className="product-title">{p.nama}</h3>
+                <div className="product-price">
+                  Rp {Number(p.harga).toLocaleString("id-ID")}
+                </div>
               </div>
-              <h3 className="product-title">{p.nama}</h3>
-              <div className="product-price">
-                Rp {Number(p.harga).toLocaleString("id-ID")}
-              </div>
-            </div>
-          </div>
-        ))}
+            </Link>
+          ))}
+        </div>
       </div>
     </>
   );

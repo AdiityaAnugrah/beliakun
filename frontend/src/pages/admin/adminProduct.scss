@@ -1,0 +1,369 @@
+
+$primary-color: var(--merah);
+$text-color: var(--hitam);
+$background-color: var(--putih);
+$secondary-bg-color: var(--abu);
+$border-color: var(--abu-abu-gelap);
+$success-color: var(--hijau);
+$danger-color: var(--merah); // Using your red for danger messages/buttons
+$input-bg-color: var(--input-bg);
+
+// Spacing variables for consistency
+$spacing-xs: 0.5rem; // 8px
+$spacing-sm: 1rem; // 16px
+$spacing-md: 1.5rem; // 24px
+$spacing-lg: 2rem; // 32px
+$spacing-xl: 3rem; // 48px
+
+// Reusable Mixins
+@mixin button-styles($bg-color, $text-color: var(--putih)) {
+  padding: $spacing-xs $spacing-sm;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  background-color: $bg-color;
+  color: $text-color;
+
+  &:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: none;
+    transform: none;
+  }
+}
+
+@mixin form-input-styles {
+  width: 100%;
+  padding: $spacing-xs + 0.125rem $spacing-sm; // Slightly more vertical padding
+  border: 1px solid $border-color;
+  border-radius: 0.375rem; // Slightly more rounded corners
+  font-size: 0.95rem; // Slightly larger font size
+  color: $text-color;
+  background-color: $input-bg-color;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  line-height: 1.5; // Ensure consistent line height
+
+  &:focus {
+    border-color: $primary-color;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.25);
+  }
+}
+
+@mixin card-shadow {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); // Softer, slightly larger shadow
+}
+
+// --- Product List Styles (pages/admin/Products.jsx) ---
+.admin-product-list {
+  padding: $spacing-lg;
+  max-width: 1200px;
+  margin: $spacing-md auto;
+  background-color: $background-color;
+  border-radius: 8px;
+  @include card-shadow;
+  color: $text-color;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: $spacing-md;
+    padding-bottom: $spacing-sm;
+    border-bottom: 1px solid $border-color;
+
+    h1 {
+      margin: 0;
+      color: $text-color;
+      font-size: 1.8rem;
+    }
+  }
+
+  &__add-button {
+    @include button-styles($primary-color);
+    padding: $spacing-sm $spacing-md;
+    font-size: 1rem;
+  }
+
+  &__filters {
+    display: flex;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-md;
+
+    input[type="text"],
+    select {
+      flex: 1;
+      @include form-input-styles; // Reuse form input styles
+    }
+  }
+
+  &__loading,
+  &__no-products {
+    text-align: center;
+    padding: $spacing-lg;
+    color: $text-color;
+    font-style: italic;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: $spacing-md;
+    margin-bottom: $spacing-md;
+  }
+
+  .admin-product-card {
+    border: 1px solid $border-color;
+    border-radius: 8px;
+    overflow: hidden;
+    @include card-shadow;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background-color: $background-color;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+    }
+
+    &__image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-bottom: 1px solid $border-color;
+    }
+
+    &__details {
+      padding: $spacing-sm;
+      flex-grow: 1;
+    }
+
+    &__name {
+      font-size: 1.25rem;
+      color: $primary-color;
+      margin-top: 0;
+      margin-bottom: $spacing-xs;
+    }
+
+    &__category,
+    &__price {
+      font-size: 0.9rem;
+      color: $text-color;
+      margin-bottom: $spacing-xs;;
+    }
+
+    &__price {
+      font-weight: 600;
+      color: $text-color;
+    }
+
+    &__actions {
+      display: flex;
+      justify-content: space-around;
+      padding: $spacing-sm;
+      border-top: 1px solid $border-color;
+      background-color: $secondary-bg-color;
+    }
+
+    &__button {
+      flex: 1;
+      margin: $spacing-xs;;
+      @include button-styles($secondary-bg-color, $text-color);
+
+      &--edit {
+        background-color: $primary-color;
+      }
+
+      &--delete {
+        background-color: $danger-color;
+      }
+    }
+  }
+
+  &__pagination {
+    display: flex;
+    justify-content: center;
+    gap: $spacing-xs;
+    margin-top: $spacing-md;
+
+    &-button {
+      @include button-styles($secondary-bg-color, $text-color);
+      min-width: 40px;
+      padding: $spacing-xs;
+      font-size: 0.9rem;
+
+      &--active {
+        background-color: $primary-color;
+        color: var(--putih);
+        pointer-events: none;
+      }
+    }
+  }
+}
+
+---
+
+// --- Add/Edit Product Form Styles (pages/admin/AddProduct.jsx) ---
+.add-product-container {
+  padding: $spacing-lg;
+  max-width: 900px; // Slightly increased max-width for two-column layout
+  margin: $spacing-md auto;
+  background-color: $background-color;
+  border-radius: 8px;
+  @include card-shadow;
+  color: $text-color;
+
+  h1 {
+    text-align: center;
+    margin-bottom: $spacing-xl; // More space below title
+    color: $primary-color;
+    font-size: 2.2rem; // Slightly larger title
+    font-weight: 700;
+  }
+
+  .error-display {
+    text-align: center;
+    padding: $spacing-sm;
+    color: $danger-color;
+    background-color: rgba($danger-color, 0.1);
+    border: 1px solid $danger-color;
+    border-radius: 4px;
+    margin-bottom: $spacing-md;
+  }
+
+  .add-product-form {
+    display: flex; // Default to flex column for small screens
+    flex-direction: column;
+    gap: $spacing-md; // Gap between form-grid, message, and button
+
+    // The container for fields that will be arranged in a grid
+    .form-grid {
+        display: grid;
+        gap: $spacing-md; // Gap within the grid
+
+        // Default to single column for smaller screens
+        grid-template-columns: 1fr;
+
+        // Media query for desktop: two columns
+        @media (min-width: 768px) { // Adjust breakpoint as needed
+            grid-template-columns: repeat(2, 1fr); // Two equal columns
+            // Using grid-template-areas for specific placement for better control
+            grid-template-areas:
+                "name price"
+                "stock image"
+                "shopee status"
+                "category ." // Category on left, empty on right to align with others
+                "description description"; // Description spans full width
+        }
+    }
+
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-xs;
+
+      label {
+        font-weight: 600;
+        color: $text-color;
+        font-size: 1rem;
+        margin-bottom: 0.25rem; // Small margin below label
+      }
+
+      .required-star {
+        color: $danger-color;
+        margin-left: 0.25rem;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select {
+        @include form-input-styles;
+      }
+
+      textarea {
+        @include form-input-styles; // Apply same styles
+        min-height: 120px; // Slightly taller textarea
+        resize: vertical; // Allow vertical resizing
+      }
+
+      // Specific grid area assignments for desktop, matching the order in JSX
+      &--name        { @media (min-width: 768px) { grid-area: name; } }
+      &--price       { @media (min-width: 768px) { grid-area: price; } }
+      &--stock       { @media (min-width: 768px) { grid-area: stock; } }
+      &--image       { @media (min-width: 768px) { grid-area: image; } }
+      &--shopee      { @media (min-width: 768px) { grid-area: shopee; } }
+      &--status      { @media (min-width: 768px) { grid-area: status; } }
+      &--category    { @media (min-width: 768px) { grid-area: category; } }
+      &--description { @media (min-width: 768px) { grid-area: description; } }
+
+
+      input[type="file"] {
+        @include form-input-styles; // Inherit base input styles
+        cursor: pointer;
+        padding: $spacing-xs; // File inputs often look better with less padding
+        &:hover {
+          border-color: $primary-color;
+        }
+      }
+
+      .image-preview {
+        margin-top: $spacing-sm; // More space above preview image
+        text-align: center;
+        background-color: $secondary-bg-color; // Light background for the preview area
+        padding: $spacing-sm;
+        border-radius: 4px;
+
+        .product-image-preview {
+          max-width: 250px; // Slightly larger preview image
+          height: auto;
+          border-radius: 4px;
+          border: 1px solid $border-color;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); // Clearer shadow for image
+        }
+      }
+    }
+
+    // Messages (now handled by SweetAlert2, but keeping classes if you use them locally)
+    .message {
+      text-align: center;
+      padding: $spacing-sm; // More padding for messages
+      border-radius: 4px;
+      font-weight: 500;
+      margin-top: $spacing-sm; // Space above message
+
+      &--error {
+        color: $danger-color;
+        background-color: rgba($danger-color, 0.1);
+        border: 1px solid $danger-color;
+      }
+
+      &--success {
+        color: $success-color;
+        background-color: rgba($success-color, 0.1);
+        border: 1px solid $success-color;
+      }
+    }
+
+    button[type="submit"] {
+      @include button-styles($primary-color);
+      padding: $spacing-sm $spacing-md;
+      font-size: 1.1rem;
+      width: 100%;
+      max-width: 300px;
+      margin: $spacing-lg auto $spacing-sm auto; // More space above button, centered
+    }
+  }
+}

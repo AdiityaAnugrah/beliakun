@@ -1,5 +1,6 @@
 const API_URL = `${import.meta.env.VITE_URL_BACKEND}`;
 
+
 export const getProducts = async (id = false) => {
     try {
         const res = await fetch(`${API_URL}/product${id ? `/${id}` : ""}`);
@@ -97,6 +98,27 @@ export const deleteProduct = async (id, token) => {
             return {
                 status: res.status,
                 message: resJson.message || "Failed to delete product",
+            };
+        }
+    } catch (err) {
+        console.error("Request error:", err);
+        return { status: 500, message: "Server error. Please try again." };
+    }
+};
+
+// Mendapatkan produk terlaris
+export const getProductLaris = async () => {
+    try {
+        const res = await fetch(`${API_URL}/product/laris`);
+        const resJson = await res.json();
+        console.log("Produk terlaris:", resJson);
+
+        if (res.ok) {
+            return { status: res.status, data: resJson };
+        } else {
+            return {
+                status: res.status,
+                message: resJson.message || "Failed to fetch best-selling products",
             };
         }
     } catch (err) {

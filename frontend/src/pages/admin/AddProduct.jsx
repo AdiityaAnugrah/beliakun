@@ -7,6 +7,8 @@ import {
     updateProduct,
 } from "../../services/productService";
 import useUserStore from "../../../store/userStore";
+import "./adminProduct.scss";
+import Swal from "sweetalert2"; // Import SweetAlert2
 
 const AddProduct = () => {
     const { t } = useTranslation();
@@ -20,12 +22,11 @@ const AddProduct = () => {
         status: "dijual",
         produk_terjual: 0,
         deskripsi: "",
-        kategori: "games",
+        categoryId: "",
     });
     const [imageSrc, setImageSrc] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
     const location = useLocation();
     const { id: idProduct } = useParams();
     const [error, setError] = useState("");
@@ -35,9 +36,13 @@ const AddProduct = () => {
         if (location.pathname.includes("edit")) {
             (async () => {
                 const response = await getProducts(idProduct);
-                console.log(response);
                 if (response.status !== 200) {
-                    setError(response.message);
+                    setError(response.message || t("Failed to load product details."));
+                    Swal.fire({
+                        icon: 'error',
+                        title: t('Error!'),
+                        text: response.message || t("Failed to load product details."),
+                    });
                 } else {
                     const product = response.data;
                     setFormData({
@@ -49,30 +54,44 @@ const AddProduct = () => {
                         status: product.status,
                         produk_terjual: product.produk_terjual,
                         deskripsi: product.deskripsi,
-                        kategori: product.kategori,
+                        categoryId: product.categoryId, // Ensure the correct category ID
                     });
                     setImageSrc(product.gambar);
                 }
             })();
         }
-    }, []);
+    }, []); // Added dependencies for useEffect
 
     const handleChange = (e) => {
         if (e.target.name === "image") {
             const file = e.target.files[0];
-            const fileSize = file.size / 1024 / 1024;
 
-            if (fileSize > 5) {
-                setMessage(t("File size is too large. Maximum is 5MB"));
-                return;
+            if (file) { // Check if a file was actually selected
+                const fileSize = file.size / 1024 / 1024; // size in MB
+
+                if (fileSize > 5) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: t('File Too Large!'),
+                        text: t("File size is too large. Maximum is 5MB"),
+                    });
+                    // Clear the file input if too large
+                    e.target.value = '';
+                    setImageFile(null);
+                    setImageSrc(null);
+                    return;
+                }
+
+                setImageFile(file);
+                const reader = new FileReader();
+                reader.onload = () => {
+                    setImageSrc(reader.result);
+                };
+                reader.readAsDataURL(file);
+            } else { // If user clears the file input
+                setImageFile(null);
+                setImageSrc(null);
             }
-
-            setImageFile(file);
-            const reader = new FileReader();
-            reader.onload = () => {
-                setImageSrc(reader.result);
-            };
-            reader.readAsDataURL(file);
         } else {
             setFormData({
                 ...formData,
@@ -90,20 +109,35 @@ const AddProduct = () => {
             !formData.nama ||
             !formData.harga ||
             !formData.deskripsi ||
-            !formData.kategori
+            !formData.categoryId // Fixed to categoryId
         ) {
-            setMessage(t("Please fill out all fields"));
+            Swal.fire({
+                icon: 'warning',
+                title: t('Missing Fields!'),
+                text: t("Please fill out all required fields."),
+            });
             setLoading(false);
             return;
         }
 
-        console.log(formData);
+        if (location.pathname.includes("add") && !imageFile && !imageSrc) { // Check if image is missing for new product
+            Swal.fire({
+                icon: 'warning',
+                title: t('Image Required!'),
+                text: t("Please select an image for the new product."),
+            });
+            setLoading(false);
+            return;
+        }
 
         const formDataWithImage = new FormData();
-        if (location.pathname.includes("edit") && imageFile)
+        // Only append image if a new file is selected (imageFile exists)
+        // or if it's an add operation and an image was initially present (imageSrc exists)
+        if (imageFile) {
             formDataWithImage.append("image", imageFile);
-        if (location.pathname.includes("add"))
-            formDataWithImage.append("image", imageFile);
+        }
+
+        // Append other form data
         formDataWithImage.append("nama", formData.nama);
         formDataWithImage.append("harga", formData.harga);
         formDataWithImage.append("stock", formData.stock);
@@ -111,32 +145,55 @@ const AddProduct = () => {
         formDataWithImage.append("status", formData.status);
         formDataWithImage.append("produk_terjual", formData.produk_terjual);
         formDataWithImage.append("deskripsi", formData.deskripsi);
-        formDataWithImage.append("kategori", formData.kategori);
-        formDataWithImage.append("token", token);
+        formDataWithImage.append("categoryId", formData.categoryId); // Use categoryId
+        formDataWithImage.append("token", token); // Assuming token is always needed
 
         try {
             const response = location.pathname.includes("add")
                 ? await addProduct(formDataWithImage, token)
                 : await updateProduct(idProduct, formDataWithImage, token);
-            if (response.status == 401) {
+
+            if (response.status === 401) {
                 user.emptyUser();
                 navigate("/login");
+                Swal.fire({
+                    icon: 'error',
+                    title: t('Authentication Error!'),
+                    text: t('Your session has expired. Please log in again.'),
+                    confirmButtonText: t('OK')
+                });
                 return;
             }
             if (response.status === 200) {
-                setMessage(t("Product added successfully"));
-                navigate("/admin/products");
+                Swal.fire({
+                    icon: 'success',
+                    title: t('Success!'),
+                    text: t('Product saved successfully!'),
+                    timer: 1500, // Close after 1.5 seconds
+                    showConfirmButton: false
+                }).then(() => {
+                    navigate("/admin/products");
+                });
             } else {
-                setMessage(t("Error adding product"));
+                Swal.fire({
+                    icon: 'error',
+                    title: t('Error!'),
+                    text: response.message || t("Error saving product."),
+                });
             }
         } catch (err) {
             console.error(err);
-            setMessage(t("Error adding product"));
+            Swal.fire({
+                icon: 'error',
+                title: t('Oops...'),
+                text: t("An unexpected error occurred. Please try again."),
+            });
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
 
-    if (error) return <div>{error}</div>;
+    if (error) return <div className="error-display">{t("Error loading product details:")} {error}</div>;
 
     return (
         <div className="add-product-container">
@@ -148,115 +205,123 @@ const AddProduct = () => {
                 )}
             </h1>
             <form onSubmit={handleSubmit} className="add-product-form">
-                <div className="form-group">
-                    <label>{t("Product Name")}</label>
-                    <input
-                        type="text"
-                        name="nama"
-                        value={formData.nama}
-                        onChange={handleChange}
-                        placeholder={t("Enter product name")}
-                        required
-                    />
-                </div>
+                <div className="form-grid">
+                    <div className="form-group form-group--name">
+                        <label htmlFor="product-name">{t("Product Name")}<span className="required-star">*</span></label>
+                        <input
+                            id="product-name"
+                            type="text"
+                            name="nama"
+                            value={formData.nama}
+                            onChange={handleChange}
+                            placeholder={t("Enter product name")}
+                            required
+                        />
+                    </div>
 
-                <div className="form-group">
-                    <label>{t("Price")}</label>
-                    <input
-                        type="number"
-                        name="harga"
-                        value={formData.harga}
-                        onChange={handleChange}
-                        placeholder={t("Enter product price")}
-                        required
-                    />
-                </div>
+                    <div className="form-group form-group--price">
+                        <label htmlFor="product-price">{t("Price")}<span className="required-star">*</span></label>
+                        <input
+                            id="product-price"
+                            type="number"
+                            name="harga"
+                            value={formData.harga}
+                            onChange={handleChange}
+                            placeholder={t("Enter product price")}
+                            required
+                        />
+                    </div>
 
-                <div className="form-group">
-                    <label>{t("Stock")}</label>
-                    <input
-                        type="number"
-                        name="stock"
-                        value={formData.stock}
-                        onChange={handleChange}
-                        placeholder={t("Enter stock quantity")}
-                    />
-                </div>
+                    <div className="form-group form-group--stock">
+                        <label htmlFor="product-stock">{t("Stock")}</label>
+                        <input
+                            id="product-stock"
+                            type="number"
+                            name="stock"
+                            value={formData.stock}
+                            onChange={handleChange}
+                            placeholder={t("Enter stock quantity")}
+                            min="0"
+                        />
+                    </div>
 
-                <div className="form-group">
-                    <label>{t("Product Image")}</label>
-                    <input
-                        type="file"
-                        name="image"
-                        onChange={handleChange}
-                        accept="image/*"
-                        required={
-                            location.pathname.includes("add") ? true : false
-                        }
-                    />
-                    {imageSrc && (
-                        <div className="image-preview">
-                            <img
-                                src={imageSrc}
-                                alt="Preview"
-                                className="product-image-preview"
-                            />
-                        </div>
-                    )}
-                </div>
+                    <div className="form-group form-group--image">
+                        <label htmlFor="product-image">{t("Product Image")}{location.pathname.includes("add") && <span className="required-star">*</span>}</label>
+                        <input
+                            id="product-image"
+                            type="file"
+                            name="image"
+                            onChange={handleChange}
+                            accept="image/*"
+                            required={location.pathname.includes("add") && !imageSrc} // Require if adding and no image exists
+                        />
+                        {imageSrc && (
+                            <div className="image-preview">
+                                <img
+                                    src={imageSrc}
+                                    alt="Preview"
+                                    className="product-image-preview"
+                                />
+                            </div>
+                        )}
+                    </div>
 
-                <div className="form-group">
-                    <label>{t("Shopee Link (optional)")}</label>
-                    <input
-                        type="text"
-                        name="link_shopee"
-                        value={formData.link_shopee}
-                        onChange={handleChange}
-                        placeholder={t("Enter Shopee link (optional)")}
-                    />
-                </div>
+                    <div className="form-group form-group--shopee">
+                        <label htmlFor="product-shopee">{t("Shopee Link (optional)")}</label>
+                        <input
+                            id="product-shopee"
+                            type="text"
+                            name="link_shopee"
+                            value={formData.link_shopee}
+                            onChange={handleChange}
+                            placeholder={t("Enter Shopee link (optional)")}
+                        />
+                    </div>
 
-                <div className="form-group">
-                    <label>{t("Product Status")}</label>
-                    <select
-                        name="status"
-                        value={formData.status}
-                        onChange={handleChange}
-                    >
-                        <option value="dijual">{t("For Sale")}</option>
-                        <option value="tidak_dijual">
-                            {t("Not for Sale")}
-                        </option>
-                    </select>
-                </div>
+                    <div className="form-group form-group--status">
+                        <label htmlFor="product-status">{t("Product Status")}</label>
+                        <select
+                            id="product-status"
+                            name="status"
+                            value={formData.status}
+                            onChange={handleChange}
+                        >
+                            <option value="dijual">{t("For Sale")}</option>
+                            <option value="tidak_dijual">
+                                {t("Not for Sale")}
+                            </option>
+                        </select>
+                    </div>
 
-                <div className="form-group">
-                    <label>{t("Description")}</label>
-                    <textarea
-                        name="deskripsi"
-                        value={formData.deskripsi}
-                        onChange={handleChange}
-                        placeholder={t("Enter product description")}
-                        required
-                    />
-                </div>
+                    <div className="form-group form-group--category">
+                        <label htmlFor="product-category">{t("Category")}<span className="required-star">*</span></label>
+                        <select
+                            id="product-category"
+                            name="categoryId" // Changed to categoryId
+                            value={formData.categoryId} // Use categoryId
+                            onChange={handleChange}
+                        >
+                            <option value="1">{t("Games")}</option>
+                            <option value="2">{t("Tools")}</option>
+                            {/* Add more categories here as needed */}
+                        </select>
+                    </div>
 
-                <div className="form-group">
-                    <label>{t("Category")}</label>
-                    <select
-                        name="kategori"
-                        value={formData.kategori}
-                        onChange={handleChange}
-                    >
-                        <option value="games">{t("Games")}</option>
-                        <option value="tools">{t("Tools")}</option>
-                    </select>
+                    <div className="form-group form-group--description">
+                        <label htmlFor="product-description">{t("Description")}<span className="required-star">*</span></label>
+                        <textarea
+                            id="product-description"
+                            name="deskripsi"
+                            value={formData.deskripsi}
+                            onChange={handleChange}
+                            placeholder={t("Enter product description")}
+                            required
+                        />
+                    </div>
                 </div>
-
-                {message && <p className="message">{message}</p>}
 
                 <button type="submit" disabled={loading}>
-                    {loading ? t("Loading...") : t("Add Product")}
+                    {loading ? t("Saving...") : t("Save Product")}
                 </button>
             </form>
         </div>

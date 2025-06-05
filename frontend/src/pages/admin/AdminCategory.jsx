@@ -69,13 +69,12 @@ export default function AdminCategory() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!form.nama || !form.label) {
+        if ( !form.label) {
             alert("Lengkapi semua field!");
             return;
         }
         // Siapkan FormData
         const fd = new FormData();
-        fd.append("nama", form.nama);
         fd.append("label", form.label);
         if (imageFile) fd.append("image", imageFile);
 
@@ -181,17 +180,6 @@ export default function AdminCategory() {
                                     value={form.label}
                                     onChange={handleChange}
                                     placeholder="Contoh: STORY-RICH"
-                                    required
-                                />
-                            </label>
-                            <label>
-                                Nama
-                                <input
-                                    type="text"
-                                    name="nama"
-                                    value={form.nama}
-                                    onChange={handleChange}
-                                    placeholder="Contoh: story-rich"
                                     required
                                 />
                             </label>

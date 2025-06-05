@@ -13,6 +13,7 @@ export const addBannerHome = async (formData) => {
         method: "POST",
         body: formData,
     });
+    console.log("Response from addBannerHome:", response);
     if (!response.ok) throw new Error("Gagal tambah banner");
     return response.json();
 };
@@ -23,6 +24,7 @@ export const updateBannerHome = async (id, formData) => {
         method: "PUT",
         body: formData,
     });
+    console.log("Response from updateBannerHome:", response);
     if (!response.ok) throw new Error("Gagal update banner");
     return response.json();
 };

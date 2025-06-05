@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db.js");
+const Category = require("./categoryModel.js");
 
 const Product = sequelize.define(
     "Product",
@@ -37,15 +38,29 @@ const Product = sequelize.define(
             type: DataTypes.TEXT,
             allowNull: false,
         },
-        kategori: {
-            type: DataTypes.ENUM("games", "tools"),
-            defaultValue: "games",
+        categoryId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: 'Categories', // Reference the 'Category' table
+                key: 'id',
+            },
         },
+        // kategori: {
+        //     type: DataTypes.ENUM("games", "tools"),
+        //     defaultValue: "games",
+        // },
     },
     {
         tableName: "products",
         timestamps: true,
     }
 );
+
+Product.associate = (models) => {
+    Product.belongsTo(models.Category, {
+        foreignKey: 'categoryId', // This is the default, but explicitly stating it is good practice
+        as: 'category' // Alias for the association, useful for includes
+    });
+};
 
 module.exports = Product;

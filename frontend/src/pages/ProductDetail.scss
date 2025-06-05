@@ -104,7 +104,7 @@ $font-main: 'Inter', sans-serif; // Pastikan font Inter sudah di-load global
       width: 100%;
       height: auto;
       max-height: 60vh;
-      object-fit: contain;
+      object-fit: cover;
       display: block;
       margin: 0 auto;
       border-radius: 16px; // Sudut lebih membulat
@@ -283,7 +283,7 @@ $font-main: 'Inter', sans-serif; // Pastikan font Inter sudah di-load global
 
   .product-gallery-column {
     position: sticky;
-    top: 2rem; // Jarak dari atas viewport (karena header tidak ada)
+    top: 7.5rem; // Jarak dari atas viewport (karena header tidak ada)
     align-self: flex-start;
     background-color: transparent;
 
@@ -310,7 +310,7 @@ $font-main: 'Inter', sans-serif; // Pastikan font Inter sudah di-load global
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 70vh;
+    // min-height: 50vh;
 
     .product-info-header {
       margin-bottom: 0.75rem;
@@ -320,8 +320,8 @@ $font-main: 'Inter', sans-serif; // Pastikan font Inter sudah di-load global
     .product-price { font-size: 14PX; }
     .product-stock-info { font-size: 1rem; margin-bottom: 2rem; }
     .product-description-container {
-        margin-bottom: 2.5rem;
-        .description-title { font-size: 1.15rem; }
+        margin-bottom: 1rem;
+        .description-title { font-size: 1rem; }
         .product-description { font-size: 0.95rem; }
     }
   }
@@ -364,37 +364,6 @@ $font-main: 'Inter', sans-serif; // Pastikan font Inter sudah di-load global
       .icon-cart { margin-right: 0.85rem; }
     }
 
-    // Target elemen <button> biasa dengan kelas .wishlist-button.secondary-action-button
-    .wishlist-button.secondary-action-button {
-      background: $button-secondary-bg;
-      border: 1px solid $button-secondary-border;
-      border-radius: 10px;
-      padding: 1rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: $button-secondary-text;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.07);
-      span {
-        margin-left: 0.6rem;
-        font-size: 0.9rem;
-        font-weight: 500;
-      }
-      svg {
-        width: 20px; height: 20px;
-        transition: color 0.2s, transform 0.2s;
-        &.wishlisted { color: $accent-color; transform: scale(1.1); }
-      }
-      &:hover:not(:disabled) {
-        border-color: $accent-color;
-        color: $accent-color;
-        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-        svg:not(.wishlisted) { color: $accent-color; }
-      }
-      &:disabled { opacity: 0.6; cursor: not-allowed; }
-    }
   }
 
   .product-detail-footer-mobile {

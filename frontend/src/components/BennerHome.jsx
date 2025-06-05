@@ -68,8 +68,8 @@ export default function BennerHome() {
         }
     };
 
-    if (loading) return <div>Loading banner...</div>;
-    if (!bannerData.length) return <div>Belum ada banner.</div>;
+    if (loading) return <div className="text-center">Loading banner...</div>;
+    if (!bannerData.length) return <div></div>;
 
     // Temukan banner yang sedang aktif
     const activeBanner = bannerData.find((b) => b.active);
