@@ -403,6 +403,35 @@ footer {
       }
       &:disabled { opacity: 0.6; cursor: not-allowed; }
     }
+    &.home {
+        color: var(--putih);
+        background-color: var(--merah);
+        border-radius: 4px;
+        border: 1px solid var(--merah);
+        padding: 10px 20px;
+        font-size: 16px;
+        width: 60%;
+        transition: background-color 0.3s, color 0.3s;
+        &:hover {
+            background-color: var(--putih);
+            color: var(--merah);
+            border: 1px solid var(--merah);
+        }
+        &:disabled {
+            background-color: var(--abu-abu-gelap);
+            color: var(--putih);
+            cursor: not-allowed;
+        }
+        &:active {
+            background-color: var(--merah);
+            color: var(--putih);
+            transform: scale(0.98);
+        }
+        &:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.2);
+        }
+    }
 }
 
 .search {

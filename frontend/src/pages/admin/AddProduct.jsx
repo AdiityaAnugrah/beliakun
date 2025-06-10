@@ -8,7 +8,8 @@ import {
 } from "../../services/productService";
 import useUserStore from "../../../store/userStore";
 import "./adminProduct.scss";
-import Swal from "sweetalert2"; // Import SweetAlert2
+import Swal from "sweetalert2";
+import { getCategories } from "../../services/categoryService";
 
 const AddProduct = () => {
     const { t } = useTranslation();
@@ -30,6 +31,7 @@ const AddProduct = () => {
     const location = useLocation();
     const { id: idProduct } = useParams();
     const [error, setError] = useState("");
+    const [categories, setCategories] = useState([]);
     const user = useUserStore();
 
     useEffect(() => {
@@ -60,7 +62,23 @@ const AddProduct = () => {
                 }
             })();
         }
-    }, []); // Added dependencies for useEffect
+
+        const fetchCategories = async () => {
+            try {
+                const categoriesResponse = await getCategories();
+                console.log("Fetched categories:", categoriesResponse);
+                setCategories(categoriesResponse);  // Ensure categories are set correctly
+            } catch (error) {
+                console.error("Failed to fetch categories:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: t('Error!'),
+                    text: t("Failed to load categories. Please try again later."),
+                });
+            }
+        };
+        fetchCategories();
+    }, []);  // This effect should run once on component mount
 
     const handleChange = (e) => {
         if (e.target.name === "image") {
@@ -93,6 +111,7 @@ const AddProduct = () => {
                 setImageSrc(null);
             }
         } else {
+            // Ensure the categoryId is updated correctly
             setFormData({
                 ...formData,
                 [e.target.name]: e.target.value,
@@ -102,14 +121,15 @@ const AddProduct = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
+        console.log("Submitting form data:", formData);
+        console.log("Selected image file:", imageFile);
 
-        // Simple validation
+        // Validasi form
         if (
             !formData.nama ||
             !formData.harga ||
             !formData.deskripsi ||
-            !formData.categoryId // Fixed to categoryId
+            !formData.categoryId
         ) {
             Swal.fire({
                 icon: 'warning',
@@ -139,7 +159,7 @@ const AddProduct = () => {
 
         // Append other form data
         formDataWithImage.append("nama", formData.nama);
-        formDataWithImage.append("harga", formData.harga);
+        formDataWithImage.append("harga", Number(formData.harga.replaceAll(/,/g, '')));
         formDataWithImage.append("stock", formData.stock);
         formDataWithImage.append("link_shopee", formData.link_shopee);
         formDataWithImage.append("status", formData.status);
@@ -193,6 +213,18 @@ const AddProduct = () => {
         }
     };
 
+
+    const handlePriceChange = (e) => {
+        let value = e.target.value.replace(/[^\d]/g, ''); // Remove non-numeric characters
+        if (value) {
+            value = parseInt(value, 10).toLocaleString(); // Format as number with commas
+        }
+        setFormData({
+            ...formData,
+            harga: value, // Update formData with formatted price
+        });
+    };
+
     if (error) return <div className="error-display">{t("Error loading product details:")} {error}</div>;
 
     return (
@@ -206,117 +238,126 @@ const AddProduct = () => {
             </h1>
             <form onSubmit={handleSubmit} className="add-product-form">
                 <div className="form-grid">
-                    <div className="form-group form-group--name">
-                        <label htmlFor="product-name">{t("Product Name")}<span className="required-star">*</span></label>
-                        <input
-                            id="product-name"
-                            type="text"
-                            name="nama"
-                            value={formData.nama}
-                            onChange={handleChange}
-                            placeholder={t("Enter product name")}
-                            required
-                        />
-                    </div>
+                    <div className="form-left">
+                        <div className="form-group form-group--image">
+                            <label htmlFor="product-image">{t("Product Image")}{location.pathname.includes("add") && <span className="required-star">*</span>}</label>
+                            <input
+                                id="product-image"
+                                type="file"
+                                name="image"
+                                onChange={handleChange}
+                                accept="image/*"
+                                required={location.pathname.includes("add") && !imageSrc} // Require if adding and no image exists
+                            />
+                            {imageSrc && (
+                                <div className="image-preview">
+                                    <img
+                                        src={imageSrc}
+                                        alt="Preview"
+                                        className="product-image-preview"
+                                    />
+                                </div>
+                            )}
+                        </div>
 
-                    <div className="form-group form-group--price">
-                        <label htmlFor="product-price">{t("Price")}<span className="required-star">*</span></label>
-                        <input
-                            id="product-price"
-                            type="number"
-                            name="harga"
-                            value={formData.harga}
-                            onChange={handleChange}
-                            placeholder={t("Enter product price")}
-                            required
-                        />
-                    </div>
+                        <div className="form-group form-group--name">
+                            <label htmlFor="product-name">{t("Product Name")}<span className="required-star">*</span></label>
+                            <input
+                                id="product-name"
+                                type="text"
+                                name="nama"
+                                value={formData.nama}
+                                onChange={handleChange}
+                                placeholder={t("Enter product name")}
+                                required
+                            />
+                        </div>
 
-                    <div className="form-group form-group--stock">
-                        <label htmlFor="product-stock">{t("Stock")}</label>
-                        <input
-                            id="product-stock"
-                            type="number"
-                            name="stock"
-                            value={formData.stock}
-                            onChange={handleChange}
-                            placeholder={t("Enter stock quantity")}
-                            min="0"
-                        />
-                    </div>
+                        <div className="form-group form-group--stock">
+                            <label htmlFor="product-stock">{t("Stock")}</label>
+                            <input
+                                id="product-stock"
+                                type="number"
+                                name="stock"
+                                value={formData.stock}
+                                onChange={handleChange}
+                                placeholder={t("Enter stock quantity")}
+                                min="0"
+                            />
+                        </div>
 
-                    <div className="form-group form-group--image">
-                        <label htmlFor="product-image">{t("Product Image")}{location.pathname.includes("add") && <span className="required-star">*</span>}</label>
-                        <input
-                            id="product-image"
-                            type="file"
-                            name="image"
-                            onChange={handleChange}
-                            accept="image/*"
-                            required={location.pathname.includes("add") && !imageSrc} // Require if adding and no image exists
-                        />
-                        {imageSrc && (
-                            <div className="image-preview">
-                                <img
-                                    src={imageSrc}
-                                    alt="Preview"
-                                    className="product-image-preview"
-                                />
-                            </div>
-                        )}
-                    </div>
+                        <div className="form-group form-group--category">
+                            <label htmlFor="product-category">{t("Category")}<span className="required-star">*</span></label>
+                            <select
+                                id="product-category"
+                                name="categoryId"
+                                value={formData.categoryId}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="" disabled>{t("Select Category")}</option>
+                                {categories.map((category) => (
+                                    <option key={category.id} value={category.id}>
+                                        {category.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
-                    <div className="form-group form-group--shopee">
-                        <label htmlFor="product-shopee">{t("Shopee Link (optional)")}</label>
-                        <input
-                            id="product-shopee"
-                            type="text"
-                            name="link_shopee"
-                            value={formData.link_shopee}
-                            onChange={handleChange}
-                            placeholder={t("Enter Shopee link (optional)")}
-                        />
                     </div>
+                    
+                    <div className="form-right">
+                        <div className="form-group form-group--price">
+                            <label htmlFor="product-price">{t("Price")}<span className="required-star">*</span></label>
+                            <input
+                                id="product-price"
+                                type="text"
+                                name="harga"
+                                value={formData.harga} // Display formatted price
+                                onChange={handlePriceChange} // Format price on change
+                                placeholder={t("Enter product price")}
+                                required
+                            />
+                        </div>
 
-                    <div className="form-group form-group--status">
-                        <label htmlFor="product-status">{t("Product Status")}</label>
-                        <select
-                            id="product-status"
-                            name="status"
-                            value={formData.status}
-                            onChange={handleChange}
-                        >
-                            <option value="dijual">{t("For Sale")}</option>
-                            <option value="tidak_dijual">
-                                {t("Not for Sale")}
-                            </option>
-                        </select>
-                    </div>
+                        <div className="form-group form-group--description">
+                            <label htmlFor="product-description">{t("Description")}<span className="required-star">*</span></label>
+                            <textarea
+                                id="product-description"
+                                name="deskripsi"
+                                value={formData.deskripsi}
+                                onChange={handleChange}
+                                placeholder={t("Enter product description")}
+                                required
+                            />
+                        </div>
 
-                    <div className="form-group form-group--category">
-                        <label htmlFor="product-category">{t("Category")}<span className="required-star">*</span></label>
-                        <select
-                            id="product-category"
-                            name="categoryId" // Changed to categoryId
-                            value={formData.categoryId} // Use categoryId
-                            onChange={handleChange}
-                        >
-                            <option value="1">{t("Games")}</option>
-                            <option value="2">{t("Tools")}</option>
-                            {/* Add more categories here as needed */}
-                        </select>
-                    </div>
+                        <div className="form-group form-group--shopee">
+                            <label htmlFor="product-shopee">{t("Shopee Link (optional)")}</label>
+                            <input
+                                id="product-shopee"
+                                type="text"
+                                name="link_shopee"
+                                value={formData.link_shopee}
+                                onChange={handleChange}
+                                placeholder={t("Enter Shopee link (optional)")}
+                            />
+                        </div>
 
-                    <div className="form-group form-group--description">
-                        <label htmlFor="product-description">{t("Description")}<span className="required-star">*</span></label>
-                        <textarea
-                            id="product-description"
-                            name="deskripsi"
-                            value={formData.deskripsi}
-                            onChange={handleChange}
-                            placeholder={t("Enter product description")}
-                            required
-                        />
+                        <div className="form-group form-group--status">
+                            <label htmlFor="product-status">{t("Product Status")}</label>
+                            <select
+                                id="product-status"
+                                name="status"
+                                value={formData.status}
+                                onChange={handleChange}
+                            >
+                                <option value="dijual">{t("For Sale")}</option>
+                                <option value="tidak_dijual">
+                                    {t("Not for Sale")}
+                                </option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 

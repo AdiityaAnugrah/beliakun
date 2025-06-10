@@ -206,7 +206,7 @@ const Products = () => {
                                             {t("Category")}: {product.category.label}
                                         </p>
                                         <p className="admin-product-card__price">
-                                            {t("Price")}: {product.harga}
+                                            {t("Price")}: {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.harga)}
                                         </p>
                                         <p className="admin-product-card__stock">
                                             {t("Stock")}: {product.stock}
@@ -229,6 +229,7 @@ const Products = () => {
                                 </div>
                             ))}
                         </div>
+
                     )}
 
                     {totalPages > 1 && (

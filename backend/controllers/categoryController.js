@@ -7,6 +7,8 @@ exports.getCategories = async (req, res) => {
     try {
         const categories = await Category.findAll({ order: [["id", "DESC"]] });
         res.json({ categories });
+        console.log("Berhasil mendapatkan data kategori");
+        console.log(categories);
     } catch (err) {
         res.status(500).json({
             message: "Gagal mendapatkan data kategori",
@@ -36,26 +38,20 @@ exports.getCategoryById = async (req, res) => {
 // CREATE category
 exports.createCategory = async (req, res) => {
     try {
-        const { nama, label } = req.body;
-        if (!nama || !label)
-            return res
-                .status(400)
-                .json({ message: "Nama dan label wajib diisi" });
+        const { label } = req.body;
+        if (!label) return res.status(400).json({ message: "Label wajib diisi" });
 
         let gambar = null;
         if (req.file) {
-            gambar = `${req.protocol}://${req.get("host")}/uploads/${
-                req.file.filename
-            }`;
+            gambar = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
         }
 
         const category = await Category.create({
-            nama,
             label,
             gambar,
         });
 
-        res.status(201).json({ message: "Kategori berhasil dibuat", category });
+        res.status(200).json({ message: "Kategori berhasil dibuat", category });
     } catch (err) {
         res.status(500).json({
             message: "Gagal membuat kategori",
@@ -68,35 +64,23 @@ exports.createCategory = async (req, res) => {
 exports.updateCategory = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nama, label } = req.body;
+        const { label } = req.body;
 
         const category = await Category.findByPk(id);
         if (!category)
-            return res
-                .status(404)
-                .json({ message: "Kategori tidak ditemukan" });
+            return res.status(404).json({ message: "Kategori tidak ditemukan" });
 
-        // Hapus gambar lama jika ada file baru diupload
         let gambar = category.gambar;
         if (req.file) {
             if (gambar && gambar.startsWith(req.protocol)) {
-                // extract filename
                 const filename = gambar.split("/uploads/")[1];
-                const filePath = path.join(
-                    __dirname,
-                    "..",
-                    "uploads",
-                    filename
-                );
+                const filePath = path.join(__dirname, "..", "uploads", filename);
                 if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
             }
-            gambar = `${req.protocol}://${req.get("host")}/uploads/${
-                req.file.filename
-            }`;
+            gambar = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
         }
 
         await category.update({
-            nama: nama ?? category.nama,
             label: label ?? category.label,
             gambar,
         });
@@ -116,11 +100,8 @@ exports.deleteCategory = async (req, res) => {
         const { id } = req.params;
         const category = await Category.findByPk(id);
         if (!category)
-            return res
-                .status(404)
-                .json({ message: "Kategori tidak ditemukan" });
+            return res.status(404).json({ message: "Kategori tidak ditemukan" });
 
-        // Hapus file gambar dari server jika ada
         if (category.gambar && category.gambar.includes("/uploads/")) {
             const filename = category.gambar.split("/uploads/")[1];
             const filePath = path.join(__dirname, "..", "uploads", filename);
@@ -136,3 +117,4 @@ exports.deleteCategory = async (req, res) => {
         });
     }
 };
+

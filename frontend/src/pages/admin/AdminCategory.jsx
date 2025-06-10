@@ -8,7 +8,7 @@ import {
 import DragDropImage from "../../components/DragDropImage";
 import "./AdminCategory.scss";
 
-const INIT_FORM = { nama: "", label: "" };
+const INIT_FORM = { label: "" };
 
 export default function AdminCategory() {
     const [categories, setCategories] = useState([]);
@@ -31,7 +31,7 @@ export default function AdminCategory() {
     const openForm = (cat = null) => {
         setEditing(cat);
         if (cat) {
-            setForm({ nama: cat.nama, label: cat.label });
+            setForm({ label: cat.label });  // Hanya label yang ada
             setImageSrc(cat.gambar || null);
         } else {
             setForm(INIT_FORM);
@@ -49,7 +49,6 @@ export default function AdminCategory() {
         setImageSrc(null);
     };
 
-    // Handle drag & drop or normal file input
     const handleChange = (e) => {
         if (e.target && e.target.name === "image") {
             const file = e.target.files[0];
@@ -69,20 +68,22 @@ export default function AdminCategory() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if ( !form.label) {
+        if (!form.label) {
             alert("Lengkapi semua field!");
             return;
         }
-        // Siapkan FormData
         const fd = new FormData();
         fd.append("label", form.label);
-        if (imageFile) fd.append("image", imageFile);
+        if (imageFile) fd.append("image", imageFile);  // Menambahkan gambar jika ada
 
         if (editing) {
-            await updateCategory(editing.id, fd, true); // true: multipart
+            // Update kategori
+            await updateCategory(editing.id, fd, true); // Kirim FormData
         } else {
-            await createCategory(fd, true);
+            // Buat kategori baru
+            await createCategory(fd, true); // Kirim FormData
         }
+
         closeForm();
         fetchAll();
     };
@@ -108,7 +109,6 @@ export default function AdminCategory() {
                         <tr>
                             <th>No</th>
                             <th>Label</th>
-                            <th>Nama</th>
                             <th>Gambar</th>
                             <th>Aksi</th>
                         </tr>
@@ -116,13 +116,7 @@ export default function AdminCategory() {
                     <tbody>
                         {categories.length === 0 && (
                             <tr>
-                                <td
-                                    colSpan={5}
-                                    style={{
-                                        textAlign: "center",
-                                        color: "#888",
-                                    }}
-                                >
+                                <td colSpan={4} style={{ textAlign: "center", color: "#888" }}>
                                     (No categories)
                                 </td>
                             </tr>
@@ -131,7 +125,6 @@ export default function AdminCategory() {
                             <tr key={cat.id}>
                                 <td>{idx + 1}</td>
                                 <td>{cat.label}</td>
-                                <td>{cat.nama}</td>
                                 <td>
                                     {cat.gambar && (
                                         <img
@@ -142,16 +135,10 @@ export default function AdminCategory() {
                                     )}
                                 </td>
                                 <td>
-                                    <button
-                                        className="btn-action edit"
-                                        onClick={() => openForm(cat)}
-                                    >
+                                    <button className="btn-action edit" onClick={() => openForm(cat)}>
                                         Edit
                                     </button>
-                                    <button
-                                        className="btn-action delete"
-                                        onClick={() => handleDelete(cat.id)}
-                                    >
+                                    <button className="btn-action delete" onClick={() => handleDelete(cat.id)}>
                                         Delete
                                     </button>
                                 </td>
@@ -163,15 +150,9 @@ export default function AdminCategory() {
 
             {showForm && (
                 <div className="category-modal-backdrop" onClick={closeForm}>
-                    <div
-                        className="category-modal"
-                        onClick={(e) => e.stopPropagation()}
-                    >
+                    <div className="category-modal" onClick={(e) => e.stopPropagation()}>
                         <h2>{editing ? "Edit Category" : "Add Category"}</h2>
-                        <form
-                            onSubmit={handleSubmit}
-                            encType="multipart/form-data"
-                        >
+                        <form onSubmit={handleSubmit} encType="multipart/form-data">
                             <label>
                                 Label
                                 <input
@@ -195,11 +176,7 @@ export default function AdminCategory() {
                                 <button className="btn-primary" type="submit">
                                     {editing ? "Save" : "Add"}
                                 </button>
-                                <button
-                                    type="button"
-                                    className="btn-cancel"
-                                    onClick={closeForm}
-                                >
+                                <button type="button" className="btn-cancel" onClick={closeForm}>
                                     Cancel
                                 </button>
                             </div>
