@@ -11,9 +11,8 @@ import {
     FaMoneyBillWave,
     FaQrcode,
     FaClipboard,
-} from "react-icons/fa"; // Import icons
-import "./PaymentInfo.scss"; // Importing SCSS for styling
-import { useRef } from "react";
+} from "react-icons/fa";
+import "./PaymentInfo.scss"; 
 import Notif from "../components/Notif";
 
 const PaymentInfo = () => {
@@ -25,40 +24,44 @@ const PaymentInfo = () => {
     // const setNotif = useNotifStore((state) => state.setNotif); // Set notifikasi
     // const showNotif = useNotifStore((state) => state.showNotif); // Show notifikasi
     const { show, teks, setNotif, showNotif } = useNotifStore();
-    const socket = useRef(new WebSocket(import.meta.env.VITE_URL_WEBSOCKET));
+    useEffect(() => {
+        const socket = new WebSocket(import.meta.env.VITE_URL_WEBSOCKET);
+        socket.onopen = () => {
+            console.log("WebSocket connection established");
+        };
+        socket.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            console.log("Received message:");
+            console.log(message);
 
-    socket.current.onopen = () => {
-        console.log("WebSocket connection established");
-    };
-    socket.current.onmessage = (event) => {
-        // const message = {
-        //     type: "order_update",
-        //     data: {
-        //         order_id,
-        //         status,
-        //     },
-        // };
-
-        const message = JSON.parse(event.data);
-        console.log("Received message:");
-        console.log(message);
-        if (
-            message.type === "order_update" &&
-            message.data.order_id === orderId
-        ) {
-            setNotif(
-                `Status pembayaran untuk Order ID ${orderId} telah diperbarui menjadi ${message.data.status}`
-            );
-            showNotif();
-            setTimeout(() => {
-                window.location.reload();
-            }, 3000);
-        }
-    };
+            if (
+                message.type === "order_update" &&
+                message.data.order_id === orderId
+            ) {
+                setNotif(
+                    `Status pembayaran untuk Order ID ${orderId} telah diperbarui menjadi ${message.data.status}`
+                );
+                showNotif();
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+            }
+        };
+        return () => {
+            socket.close();
+        };
+    }, [orderId, setNotif, showNotif]);
 
     useEffect(() => {
         (async () => {
             const res = await getOrder(orderId, token);
+            console.log('Response from getOrder:', res);
+            if (res.status === 401) {
+                // Handle unauthorized access
+                setNotif("Anda harus login untuk mengakses informasi ini.");
+                showNotif();
+                return;
+            }
             setData(res.data);
             setLoading(false);
 
@@ -228,14 +231,14 @@ const PaymentInfo = () => {
                                             </div>
                                         )}
 
-                                    {isQRIS && data.actions?.length > 0 && (
+                                    {isQRIS && (
                                         <div className="payment-method">
                                             <h3>
                                                 <FaQrcode /> QRIS
                                             </h3>
                                             <img
                                                 src={
-                                                    data.actions.find(
+                                                    data.data_mid.actions.find(
                                                         (a) =>
                                                             a.name ===
                                                             "generate-qr-code"

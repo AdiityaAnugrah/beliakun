@@ -19,7 +19,7 @@ const Checkout = () => {
         catatan: "",
         phone: "",
         paymentType: "bank_transfer",
-        bank: "bca",
+        bank: "bri",
     });
 
     const [loading, setLoading] = useState(false);
@@ -64,7 +64,7 @@ const Checkout = () => {
             setCart([]);
             navigate(`/payment-info/${res.data.order_id}`);
         } else {
-            setNotif(res.message || t("checkout.failed"));
+            setNotif(res.data.message);
             showNotif();
         }
 
@@ -133,9 +133,9 @@ const Checkout = () => {
                                 value={form.bank}
                                 onChange={handleChange}
                             >
-                                <option value="bca">BCA</option>
-                                <option value="bni">BNI</option>
                                 <option value="bri">BRI</option>
+                                <option value="bni">BNI</option>
+                                <option value="mandiri">Mandiri</option>
                                 <option value="permata">Permata</option>
                             </select>
                             <small>{t("checkout.vaNote")}</small>

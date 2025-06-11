@@ -210,6 +210,10 @@ const updateOrder = async (req, res) => {
         const orderCur = await Order.findOne({
             where: { midtrans_id: order_id },
         });
+        const orderItemsCur = await OrderItem.findAll({
+            where: { order_id: orderCur.id },
+            include: [{ model: Product }],
+        })
         if (!orderCur) {
             return res.status(400).json({
                 message: "Order tidak ditemukan",
@@ -231,6 +235,12 @@ const updateOrder = async (req, res) => {
                 include: [{ model: Product }],
             });
 
+            orderItemsCur.forEach(async (item) => {
+                const product = await Product.findByPk(item.Product.id);
+                product.produk_terjual += item.quantity;
+                await product.save();
+            });
+            
             let orderDetails = orderItems
                 .map((item) => {
                     return `${item.dataValues.Product.nama} x ${item.dataValues.quantity} - ${item.dataValues.Product.harga}`;
@@ -238,11 +248,20 @@ const updateOrder = async (req, res) => {
                 .join("\n");
 
             // Kirim email ke pembeli
-            // sendEmail(orderCur.user_email, orderDetails, orderCur);
+            sendEmail(orderCur.user_email, orderDetails, orderCur);
         } else if (transaction_status == "pending") {
             status = "pending";
         } else {
             status = "failed";
+
+            //ini itu kalou customernya kadalursa/gagal bayar/refund/apalah pokonya yg gagal
+            // stok dikembalikan
+            orderItemsCur.forEach(async (item) => {
+                await Product.update(
+                    { stock: item.dataValues.Product.stock + item.dataValues.quantity },
+                    { where: { id: item.dataValues.Product.id } }
+                );
+            });
         }
         await Order.update({ status }, { where: { midtrans_id: order_id } });
 

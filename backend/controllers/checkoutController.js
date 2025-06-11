@@ -26,6 +26,20 @@ const checkoutManual = async (req, res) => {
         if (!cartItems || cartItems.length === 0) {
             return res.status(400).json({ message: "Keranjang kosong." });
         }
+        if (cartItems.some((item) => item.quantity <= 0)) {
+            return res.status(400).json({ message: "Jumlah produk tidak valid." });
+        }
+        if (!alamat) {
+            return res.status(400).json({
+                message: "Alamat harus diisi.",
+            });
+        }
+        if (!phone) {
+            return res.status(400).json({
+                message: "Nomor telepon harus diisi.",
+            });
+        }
+
 
         // generate ID
         const order_id = "BELI" + new Date().getTime();
