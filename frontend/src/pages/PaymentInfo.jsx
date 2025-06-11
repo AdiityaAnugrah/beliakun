@@ -115,7 +115,7 @@ const PaymentInfo = () => {
         return <p>Data pembayaran tidak ditemukan.</p>;
     }
 
-    const isVA = data.data_mid.payment_type === "bank_transfer";
+    const isVA = data.data_mid.payment_type === "bank_transfer" || data.data_mid.payment_type === "echannel";
     const isQRIS = data.data_mid.payment_type === "qris";
     const paymentStatus = data.status;
     const transactionStatus = data.data_mid.transaction_status;
@@ -194,9 +194,7 @@ const PaymentInfo = () => {
 
                             {transactionStatus === "pending" && (
                                 <>
-                                    {isVA &&
-                                        data.data_mid.va_numbers?.length >
-                                            0 && (
+                                    {isVA && (
                                             <div className="payment-method flex flex-col gap-3 p-4 bg-white shadow-lg rounded-md">
                                                 <h3>
                                                     <FaMoneyBillWave /> Transfer
@@ -204,23 +202,21 @@ const PaymentInfo = () => {
                                                 </h3>
                                                 <p>
                                                     <strong>Bank:</strong>{" "}
-                                                    {data.data_mid.va_numbers[0].bank.toUpperCase()}
+                                                    {data.data_mid.payment_type == 'echannel' ? 'Mandiri' : (data.data_mid.permata_va_number ? 'Permata' : data.data_mid.va_numbers[0].bank)}
                                                 </p>
                                                 <p>
                                                     <strong>Nomor VA:</strong>{" "}
-                                                    {
-                                                        data.data_mid
+                                                    {data.data_mid.payment_type == 'echannel' ? data.data_mid.bill_key : (data.data_mid.permata_va_number ? data.data_mid.permata_va_number : data.data_mid
                                                             .va_numbers[0]
-                                                            .va_number
-                                                    }
+                                                            .va_number)}
                                                 </p>
                                                 <button
                                                     className="copy-button"
                                                     onClick={() =>
                                                         copyToClipboard(
-                                                            data.data_mid
-                                                                .va_numbers[0]
-                                                                .va_number,
+                                                            data.data_mid.payment_type == 'echannel' ? data.data_mid.bill_key : (data.data_mid.permata_va_number ? data.data_mid.permata_va_number : data.data_mid
+                                                            .va_numbers[0]
+                                                            .va_number),
                                                             "Nomor VA berhasil disalin!"
                                                         )
                                                     }

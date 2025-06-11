@@ -248,7 +248,7 @@ const updateOrder = async (req, res) => {
                 .join("\n");
 
             // Kirim email ke pembeli
-            sendEmail(orderCur.user_email, orderDetails, orderCur);
+            // sendEmail(orderCur.user_email, orderDetails, orderCur);
         } else if (transaction_status == "pending") {
             status = "pending";
         } else {
