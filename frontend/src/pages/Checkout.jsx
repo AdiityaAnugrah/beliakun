@@ -35,12 +35,6 @@ const Checkout = () => {
     };
 
     const handleCheckout = async () => {
-        // if (!form.nama || !form.alamat) {
-        //     setNotif(t("checkout.required"));
-        //     showNotif();
-        //     return;
-        // }
-
         if (!token) {
             emptyUser();
             navigate("/login");

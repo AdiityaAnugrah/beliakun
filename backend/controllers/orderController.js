@@ -6,6 +6,16 @@ const key = require("../models/keyModel.js");
 const { where } = require("sequelize");
 const baseUrl = process.env.BASE_URL || "http://localhost:4000";
 const WebSocket = require("ws");
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+});
+
 
 // Menambahkan produk ke keranjang
 
@@ -47,55 +57,55 @@ const getOrder = async (req, res) => {
 
 const sendEmail = async (userEmail, orderDetails, orderCur) => {
     try {
-        // Ambil order items untuk detail pesanan
+        // Ambil semua item dalam pesanan
         const orderItems = await OrderItem.findAll({
             where: { order_id: orderCur.id },
             include: [{ model: Product }],
         });
 
+        // Format detail order ke dalam string
         let orderInfo = orderItems
             .map((item) => {
                 return `${item.dataValues.Product.nama} x ${item.dataValues.quantity} - ${item.dataValues.Product.harga}`;
             })
             .join("\n");
 
-        // Cek apakah ada produk dengan nama "PUBG" dan ambil key dari database berdasarkan produk
-        const isPUBG = orderItems.some((item) =>
-            item.dataValues.Product.nama.toLowerCase().includes("pubg")
+        // Deteksi apakah ada produk yang namanya mengandung "pubg"
+        const allowedNames = ["bypass pubg", "bypass pubg mobile"];
+        const pubgItem = orderItems.find((item) =>
+            allowedNames.includes(item.dataValues.Product.nama.toLowerCase())
         );
 
+
         let keyInfo = "";
-        if (isPUBG) {
-            // Cari key berdasarkan nama produk di tabel Product dan durasi 1 bulan
-            const productName = "PUBG"; // Nama produk yang dicari
-            const product = await Product.findOne({
+
+        if (pubgItem) {
+            const productId = pubgItem.dataValues.Product.id;
+
+            // Ambil key untuk produk tersebut dengan durasi "1 bulan"
+            const keyData = await keyModel.findOne({
                 where: {
-                    nama: productName,
+                    product_id: productId,
+                    duration: "1 bulan",
+                    is_used: false, // jika ada kolom is_used
                 },
+                attributes: ["id", "key"],
             });
 
-            if (product) {
-                // Jika produk ditemukan, ambil key berdasarkan durasi 1 bulan
-                const keyData = await keyModel.findOne({
-                    where: {
-                        product_id: product.id, // Cari berdasarkan ID produk
-                        duration: "1 bulan", // Durasi 1 bulan
-                    },
-                    attributes: ["key"], // Ambil hanya kolom key
-                });
+            if (keyData) {
+                keyInfo = `Bonus Key untuk ${pubgItem.dataValues.Product.nama}: ${keyData.key}`;
 
-                if (keyData) {
-                    keyInfo = `Bonus Key untuk ${productName}: ${keyData.key}`; // Jika key ditemukan
-                } else {
-                    keyInfo = `Pada produk ${productName} belum tersedia Key.`; // Jika key tidak ditemukan
-                }
+                // Tandai key sebagai sudah digunakan (jika ada kolom is_used)
+                await keyModel.update({ is_used: true }, { where: { id: keyData.id } });
+            } else {
+                keyInfo = `Pada produk ${pubgItem.dataValues.Product.nama} belum tersedia Key.`;
             }
         }
 
-        // Kirim email
+        // Email template HTML
         const mailOptions = {
-            from: process.env.EMAIL_USER, // Pengirim email
-            to: userEmail, // Penerima email
+            from: process.env.EMAIL_USER,
+            to: userEmail,
             subject: "Pesanan Anda Berhasil Diproses",
             html: `
                 <html>
@@ -159,12 +169,12 @@ const sendEmail = async (userEmail, orderDetails, orderCur) => {
                                         ${orderInfo
                                             .split("\n")
                                             .map((item) => {
-                                                const [name, quantity, price] =
-                                                    item.split(" x ");
+                                                const [nameQty, price] = item.split(" - ");
+                                                const [name, qty] = nameQty.split(" x ");
                                                 return `
                                                     <tr>
                                                         <td>${name}</td>
-                                                        <td>${quantity}</td>
+                                                        <td>${qty}</td>
                                                         <td>${price}</td>
                                                     </tr>
                                                 `;
@@ -176,7 +186,7 @@ const sendEmail = async (userEmail, orderDetails, orderCur) => {
 
                             ${
                                 keyInfo
-                                    ? `<p><strong>${keyInfo}</strong></p>`
+                                    ? `<p style="margin-top:20px"><strong>${keyInfo}</strong></p>`
                                     : ""
                             }
 
@@ -202,6 +212,7 @@ const sendEmail = async (userEmail, orderDetails, orderCur) => {
         console.error("Error preparing email:", error);
     }
 };
+
 
 const updateOrder = async (req, res) => {
     const { status_code, transaction_status, order_id, status_message } =
@@ -248,7 +259,7 @@ const updateOrder = async (req, res) => {
                 .join("\n");
 
             // Kirim email ke pembeli
-            // sendEmail(orderCur.user_email, orderDetails, orderCur);
+            sendEmail(orderCur.user_email, orderDetails, orderCur);
         } else if (transaction_status == "pending") {
             status = "pending";
         } else {

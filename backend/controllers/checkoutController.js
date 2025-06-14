@@ -24,19 +24,14 @@ const checkoutManual = async (req, res) => {
         });
 
         if (!cartItems || cartItems.length === 0) {
-            return res.status(400).json({ message: "Keranjang kosong." });
+            return res.status(400).json({ message: "cart not found" });
         }
         if (cartItems.some((item) => item.quantity <= 0)) {
-            return res.status(400).json({ message: "Jumlah produk tidak valid." });
+            return res.status(400).json({ message: "Invalid product quantity." });
         }
-        if (!alamat) {
+        if (!alamat || !catatan || !phone) {
             return res.status(400).json({
-                message: "Alamat harus diisi.",
-            });
-        }
-        if (!phone) {
-            return res.status(400).json({
-                message: "Nomor telepon harus diisi.",
+                message: "All must be filled in",
             });
         }
 
@@ -51,7 +46,7 @@ const checkoutManual = async (req, res) => {
 
         // Buat transaksi ke Midtrans
         let parameter = {
-            payment_type: paymentType,
+            payment_type: bank == 'mandiri' ? 'echannel': paymentType,
             transaction_details: {
                 gross_amount,
                 order_id,
@@ -68,6 +63,12 @@ const checkoutManual = async (req, res) => {
             if (!bank)
                 return res.status(400).json({ message: "Bank tidak dipilih." });
             parameter.bank_transfer = { bank };
+        }
+        if (bank === 'mandiri') {
+            parameter.echannel = {
+                bill_info1: 'BeliaKun',
+                bill_info2: order_id,
+            }
         }
 
         parameter.customer_details = {
@@ -92,7 +93,6 @@ const checkoutManual = async (req, res) => {
             }
         );
         const midtransJson = await midtransResponse.json();
-        console.log(midtransJson);
         if (midtransJson.status_code[0] != "2") {
             return res
                 .status(Number(midtransJson.status_code))
@@ -128,7 +128,7 @@ const checkoutManual = async (req, res) => {
         await Cart.destroy({ where: { user_id: req.user.id } });
 
         return res.status(200).json({
-            message: "Checkout berhasil",
+            message: "Checkout successful",
             order_id,
         });
     } catch (error) {
