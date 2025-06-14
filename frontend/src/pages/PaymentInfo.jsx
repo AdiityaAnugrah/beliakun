@@ -2,299 +2,183 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getOrder } from "../services/checkoutService";
 import useUserStore from "../../store/userStore";
-import useNotifStore from "../../store/notifStore"; // Importing notifikasi store
+import useNotifStore from "../../store/notifStore";
 import {
-    FaSpinner,
-    FaCheck,
-    FaTimesCircle,
-    FaClock,
-    FaMoneyBillWave,
-    FaQrcode,
-    FaClipboard,
+  FaSpinner,
+  FaCheck,
+  FaTimesCircle,
+  FaClock,
+  FaMoneyBillWave,
+  FaQrcode,
+  FaClipboard,
 } from "react-icons/fa";
-import "./PaymentInfo.scss"; 
+import { useTranslation } from "react-i18next";
+import "./PaymentInfo.scss";
 import Notif from "../components/Notif";
 
 const PaymentInfo = () => {
-    const { orderId } = useParams();
-    const { token } = useUserStore();
-    const [data, setData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [timer, setTimer] = useState(null);
-    // const setNotif = useNotifStore((state) => state.setNotif); // Set notifikasi
-    // const showNotif = useNotifStore((state) => state.showNotif); // Show notifikasi
-    const { show, teks, setNotif, showNotif } = useNotifStore();
-    useEffect(() => {
-        const socket = new WebSocket(import.meta.env.VITE_URL_WEBSOCKET);
-        socket.onopen = () => {
-            console.log("WebSocket connection established");
-        };
-        socket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-            console.log("Received message:");
-            console.log(message);
+  const { t } = useTranslation();
+  const { orderId } = useParams();
+  const { token } = useUserStore();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [timer, setTimer] = useState(null);
+  const { show, teks, setNotif, showNotif } = useNotifStore();
 
-            if (
-                message.type === "order_update" &&
-                message.data.order_id === orderId
-            ) {
-                setNotif(
-                    `Status pembayaran untuk Order ID ${orderId} telah diperbarui menjadi ${message.data.status}`
-                );
-                showNotif();
-                setTimeout(() => {
-                    window.location.reload();
-                }, 3000);
-            }
-        };
-        return () => {
-            socket.close();
-        };
-    }, [orderId, setNotif, showNotif]);
-
-    useEffect(() => {
-        (async () => {
-            const res = await getOrder(orderId, token);
-            console.log('Response from getOrder:', res);
-            if (res.status === 401) {
-                // Handle unauthorized access
-                setNotif("Anda harus login untuk mengakses informasi ini.");
-                showNotif();
-                return;
-            }
-            setData(res.data);
-            setLoading(false);
-
-            if (res.data && res.data.data_mid.expiry_time) {
-                const expiryTime = new Date(
-                    res.data.data_mid.expiry_time
-                ).getTime();
-                const now = new Date().getTime();
-                const timeRemaining = expiryTime - now;
-
-                if (timeRemaining > 0) {
-                    const countdown = setInterval(() => {
-                        const remaining = expiryTime - new Date().getTime();
-                        if (remaining <= 0) {
-                            clearInterval(countdown);
-                        }
-                        setTimer(remaining);
-                    }, 1000);
-                }
-            }
-        })();
-    }, [orderId, token]);
-
-    // Calculate formatted time remaining
-    const formattedTimeRemaining = timer
-        ? `${Math.floor(timer / (1000 * 60 * 60 * 24))} hari ${Math.floor(
-              (timer % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-          )} jam ${Math.floor(
-              (timer % (1000 * 60 * 60)) / (1000 * 60)
-          )} menit ${Math.floor((timer % (1000 * 60)) / 1000)} detik`
-        : "Expired";
-
-    // Function to copy text to clipboard
-    const copyToClipboard = (text, message) => {
-        navigator.clipboard.writeText(text).then(() => {
-            setNotif(message); // Set the notification message
-            showNotif(); // Show the notification
-        });
-    };
-
-    if (loading) {
-        return (
-            <div className="loading-spinner">
-                <FaSpinner className="spin-icon" />
-                <p>Loading...</p>
-            </div>
+  useEffect(() => {
+    const socket = new WebSocket(import.meta.env.VITE_URL_WEBSOCKET);
+    socket.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      if (
+        message.type === "order_update" &&
+        message.data.order_id === orderId
+      ) {
+        setNotif(
+          `${t("notif.updated", "Payment status for Order ID")} ${orderId} ${t("notif.updated.to", "has been updated to")} ${message.data.status}`
         );
-    }
+        showNotif();
+        setTimeout(() => window.location.reload(), 3000);
+      }
+    };
+    return () => socket.close();
+  }, [orderId, setNotif, showNotif]);
 
-    if (!data) {
-        return <p>Data pembayaran tidak ditemukan.</p>;
-    }
+  useEffect(() => {
+    (async () => {
+      const res = await getOrder(orderId, token);
+      if (res.status === 401) {
+        setNotif(t("notif.unauthorized", "You must be logged in to access this information."));
+        showNotif();
+        return;
+      }
+      setData(res.data);
+      setLoading(false);
 
-    const isVA = data.data_mid.payment_type === "bank_transfer" || data.data_mid.payment_type === "echannel";
-    const isQRIS = data.data_mid.payment_type === "qris";
-    const paymentStatus = data.status;
-    const transactionStatus = data.data_mid.transaction_status;
+      if (res.data?.data_mid?.expiry_time) {
+        const expiryTime = new Date(res.data.data_mid.expiry_time).getTime();
+        const countdown = setInterval(() => {
+          const remaining = expiryTime - new Date().getTime();
+          if (remaining > 0) setTimer(remaining);
+        }, 1000);
+        return () => clearInterval(countdown);
+      }
+    })();
+  }, [orderId, token]);
 
+  const formattedTimeRemaining = timer
+    ? `${Math.floor(timer / (1000 * 60 * 60 * 24))} ${t("time.days", "days")} ${Math.floor((timer % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))} ${t("time.hours", "hours")} ${Math.floor((timer % (1000 * 60 * 60)) / (1000 * 60))} ${t("time.minutes", "minutes")} ${Math.floor((timer % (1000 * 60)) / 1000)} ${t("time.seconds", "seconds")}`
+    : t("time.expired", "Expired");
+
+  const copyToClipboard = (text, message) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setNotif(message);
+      showNotif();
+    });
+  };
+
+  if (loading)
     return (
-        <>
-            <Notif teks={teks} show={show} />
-            <div className="payment-info-page flex flex-col">
-                <h1 className="text-center mb-8">Informasi Pembayaran</h1>
-                <p className="order-id text-center mb-4">Order ID: {orderId}</p>
-
-                <div className="order-details flex flex-col gap-8">
-                    {/* Menampilkan Status Pembayaran */}
-                    <div className="status">
-                        <p>
-                            <strong>Status Pembayaran: </strong>
-                            {paymentStatus === "pending" ? (
-                                <FaClock className="icon-pending" />
-                            ) : paymentStatus === "success" ? (
-                                <FaCheck className="icon-success" />
-                            ) : (
-                                <FaTimesCircle className="icon-failed" />
-                            )}
-                            {paymentStatus}
-                        </p>
-                    </div>
-
-                    {/* Menampilkan Harga yang Harus Dibayar */}
-                    <div className="order-summary">
-                        <h3>Rincian Pemesanan</h3>
-                        <div className="item-list">
-                            {data.items.map((item) => (
-                                <div
-                                    className="item flex items-center gap-5 p-4 bg-gray-100 rounded-lg shadow-md"
-                                    key={item.productId}
-                                >
-                                    <img
-                                        src={item.gambar}
-                                        alt={item.nama}
-                                        className="item-image w-20 h-20 object-cover rounded-md"
-                                    />
-                                    <div className="item-info flex flex-col">
-                                        <h4>{item.nama}</h4>
-                                        <p>
-                                            Harga: Rp{" "}
-                                            {item.harga.toLocaleString()}
-                                        </p>
-                                        <p>Quantity: {item.quantity}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Menampilkan VA atau QRIS untuk status pending */}
-                    {paymentStatus === "pending" && (
-                        <>
-                            <div className="payment-method">
-                                <h3>Segera Lakukan Pembayaran</h3>
-                                <p>
-                                    Pembayaran Anda masih dalam status pending.
-                                    Silakan segera lakukan pembayaran untuk
-                                    mengonfirmasi transaksi.
-                                </p>
-                                <p>
-                                    <strong>Waktu Expired: </strong>
-                                    {formattedTimeRemaining}
-                                </p>
-                                <p>
-                                    <strong>
-                                        Total Harga yang Harus Dibayar:{" "}
-                                    </strong>
-                                    Rp {data.total_harga.toLocaleString()}
-                                </p>
-                            </div>
-
-                            {transactionStatus === "pending" && (
-                                <>
-                                    {isVA && (
-                                            <div className="payment-method flex flex-col gap-3 p-4 bg-white shadow-lg rounded-md">
-                                                <h3>
-                                                    <FaMoneyBillWave /> Transfer
-                                                    ke:
-                                                </h3>
-                                                <p>
-                                                    <strong>Bank:</strong>{" "}
-                                                    {data.data_mid.payment_type == 'echannel' ? 'Mandiri' : (data.data_mid.permata_va_number ? 'Permata' : data.data_mid.va_numbers[0].bank)}
-                                                </p>
-                                                <p>
-                                                    <strong>Nomor VA:</strong>{" "}
-                                                    {data.data_mid.payment_type == 'echannel' ? data.data_mid.bill_key : (data.data_mid.permata_va_number ? data.data_mid.permata_va_number : data.data_mid
-                                                            .va_numbers[0]
-                                                            .va_number)}
-                                                </p>
-                                                <button
-                                                    className="copy-button"
-                                                    onClick={() =>
-                                                        copyToClipboard(
-                                                            data.data_mid.payment_type == 'echannel' ? data.data_mid.bill_key : (data.data_mid.permata_va_number ? data.data_mid.permata_va_number : data.data_mid
-                                                            .va_numbers[0]
-                                                            .va_number),
-                                                            "Nomor VA berhasil disalin!"
-                                                        )
-                                                    }
-                                                >
-                                                    <FaClipboard /> Salin Nomor
-                                                    VA
-                                                </button>
-                                            </div>
-                                        )}
-
-                                    {isQRIS && (
-                                        <div className="payment-method">
-                                            <h3>
-                                                <FaQrcode /> QRIS
-                                            </h3>
-                                            <img
-                                                src={
-                                                    data.data_mid.actions.find(
-                                                        (a) =>
-                                                            a.name ===
-                                                            "generate-qr-code"
-                                                    )?.url
-                                                }
-                                                alt="QRIS"
-                                                width={250}
-                                            />
-                                            <button
-                                                className="copy-button"
-                                                onClick={() =>
-                                                    copyToClipboard(
-                                                        data.actions.find(
-                                                            (a) =>
-                                                                a.name ===
-                                                                "generate-qr-code"
-                                                        )?.url,
-                                                        "QRIS berhasil disalin!"
-                                                    )
-                                                }
-                                            >
-                                                <FaClipboard /> Salin QRIS
-                                            </button>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </>
-                    )}
-
-                    {/* Menampilkan Pesan untuk status pembayaran success */}
-                    {paymentStatus === "success" && (
-                        <div className="status-message success flex items-center justify-center bg-green-100 p-4 rounded-lg">
-                            <FaCheck className="icon-success mr-4" />
-                            <p>
-                                Transaksi Anda berhasil! Terima kasih atas
-                                pembayaran Anda.
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Menampilkan Pesan untuk status pembayaran failed */}
-                    {paymentStatus === "failed" && (
-                        <div className="status-message failed flex items-center justify-center bg-red-100 p-4 rounded-lg">
-                            <FaTimesCircle className="icon-failed mr-4" />
-                            <p>
-                                Maaf, pembayaran Anda gagal. Silakan coba lagi
-                                atau hubungi customer support.
-                            </p>
-                        </div>
-                    )}
-
-                    <p className="text-center">
-                        Silakan lakukan pembayaran dan jangan tutup halaman ini
-                        sebelum selesai.
-                    </p>
-                </div>
-            </div>
-        </>
+      <div className="loading-spinner">
+        <FaSpinner className="spin-icon" />
+        <p>{t("loading", "Loading...")}</p>
+      </div>
     );
+
+  if (!data) return <p>{t("payment.not_found", "Payment information not found.")}</p>;
+
+  const isVA = ["bank_transfer", "echannel"].includes(data.data_mid.payment_type);
+  const isQRIS = data.data_mid.payment_type === "qris";
+  const paymentStatus = data.status;
+  const transactionStatus = data.data_mid.transaction_status;
+
+  return (
+    <div className="payment-info-page">
+      <Notif teks={teks} show={show} />
+
+      <header className="payment-header">
+        <h1>{t("payment.title", "Payment Information")}</h1>
+        <p className="order-id">{t("payment.order_id", "Order ID")}: {orderId}</p>
+      </header>
+
+      <section className="payment-status">
+        <p>
+          <strong>{t("payment.status", "Payment Status")}:</strong>{" "}
+          {paymentStatus === "pending" ? (
+            <FaClock className="icon-pending" />
+          ) : paymentStatus === "success" ? (
+            <FaCheck className="icon-success" />
+          ) : (
+            <FaTimesCircle className="icon-failed" />
+          )}{" "}
+          {paymentStatus}
+        </p>
+      </section>
+
+      <section className="payment-summary">
+        <h2>{t("payment.summary", "Order Summary")}</h2>
+        <div className="item-list">
+          {data.items.map((item) => (
+            <div className="item" key={item.productId}>
+              <img src={item.gambar} alt={item.nama} />
+              <div className="info">
+                <h4>{item.nama}</h4>
+                <p>{t("payment.price", "Price")}: Rp {item.harga.toLocaleString()}</p>
+                <p>{t("payment.qty", "Quantity")}: {item.quantity}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {paymentStatus === "pending" && (
+        <section className="payment-instructions">
+          <h2>{t("payment.instructions", "Please Make Payment")}</h2>
+          <p>{t("payment.pending_msg", "Your payment is still pending. Please complete the payment before expiration.")}</p>
+          <p><strong>{t("payment.expires", "Expires in")}:</strong> {formattedTimeRemaining}</p>
+          <p><strong>{t("payment.total", "Total Amount")}:</strong> Rp {data.total_harga.toLocaleString()}</p>
+
+          {transactionStatus === "pending" && (
+            <>
+              {isVA && (
+                <div className="payment-method-box">
+                  <h3><FaMoneyBillWave /> {t("payment.transfer_to", "Transfer to")}:</h3>
+                  <p><strong>{t("payment.bank", "Bank")}:</strong> {data.data_mid.payment_type === 'echannel' ? 'Mandiri' : (data.data_mid.permata_va_number ? 'Permata' : data.data_mid.va_numbers[0].bank.toUpperCase())}</p>
+                  <p><strong>{t("payment.va_number", "VA Number")}:</strong> {data.data_mid.payment_type === 'echannel' ? data.data_mid.bill_key : (data.data_mid.permata_va_number || data.data_mid.va_numbers[0].va_number)}</p>
+                  <button className="copy-button" onClick={() => copyToClipboard(
+                    data.data_mid.payment_type === 'echannel' ? data.data_mid.bill_key : (data.data_mid.permata_va_number || data.data_mid.va_numbers[0].va_number),
+                    t("notif.copied_va", "VA number copied!")
+                  )}><FaClipboard /> {t("payment.copy_va", "Copy VA Number")}</button>
+                </div>
+              )}
+
+              {isQRIS && (
+                <div className="payment-method-box">
+                  <h3><FaQrcode /> {t("payment.qris_title", "Pay with QRIS")}</h3>
+                  <img src={data.data_mid.actions.find(a => a.name === "generate-qr-code")?.url} alt="QRIS" />
+                  <button className="copy-button" onClick={() => copyToClipboard(
+                    data.data_mid.actions.find(a => a.name === "generate-qr-code")?.url,
+                    t("notif.copied_qris", "QRIS copied!")
+                  )}><FaClipboard /> {t("payment.copy_qris", "Copy QRIS")}</button>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      )}
+
+      {(paymentStatus === "success" || paymentStatus === "failed") && (
+        <section className={`status-message ${paymentStatus}`}>
+          {paymentStatus === "success" ? (
+            <><FaCheck className="icon-success" /> <p>{t("payment.success_msg", "Your transaction was successful. Thank you!")}</p></>
+          ) : (
+            <><FaTimesCircle className="icon-failed" /> <p>{t("payment.failed_msg", "Payment failed. Please try again.")}</p></>
+          )}
+        </section>
+      )}
+
+      <p className="text-center">{t("payment.footer_msg", "Please do not close this page until the payment is complete.")}</p>
+    </div>
+  );
 };
 
 export default PaymentInfo;

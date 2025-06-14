@@ -1,5 +1,6 @@
 const Wishlist = require("../models/wishlistModel");
 const Product = require("../models/productModel");
+const Category = require("../models/categoryModel.js");
 const baseUrl = process.env.BASE_URL || "http://localhost:4000";
 
 // Tambah ke wishlist
@@ -32,7 +33,7 @@ const getWishlist = async (req, res) => {
     try {
         const items = await Wishlist.findAll({
             where: { user_id: req.user.id },
-            include: [{ model: Product }],
+            include: [{ model: Product, include: [{ model: Category, as: "category", attributes: ["label"] }] }],
         });
 
         const data = items.map((item) => ({
@@ -41,6 +42,7 @@ const getWishlist = async (req, res) => {
             nama: item.Product.nama,
             harga: item.Product.harga,
             gambar: `${baseUrl}/uploads/${item.Product.gambar}`,
+            kategori: item.Product.categoryId?.label,
         }));
 
         res.status(200).json(data);

@@ -4,6 +4,7 @@ const midtransClient = require("midtrans-client");
 const Order = require("../models/orderModel.js");
 const OrderItem = require("../models/orderItemModel.js");
 const Product = require("../models/productModel.js");
+const Category = require("../models/categoryModel.js");
 
 const coreApi = new midtransClient.CoreApi({
     isProduction: false,
@@ -20,7 +21,10 @@ const checkoutManual = async (req, res) => {
         // Cek cart user
         const cartItems = await Cart.findAll({
             where: { user_id: req.user.id },
-            include: [{ model: Product }],
+            include: [{
+                model: Product,
+                include: [{ model: Category, as: "category", attributes: ["label"] }]
+            }],
         });
 
         if (!cartItems || cartItems.length === 0) {

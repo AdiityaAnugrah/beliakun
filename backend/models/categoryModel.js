@@ -13,12 +13,6 @@ const Category = sequelize.define(
     }
 );
 
-Category.associate = (models) => {
-    Category.hasMany(models.Product, {
-        foreignKey: 'categoryId',
-        as: 'products'
-    });
-};
 
 
 module.exports = Category;

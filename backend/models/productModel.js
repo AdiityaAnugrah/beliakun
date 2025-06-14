@@ -56,11 +56,5 @@ const Product = sequelize.define(
     }
 );
 
-Product.associate = (models) => {
-    Product.belongsTo(models.Category, {
-        foreignKey: 'categoryId', // This is the default, but explicitly stating it is good practice
-        as: 'category' // Alias for the association, useful for includes
-    });
-};
 
 module.exports = Product;

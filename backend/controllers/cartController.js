@@ -1,6 +1,8 @@
 require("dotenv").config();
 const Cart = require("../models/cartModel.js");
 const Product = require("../models/productModel.js");
+const Category = require("../models/categoryModel.js");
+
 const baseUrl = process.env.BASE_URL || "http://localhost:4000";
 
 // Menambahkan produk ke keranjang
@@ -39,7 +41,7 @@ const addToCart = async (req, res) => {
 
         const cartItems = await Cart.findAll({
             where: { user_id: req.user.id },
-            include: [{ model: Product }],
+            include: [{ model: Product, include: [{ model: Category, as: "category", attributes: ["label"] }] }],
         });
 
         res.status(200).json(
@@ -50,6 +52,7 @@ const addToCart = async (req, res) => {
                 gambar: `${baseUrl}/uploads/${c.Product.gambar}`,
                 quantity: c.quantity,
                 stok: c.Product.stock,
+                kategori: c.Product.categoryId?.label,
             }))
         );
     } catch (error) {
@@ -62,7 +65,10 @@ const getCart = async (req, res) => {
     try {
         const cartItems = await Cart.findAll({
             where: { user_id: req.user.id },
-            include: [{ model: Product }],
+            include: [{
+                model: Product,
+                include: [{ model: Category, as: "category", attributes: ["label"] }]
+            }],
         });
         res.status(200).json(
             cartItems.map((c) => ({
@@ -72,6 +78,7 @@ const getCart = async (req, res) => {
                 gambar: `${baseUrl}/uploads/${c.Product.gambar}`,
                 quantity: c.quantity,
                 stok: c.Product.stock,
+                kategori: c.Product.categoryId?.label,
             }))
         );
     } catch (error) {

@@ -17,6 +17,7 @@ import Checkout from "./pages/Checkout.jsx";
 import PaymentInfo from "./pages/PaymentInfo.jsx";
 import Profile from "./pages/Profile.jsx";
 import Setting from "./pages/Setting";
+import History from "./pages/History.jsx";
 
 // Admin
 import HomeAdmin from "./pages/admin/HomeAdmin.jsx";
@@ -52,10 +53,12 @@ createRoot(document.getElementById("root")).render(
                 <Route path="checkout" element={<Checkout />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="setting" element={<Setting />} />
+                <Route path="history" element={<History />} />
                 <Route
                     path="/payment-info/:orderId"
                     element={<PaymentInfo />}
                 />
+
                 <Route path="*" element={<NotFond />} />
             </Route>
             <Route

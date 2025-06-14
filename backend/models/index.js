@@ -16,6 +16,7 @@ const BennerHome = require("./bennerHomeModel")(
 
 // RELASI (optional, bisa tambah lain kalau mau)
 Product.belongsTo(Category, { foreignKey: "categoryId", as: "category" });
+Category.hasMany(Product, { foreignKey: "categoryId", as: "products" });
 // Category.hasMany(Product, { foreignKey: "categoryId", as: "products" });
 
 const initModels = async () => {

@@ -1,0 +1,113 @@
+.history-page {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 2rem;
+  font-family: "Segoe UI", sans-serif;
+
+  h1 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: var(--hitam);
+  }
+
+  .loading,
+  .error,
+  .empty {
+    text-align: center;
+    font-size: 1.1rem;
+    margin-top: 2rem;
+    color: #555;
+  }
+
+  .order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .order-card {
+    background: #fff;
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      margin-bottom: 1rem;
+
+      .status {
+        text-transform: capitalize;
+        padding: 0.2rem 0.6rem;
+        border-radius: 5px;
+        font-size: 0.85rem;
+        &.pending { background-color: #fff3cd; color: #856404; }
+        &.success { background-color: #d4edda; color: #155724; }
+        &.failed { background-color: #f8d7da; color: #721c24; }
+      }
+    }
+
+    .order-items {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+
+      .order-item {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        padding: 0.75rem;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+
+        img {
+          width: 70px;
+          height: 70px;
+          object-fit: cover;
+          border-radius: 6px;
+        }
+
+        .details {
+          flex: 1;
+          p {
+            margin: 0.2rem 0;
+            font-size: 0.95rem;
+            color: #333;
+
+            &.name {
+              font-weight: bold;
+              font-size: 1rem;
+            }
+          }
+        }
+      }
+    }
+
+    .order-total {
+      text-align: right;
+      margin-top: 1rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--merah);
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+
+    .order-card {
+      padding: 1rem;
+    }
+
+    .order-item {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .order-total {
+      text-align: left;
+    }
+  }
+}

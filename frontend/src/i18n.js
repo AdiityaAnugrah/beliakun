@@ -190,8 +190,44 @@ const resources = {
             home_all_products: "All Products",
             home_view_all_products: "View All Products",
             home_no_products: "No products found.",            
+            },
+            payment: {
+            title: "Payment Information",
+            order_id: "Order ID",
+            status: "Payment Status",
+            summary: "Order Summary",
+            price: "Price",
+            qty: "Quantity",
+            instructions: "Please Make Payment",
+            pending_msg: "Your payment is still pending. Please complete the payment before expiration.",
+            expires: "Expires in",
+            total: "Total Amount",
+            transfer_to: "Transfer to",
+            bank: "Bank",
+            va_number: "VA Number",
+            copy_va: "Copy VA Number",
+            qris_title: "Pay with QRIS",
+            copy_qris: "Copy QRIS",
+            success_msg: "Your transaction was successful. Thank you!",
+            failed_msg: "Payment failed. Please try again.",
+            not_found: "Payment information not found.",
+            footer_msg: "Please do not close this page until the payment is complete."
+            },
+            time: {
+                days: "days",
+                hours: "hours",
+                minutes: "minutes",
+                seconds: "seconds",
+                expired: "Expired"
+            },
+            notif: {
+                updated: "Payment status for Order ID",
+                updated_to: "has been updated to",
+                unauthorized: "You must be logged in to access this information.",
+                copied_va: "VA number copied!",
+                copied_qris: "QRIS copied!"
+            }
         },
-    },
 
     id: {
         translation: {
@@ -374,8 +410,45 @@ const resources = {
             home_view_all_products: "Lihat Semua Produk",
             home_no_products: "Tidak ada produk yang ditemukan.",
 
+            },
+            payment: {
+            title: "Informasi Pembayaran",
+            order_id: "ID Pesanan",
+            status: "Status Pembayaran",
+            summary: "Ringkasan Pesanan",
+            price: "Harga",
+            qty: "Jumlah",
+            instructions: "Silakan Lakukan Pembayaran",
+            pending_msg: "Pembayaran Anda masih pending. Silakan selesaikan sebelum waktu habis.",
+            expires: "Berakhir dalam",
+            total: "Total Tagihan",
+            transfer_to: "Transfer ke",
+            bank: "Bank",
+            va_number: "Nomor VA",
+            copy_va: "Salin Nomor VA",
+            qris_title: "Bayar dengan QRIS",
+            copy_qris: "Salin QRIS",
+            success_msg: "Transaksi Anda berhasil. Terima kasih!",
+            failed_msg: "Pembayaran gagal. Silakan coba lagi.",
+            not_found: "Informasi pembayaran tidak ditemukan.",
+            footer_msg: "Silakan jangan tutup halaman ini sampai pembayaran selesai."
         },
-    },
+        time: {
+            days: "hari",
+            hours: "jam",
+            minutes: "menit",
+            seconds: "detik",
+            expired: "Kadaluarsa"
+        },
+        notif: {
+            updated: "Status pembayaran untuk Order ID",
+            updated_to: "telah diperbarui menjadi",
+            unauthorized: "Anda harus login untuk mengakses informasi ini.",
+            copied_va: "Nomor VA berhasil disalin!",
+            copied_qris: "QRIS berhasil disalin!"
+        }
+        
+        },  
 };
 
 // ========================

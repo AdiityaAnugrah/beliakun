@@ -3,6 +3,7 @@ const Order = require("../models/orderModel.js");
 const Product = require("../models/productModel.js");
 const OrderItem = require("../models/orderItemModel.js");
 const KeyModel = require("../models/keyModel.js");
+const Category = require("../models/categoryModel.js");
 const { where } = require("sequelize");
 const baseUrl = process.env.BASE_URL || "http://localhost:4000";
 const WebSocket = require("ws");
@@ -35,7 +36,10 @@ const getOrder = async (req, res) => {
         console.log(JSON.parse(JSON.parse(order.dataValues.data_mid)));
         const orderItems = await OrderItem.findAll({
             where: { order_id: order.dataValues.id },
-            include: [{ model: Product }],
+            include: [{
+                model: Product,
+                include: [{ model: Category, as: "category", attributes: ["label"] }]
+            }],
         });
         res.status(200).json({
             ...order.dataValues,
@@ -47,6 +51,7 @@ const getOrder = async (req, res) => {
                 gambar: `${baseUrl}/uploads/${c.dataValues.Product.gambar}`,
                 quantity: c.dataValues.quantity,
                 stok: c.dataValues.Product.stock,
+                kategori: c.dataValues.Product.categoryId?.label,
             })),
         });
     } catch (error) {
@@ -251,7 +256,7 @@ const updateOrder = async (req, res) => {
                 .join("\n");
 
             // Kirim email ke pembeli
-            // sendEmail(orderCur.user_email, orderDetails, orderCur);
+            sendEmail(orderCur.user_email, orderDetails, orderCur);
         } else if (transaction_status == "pending") {
             status = "pending";
         } else {
@@ -291,5 +296,39 @@ const updateOrder = async (req, res) => {
     }
 };
 
+const getOrderHistory  = async (req,res) => {
+    try {
+        const orders = await Order.findAll({
+            where: { user_id: req.user.id },
+            order: [["createdAt", "DESC"]],
+            include: [{ model: OrderItem, include: [{ model: Product }] }],
+        });
 
-module.exports = { getOrder, updateOrder };
+        const baseUrl = process.env.BASE_URL || "http://localhost:4000";
+
+        const formattedOrders = orders.map((order) => ({
+            id: order.id,
+            midtrans_id: order.midtrans_id,
+            total: order.total,
+            status: order.status,
+            createdAt: order.createdAt,
+            items: order.OrderItems.map((item) => ({
+                id: item.id,
+                productId: item.Product.id,
+                nama: item.Product.nama,
+                harga: item.Product.harga,
+                gambar: `${baseUrl}/uploads/${item.Product.gambar}`,
+                quantity: item.quantity,
+            })),
+        }));
+
+        res.status(200).json(formattedOrders);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Fail to get order" });
+    }
+}
+
+
+
+module.exports = { getOrder, updateOrder, getOrderHistory };

@@ -50,7 +50,7 @@ const AddProduct = () => {
                     setFormData({
                         ...formData,
                         nama: product.nama,
-                        harga: product.harga,
+                        harga: product.harga?.toLocaleString() ?? "",
                         stock: product.stock,
                         link_shopee: product.link_shopee,
                         status: product.status,
@@ -159,7 +159,7 @@ const AddProduct = () => {
 
         // Append other form data
         formDataWithImage.append("nama", formData.nama);
-        formDataWithImage.append("harga", Number(formData.harga.replaceAll(/,/g, '')));
+        formDataWithImage.append("harga", Number(formData.harga?.toString().replaceAll(",", "")));
         formDataWithImage.append("stock", formData.stock);
         formDataWithImage.append("link_shopee", formData.link_shopee);
         formDataWithImage.append("status", formData.status);

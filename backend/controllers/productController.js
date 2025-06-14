@@ -140,6 +140,7 @@ const getAllProducts = async (req, res) => {
         const productsWithFullImageUrl = products.rows.map((product) => ({
             ...product.dataValues,
             gambar: `${baseUrl}/uploads/${product.gambar}`,
+            kategori: product.category?.label,
         }));
 
         const totalPages = Math.ceil(products.count / limit);
@@ -164,10 +165,12 @@ const getProductLaris = async (req, res) => {
         const products = await Product.findAll({
             order: [["produk_terjual", "DESC"]],
             limit: 4,
+            include: [{ model: Category, as: "category", attributes: ["label"] }]
         });
         const productsWithFullImageUrl = products.map((product) => ({
             ...product.dataValues,
-            gambar: `${baseUrl}/uploads/${product.gambar}`, // Menambahkan path gambar lengkap
+            gambar: `${baseUrl}/uploads/${product.gambar}`,
+            kategori: product.category?.label,
         }));
         res.status(200).json(productsWithFullImageUrl);
     } catch (error) {
