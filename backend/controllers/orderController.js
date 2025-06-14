@@ -213,15 +213,15 @@ const updateOrder = async (req, res) => {
         const orderCur = await Order.findOne({
             where: { midtrans_id: order_id },
         });
-        const orderItemsCur = await OrderItem.findAll({
-            where: { order_id: orderCur.id },
-            include: [{ model: Product }],
-        })
         if (!orderCur) {
             return res.status(400).json({
                 message: "Order tidak ditemukan",
             });
         }
+        const orderItemsCur = await OrderItem.findAll({
+            where: { order_id: orderCur.id },
+            include: [{ model: Product }],
+        })
         if (status_code[0] != "2") {
             return res.status(Number(status_code)).json({
                 message: status_message,
