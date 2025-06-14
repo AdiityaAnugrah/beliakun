@@ -2,7 +2,7 @@ require("dotenv").config();
 const Order = require("../models/orderModel.js");
 const Product = require("../models/productModel.js");
 const OrderItem = require("../models/orderItemModel.js");
-const key = require("../models/keyModel.js");
+const KeyModel = require("../models/keyModel.js");
 const { where } = require("sequelize");
 const baseUrl = process.env.BASE_URL || "http://localhost:4000";
 const WebSocket = require("ws");
@@ -57,52 +57,47 @@ const getOrder = async (req, res) => {
 
 const sendEmail = async (userEmail, orderDetails, orderCur) => {
     try {
-        // Ambil semua item dalam pesanan
         const orderItems = await OrderItem.findAll({
             where: { order_id: orderCur.id },
             include: [{ model: Product }],
         });
 
-        // Format detail order ke dalam string
         let orderInfo = orderItems
             .map((item) => {
                 return `${item.dataValues.Product.nama} x ${item.dataValues.quantity} - ${item.dataValues.Product.harga}`;
             })
             .join("\n");
 
-        // Deteksi apakah ada produk yang namanya mengandung "pubg"
-        const allowedNames = ["bypass pubg", "bypass pubg mobile"];
+        // Cari produk dengan nama persis "Bypass Pubg"
         const pubgItem = orderItems.find((item) =>
-            allowedNames.includes(item.dataValues.Product.nama.toLowerCase())
+            item.dataValues.Product.nama.toLowerCase() === "bypass pubg"
         );
-
 
         let keyInfo = "";
 
         if (pubgItem) {
-            const productId = pubgItem.dataValues.Product.id;
-
-            // Ambil key untuk produk tersebut dengan durasi "1 bulan"
-            const keyData = await keyModel.findOne({
+            // Ambil key dari KeyModel berdasarkan durasi & status
+            const keyData = await KeyModel.findOne({
                 where: {
-                    product_id: productId,
-                    duration: "1 bulan",
-                    is_used: false, // jika ada kolom is_used
+                    durasi: "1 bulan",
+                    status: "nonaktif",
                 },
-                attributes: ["id", "key"],
+                attributes: ["key"],
             });
 
             if (keyData) {
                 keyInfo = `Bonus Key untuk ${pubgItem.dataValues.Product.nama}: ${keyData.key}`;
 
-                // Tandai key sebagai sudah digunakan (jika ada kolom is_used)
-                await keyModel.update({ is_used: true }, { where: { id: keyData.id } });
+                // Update status key menjadi aktif
+                await KeyModel.update(
+                    { status: "aktif" },
+                    { where: { key: keyData.key } }
+                );
             } else {
                 keyInfo = `Key untuk ${pubgItem.dataValues.Product.nama} sedang habis. Silakan hubungi admin.`;
             }
         }
 
-        // Email template HTML
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: userEmail,
@@ -184,11 +179,7 @@ const sendEmail = async (userEmail, orderDetails, orderCur) => {
                                 </table>
                             </div>
 
-                            ${
-                                keyInfo
-                                    ? `<p style="margin-top:20px"><strong>${keyInfo}</strong></p>`
-                                    : ""
-                            }
+                            ${keyInfo ? `<p style="margin-top:20px"><strong>${keyInfo}</strong></p>` : ""}
 
                             <p>Terima kasih atas kepercayaan Anda. Kami akan segera memproses pengiriman barang Anda!</p>
                             
@@ -212,6 +203,7 @@ const sendEmail = async (userEmail, orderDetails, orderCur) => {
         console.error("Error preparing email:", error);
     }
 };
+
 
 
 const updateOrder = async (req, res) => {
