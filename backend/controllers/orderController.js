@@ -207,55 +207,43 @@ const sendEmail = async (userEmail, orderDetails, orderCur) => {
 
 
 const updateOrder = async (req, res) => {
-    const { status_code, transaction_status, order_id, status_message } = req.body;
-
+    const { status_code, transaction_status, order_id, status_message } =
+        req.body;
     try {
-        // CARI order-nya dulu
         const orderCur = await Order.findOne({
             where: { midtrans_id: order_id },
         });
-
-        // CEK jika order tidak ditemukan, langsung balikan response
+        const orderItemsCur = await OrderItem.findAll({
+            where: { order_id: orderCur.id },
+            include: [{ model: Product }],
+        })
         if (!orderCur) {
             return res.status(400).json({
                 message: "Order tidak ditemukan",
             });
         }
-
-        // Lalu cari item-item dalam order setelah dipastikan order-nya ada
-        const orderItemsCur = await OrderItem.findAll({
-            where: { order_id: orderCur.id },
-            include: [{ model: Product }],
-        });
-
-        // Cek apakah status dari Midtrans bukan 2xx (berhasil)
         if (status_code[0] != "2") {
             return res.status(Number(status_code)).json({
                 message: status_message,
             });
         }
-
         let status = "";
-
         if (
-            transaction_status === "capture" ||
-            transaction_status === "settlement"
+            transaction_status == "capture" ||
+            transaction_status == "settlement"
         ) {
             status = "success";
-
             const orderItems = await OrderItem.findAll({
                 where: { order_id: orderCur.id },
                 include: [{ model: Product }],
             });
 
-            // Update jumlah produk terjual
-            for (const item of orderItemsCur) {
+            orderItemsCur.forEach(async (item) => {
                 const product = await Product.findByPk(item.Product.id);
                 product.produk_terjual += item.quantity;
                 await product.save();
-            }
-
-            // Buat deskripsi order untuk email
+            });
+            
             let orderDetails = orderItems
                 .map((item) => {
                     return `${item.dataValues.Product.nama} x ${item.dataValues.quantity} - ${item.dataValues.Product.harga}`;
@@ -264,31 +252,23 @@ const updateOrder = async (req, res) => {
 
             // Kirim email ke pembeli
             sendEmail(orderCur.user_email, orderDetails, orderCur);
-
-        } else if (transaction_status === "pending") {
+        } else if (transaction_status == "pending") {
             status = "pending";
-
         } else {
             status = "failed";
 
-            // Jika gagal bayar, kembalikan stok
-            for (const item of orderItemsCur) {
+            //ini itu kalou customernya kadalursa/gagal bayar/refund/apalah pokonya yg gagal
+            // stok dikembalikan
+            orderItemsCur.forEach(async (item) => {
                 await Product.update(
-                    {
-                        stock: item.dataValues.Product.stock + item.dataValues.quantity,
-                    },
-                    {
-                        where: { id: item.dataValues.Product.id },
-                    }
+                    { stock: item.dataValues.Product.stock + item.dataValues.quantity },
+                    { where: { id: item.dataValues.Product.id } }
                 );
-            }
+            });
         }
-
-        // Update status order
         await Order.update({ status }, { where: { midtrans_id: order_id } });
 
-        // Kirim update ke WebSocket jika bukan pending
-        if (status !== "pending") {
+        if (status != "pending") {
             const socket = new WebSocket(process.env.URL_WEBSOCKET);
             socket.on("open", () => {
                 const message = {
@@ -305,9 +285,8 @@ const updateOrder = async (req, res) => {
         res.status(200).json({
             message: status_message,
         });
-
     } catch (error) {
-        console.error("updateOrder error:", error);
+        console.error(error);
         res.status(500).json({ message: "Server error" });
     }
 };
