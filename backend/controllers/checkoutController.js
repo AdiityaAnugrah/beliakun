@@ -29,7 +29,7 @@ const checkoutManual = async (req, res) => {
         if (cartItems.some((item) => item.quantity <= 0)) {
             return res.status(400).json({ message: "Invalid product quantity." });
         }
-        if (!alamat || !catatan || !phone) {
+        if (!alamat || !phone) {
             return res.status(400).json({
                 message: "All must be filled in",
             });
