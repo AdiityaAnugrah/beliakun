@@ -36,10 +36,17 @@
   }
 
   .logo-web {
-    width: 50px;
+    width: 100px;
     height: auto;
     cursor: pointer;
+    img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      display: block;
+    }
   }
+
 
   .menu-toggle {
     background: none;

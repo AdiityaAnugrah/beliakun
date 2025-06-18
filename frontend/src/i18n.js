@@ -7,6 +7,82 @@ import { initReactI18next } from "react-i18next";
 const resources = {
     en: {
         translation: {
+            terms: {
+                title: "Terms & Conditions",
+                last_updated: "Last updated: June 18, 2025",
+                acceptance: "By using our services at beliakun, you agree to the following terms and conditions without exception.",
+                transaction: {
+                    title: "Transaction Terms",
+                    points: [
+                    "You must provide accurate and valid information (ID, server, character name, etc).",
+                    "Orders are processed within 5 minutes during working hours after payment is confirmed.",
+                    "Refunds only apply if we fail to deliver due to internal issues."
+                    ]
+                },
+                services: "beliakun provides digital game services such as top-ups, account sales, game items, and game-related services. We reserve the right to update or terminate services at any time.",
+                user_data: "We use your data only for order processing. We do not share your data unless required by law. See our Privacy Policy for details.",
+                user_responsibility: "You are fully responsible for the data provided. beliakun is not liable for losses due to user error.",
+                modification: "Terms may change at any time. Updates will be shown on this page.",
+                contact: "Contact us if you have questions about these terms.",
+                contact_info: {
+                    email: "Email: admin@beliakun.com",
+                    whatsapp: "WhatsApp: +62 812-3456-7890",
+                    website: "Website: https://beliakun.com"
+                }
+                }
+                ,
+            privacy: {
+                title: "Privacy Policy",
+                last_updated: "Last updated: June 18, 2025",
+                intro: "This page explains how we collect, use, and protect your personal information on beliakun.",
+                collected: {
+                    title: "What We Collect",
+                    items: [
+                    "Name or nickname",
+                    "User ID & Server ID / Character name",
+                    "Game account data (for purchases)",
+                    "Email address and WhatsApp number",
+                    "Payment method (without storing card data)"
+                    ]
+                },
+                usage: {
+                    title: "How We Use Your Data",
+                    items: [
+                    "To process transactions and orders",
+                    "To notify order status",
+                    "To improve customer support",
+                    "To enhance your experience on our platform"
+                    ],
+                    note: "We do NOT share your data with any third party unless required by law."
+                },
+                security: {
+                    title: "Data Security",
+                    description: "We apply strict internal controls and encrypted communication to ensure your data remains protected."
+                },
+                rights: {
+                    title: "Your Rights",
+                    items: [
+                    "Request a copy of your personal data",
+                    "Request modification or deletion of your data",
+                    "Opt-out from promotional usage"
+                    ]
+                },
+                cookies: {
+                    title: "Cookies",
+                    description: "Our website uses cookies to enhance performance and personalize your experience. You can disable them in your browser settings."
+                },
+                changes: {
+                    title: "Changes to Policy",
+                    description: "We may update this policy from time to time. All updates will be posted on this page."
+                },
+                contact: {
+                    title: "Contact Us",
+                    email: "Email: admin@beliakun.com",
+                    whatsapp: "WhatsApp: +62 812-3456-7890",
+                    website: "Website: https://beliakun.com"
+                }
+                }
+                ,
             // ===== Existing Keys (tidak diubah) =====
             create_account: "Create an Account",
             full_name: "Full Name",
@@ -231,6 +307,82 @@ const resources = {
 
     id: {
         translation: {
+            terms: {
+                title: "Syarat & Ketentuan",
+                last_updated: "Terakhir diperbarui: 18 Juni 2025",
+                acceptance: "Dengan menggunakan layanan beliakun, Anda dianggap telah menyetujui semua syarat dan ketentuan berikut ini tanpa pengecualian.",
+                transaction: {
+                    title: "Ketentuan Transaksi",
+                    points: [
+                    "Anda wajib memberikan data yang valid dan benar (ID, server, nama karakter, dll).",
+                    "Pesanan diproses maksimal 5 menit setelah pembayaran terkonfirmasi (selama jam kerja).",
+                    "Pengembalian dana hanya berlaku jika kami gagal memproses pesanan karena kesalahan internal."
+                    ]
+                },
+                services: "beliakun menyediakan layanan digital game seperti top up, jual beli akun, item game, dan layanan terkait lainnya. Kami berhak mengubah atau menghentikan layanan sewaktu-waktu.",
+                user_data: "Data Anda digunakan hanya untuk memproses pesanan. Kami tidak membagikan data Anda kecuali diwajibkan oleh hukum. Baca selengkapnya di Kebijakan Privasi.",
+                user_responsibility: "Pengguna bertanggung jawab atas data yang diberikan. beliakun tidak bertanggung jawab atas kerugian akibat kesalahan pengguna.",
+                modification: "Syarat & Ketentuan dapat berubah sewaktu-waktu dan akan diperbarui di halaman ini.",
+                contact: "Hubungi kami jika ada pertanyaan terkait syarat & ketentuan ini.",
+                contact_info: {
+                    email: "Email: admin@beliakun.com",
+                    whatsapp: "WhatsApp: +62 812-3456-7890",
+                    website: "Website: https://beliakun.com"
+                }
+                }
+                ,
+            privacy: {
+                title: "Kebijakan Privasi",
+                last_updated: "Terakhir diperbarui: 18 Juni 2025",
+                intro: "Halaman ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan melindungi data pribadi Anda di beliakun.",
+                collected: {
+                    title: "Data yang Kami Kumpulkan",
+                    items: [
+                    "Nama atau nama panggilan",
+                    "User ID & Server ID / Nama karakter",
+                    "Data akun game (untuk pembelian/jasa)",
+                    "Alamat email dan nomor WhatsApp",
+                    "Metode pembayaran (tanpa menyimpan data kartu)"
+                    ]
+                },
+                usage: {
+                    title: "Bagaimana Kami Menggunakan Data Anda",
+                    items: [
+                    "Memproses transaksi dan pesanan",
+                    "Memberikan status pesanan",
+                    "Meningkatkan layanan pelanggan",
+                    "Meningkatkan pengalaman pengguna di platform"
+                    ],
+                    note: "Kami TIDAK membagikan data Anda kepada pihak lain, kecuali diwajibkan oleh hukum."
+                },
+                security: {
+                    title: "Keamanan Data",
+                    description: "Kami menggunakan kontrol internal yang ketat dan komunikasi terenkripsi untuk menjaga keamanan data Anda."
+                },
+                rights: {
+                    title: "Hak Anda",
+                    items: [
+                    "Meminta salinan data pribadi Anda",
+                    "Meminta pengubahan atau penghapusan data",
+                    "Menolak penggunaan data untuk promosi"
+                    ]
+                },
+                cookies: {
+                    title: "Cookies",
+                    description: "Situs kami menggunakan cookies untuk meningkatkan performa dan personalisasi pengalaman Anda. Anda dapat menonaktifkan cookies di pengaturan browser."
+                },
+                changes: {
+                    title: "Perubahan Kebijakan",
+                    description: "Kami dapat memperbarui kebijakan ini sewaktu-waktu. Semua perubahan akan diumumkan di halaman ini."
+                },
+                contact: {
+                    title: "Hubungi Kami",
+                    email: "Email: admin@beliakun.com",
+                    whatsapp: "WhatsApp: +62 812-3456-7890",
+                    website: "Website: https://beliakun.com"
+                }
+                }
+                ,
             // ===== Existing Keys (tidak diubah) =====
             create_account: "Buat Akun Baru",
             full_name: "Nama Lengkap",

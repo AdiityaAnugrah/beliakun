@@ -18,6 +18,8 @@ import PaymentInfo from "./pages/PaymentInfo.jsx";
 import Profile from "./pages/Profile.jsx";
 import Setting from "./pages/Setting";
 import History from "./pages/History.jsx";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 
 // Admin
 import HomeAdmin from "./pages/admin/HomeAdmin.jsx";
@@ -36,6 +38,9 @@ createRoot(document.getElementById("root")).render(
             <Route path="/" element={<App />}>
                 <Route index element={<Home />} />
                 <Route path="about" element={<About />} />
+                <Route path="terms" element={<Terms />} />
+                <Route path="privacy" element={<Privacy />} />
+                
                 <Route
                     path="login"
                     element={
