@@ -78,7 +78,7 @@ const Navbar = () => {
         <Link to="/" className="logo" onClick={() => setMenuOpen(false)}>
           <Img
             className="logo-web"
-            src={scrolled ? "/logo-dark.svg" : "/logo-light.svg"}
+            src={scrolled ? "/logo-dark.svg?v=2" : "/logo-light.svg?v=2"}
             alt="Logo"
           />
         </Link>
