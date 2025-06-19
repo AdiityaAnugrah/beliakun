@@ -13,6 +13,11 @@ const BennerHome = require("./bennerHomeModel")(
     sequelize,
     require("sequelize").DataTypes
 );
+const Newsletter = require("./newsletterModel")(
+    sequelize,
+    require("sequelize").DataTypes
+);
+
 
 // RELASI (optional, bisa tambah lain kalau mau)
 Product.belongsTo(Category, { foreignKey: "categoryId", as: "category" });
@@ -45,4 +50,5 @@ module.exports = {
     Wishlist,
     BennerHome,
     initModels,
+    Newsletter,
 };

@@ -7,6 +7,7 @@ import { initReactI18next } from "react-i18next";
 const resources = {
     en: {
         translation: {
+            
             terms: {
                 title: "Terms & Conditions",
                 last_updated: "Last updated: June 18, 2025",
