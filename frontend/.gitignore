@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 .env
+backend-fixed.zip
+backend.zip
+frontend-fixed.zip
+frontend.zip
 
 # Editor directories and files
 .vscode/*
