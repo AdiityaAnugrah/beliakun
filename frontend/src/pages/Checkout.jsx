@@ -19,16 +19,12 @@ const Checkout = () => {
     alamat: "",
     catatan: "",
     phone: "",
-    paymentType: "bank_transfer",
-    bank: "bri",
+    method: "",
   });
 
   const [loading, setLoading] = useState(false);
 
-  const total = cart.reduce(
-    (sum, item) => sum + item.harga * item.quantity,
-    0
-  );
+  const total = cart.reduce((sum, item) => sum + item.harga * item.quantity, 0);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,6 +38,18 @@ const Checkout = () => {
       return;
     }
 
+    if (!form.phone || !form.alamat || !form.method) {
+      setNotif("Silakan lengkapi semua input terlebih dahulu.");
+      showNotif();
+      return;
+    }
+
+    if (!/^\+?\d{9,15}$/.test(form.phone)) {
+      setNotif("Nomor telepon tidak valid.");
+      showNotif();
+      return;
+    }
+
     setLoading(true);
     const res = await checkoutManual(form, token);
 
@@ -51,16 +59,24 @@ const Checkout = () => {
       return;
     }
 
-    if (res.status === 200) {
+    if (res.status === 200 && res.data?.checkout_url) {
       setCart([]);
-      navigate(`/payment-info/${res.data.order_id}`);
+      window.location.href = res.data.checkout_url;
     } else {
-      setNotif(res.data.message);
+      setNotif(res.data?.message || "Gagal membuat transaksi");
       showNotif();
     }
 
     setLoading(false);
   };
+
+  const paymentOptions = [
+    { code: "BRIVA", image: "bri.png" },
+    { code: "BNIVA", image: "bni.png" },
+    { code: "MANDIRIVA", image: "mandiri.png" },
+    { code: "PERMATAVA", image: "permata.png" },
+    { code: "QRIS", image: "qris.png" },
+  ];
 
   return (
     <div className="checkout-page">
@@ -68,66 +84,48 @@ const Checkout = () => {
       <h1>{t("checkout.title", "Checkout")}</h1>
 
       <div className="form-section">
-        <input
-          type="number"
-          name="phone"
-          placeholder={t("checkout.phone", "Phone number")}
-          value={form.phone}
-          onChange={handleChange}
-        />
+        <label>{t("checkout.phone", "Phone number")}</label>
+        <div className="phone-input">
+          <span className="country-code">+62</span>
+          <input
+            type="tel"
+            name="phone"
+            placeholder="81234567890"
+            value={form.phone.replace(/^\+?62/, '')}
+            onChange={(e) => setForm((prev) => ({ ...prev, phone: "+62" + e.target.value.replace(/^0+/, '') }))}
+          />
+        </div>
 
+        <label>{t("checkout.address", "Complete address")}</label>
         <textarea
           name="alamat"
-          placeholder={t("checkout.address", "Complete address")}
+          placeholder="Jl. Contoh No. 123, Kota"
           value={form.alamat}
           onChange={handleChange}
         />
+
+        <label>{t("checkout.note", "Note (optional)")}</label>
         <textarea
           name="catatan"
-          placeholder={t("checkout.note", "Note (optional)")}
+          placeholder="Contoh: Tolong kirim cepat ya..."
           value={form.catatan}
           onChange={handleChange}
         />
 
-        {/* Kategori Pembayaran */}
         <div className="payment-methods">
           <label>{t("checkout.chooseBank", "Choose Payment Method")}</label>
 
-          <div className="bank-category-label">Virtual Account</div>
           <div className="bank-grid">
-            {["bni", "bri", "mandiri", "permata"].map((bank) => (
+            {paymentOptions.map((channel) => (
               <div
-                key={bank}
-                className={`bank-grid-item ${form.bank === bank ? "selected" : ""}`}
-                onClick={() => setForm((prev) => ({ ...prev, bank }))}
+                key={channel.code}
+                className={`bank-grid-item ${form.method === channel.code ? "selected" : ""}`}
+                onClick={() => setForm((prev) => ({ ...prev, method: channel.code }))}
               >
-                <img src={`/assets/payment/${bank}.png`} alt={bank.toUpperCase()} />
+                <img src={`/assets/payment/${channel.image}`} alt={channel.code} />
               </div>
             ))}
           </div>
-
-          <div className="bank-category-label">QRIS</div>
-          <div className="bank-grid">
-            <div
-              className={`bank-grid-item ${form.bank === "qris" ? "selected" : ""}`}
-              onClick={() => setForm((prev) => ({ ...prev, bank: "qris" }))}
-            >
-              <img src="/assets/payment/qris.png" alt="QRIS" />
-            </div>
-          </div>
-
-          {/* <div className="bank-category-label">E-Wallet & Credit Card</div>
-          <div className="bank-grid">
-            {["gopay", "mastercard"].map((method) => (
-              <div
-                key={method}
-                className={`bank-grid-item ${form.bank === method ? "selected" : ""}`}
-                onClick={() => setForm((prev) => ({ ...prev, bank: method }))}
-              >
-                <img src={`/assets/payment/${method}.png`} alt={method.toUpperCase()} />
-              </div>
-            ))}
-          </div> */}
         </div>
       </div>
 
@@ -146,7 +144,7 @@ const Checkout = () => {
         </p>
       </div>
 
-      <button disabled={loading} onClick={handleCheckout}>
+      <button disabled={loading || !form.method} onClick={handleCheckout}>
         {loading ? t("checkout.processing", "Processing...") : t("checkout.payNow", "Pay Now")}
       </button>
     </div>

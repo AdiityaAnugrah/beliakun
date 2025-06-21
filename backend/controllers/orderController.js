@@ -21,43 +21,81 @@ const transporter = nodemailer.createTransport({
 // Menambahkan produk ke keranjang
 
 const getOrder = async (req, res) => {
-    const midtrans_id = req.params.midtrans_id;
-    try {
-        if (!midtrans_id) {
-            const order = await Order.findAll({
-                attributes: { exclude: ["data_mid"] },
-                where: { user_id: req.user.id },
-            });
-            return res.status(200).json(order);
-        }
-        const order = await Order.findOne({
-            where: { midtrans_id },
-        });
-        console.log(JSON.parse(JSON.parse(order.dataValues.data_mid)));
-        const orderItems = await OrderItem.findAll({
-            where: { order_id: order.dataValues.id },
-            include: [{
-                model: Product,
-                include: [{ model: Category, as: "category", attributes: ["label"] }]
-            }],
-        });
-        res.status(200).json({
-            ...order.dataValues,
-            data_mid: JSON.parse(JSON.parse(order.dataValues.data_mid)),
-            items: orderItems.map((c) => ({
-                productId: c.dataValues.Product.id,
-                nama: c.dataValues.Product.nama,
-                harga: c.dataValues.Product.harga,
-                gambar: `${baseUrl}/uploads/${c.dataValues.Product.gambar}`,
-                quantity: c.dataValues.quantity,
-                stok: c.dataValues.Product.stock,
-                kategori: c.dataValues.Product.categoryId?.label,
-            })),
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error" });
+  const { midtrans_id } = req.params;
+  try {
+    if (!midtrans_id) {
+      const order = await Order.findAll({
+        attributes: { exclude: ["data_mid"] },
+        where: { user_id: req.user.id },
+      });
+      return res.status(200).json(order);
     }
+    const order = await Order.findOne({ where: { midtrans_id } });
+    const orderItems = await OrderItem.findAll({
+      where: { order_id: order.id },
+      include: [{ model: Product, include: [{ model: Category, as: "category" }] }],
+    });
+    res.status(200).json({
+      ...order.dataValues,
+      data_mid: order.dataValues.data_mid,
+      items: orderItems.map((c) => ({
+        productId: c.Product.id,
+        nama: c.Product.nama,
+        harga: c.Product.harga,
+        gambar: `${baseUrl}/uploads/${c.Product.gambar}`,
+        quantity: c.quantity,
+        stok: c.Product.stock,
+        kategori: c.Product.category?.label,
+      })),
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+const updateOrder = async (req, res) => {
+  const { reference, status } = req.body;
+  try {
+    const orderCur = await Order.findOne({ where: { midtrans_id: reference } });
+    if (!orderCur) return res.status(400).json({ message: "Order tidak ditemukan" });
+
+    const orderItems = await OrderItem.findAll({
+      where: { order_id: orderCur.id },
+      include: [Product],
+    });
+
+    if (status === "PAID") {
+      await Promise.all(orderItems.map(async (item) => {
+        const product = await Product.findByPk(item.Product.id);
+        product.produk_terjual += item.quantity;
+        await product.save();
+      }));
+
+      sendEmail(orderCur.email, orderItems, orderCur);
+      await orderCur.update({ status: "success" });
+    } else if (["FAILED", "EXPIRED"].includes(status)) {
+      await Promise.all(orderItems.map(async (item) => {
+        const product = await Product.findByPk(item.Product.id);
+        product.stock += item.quantity;
+        await product.save();
+      }));
+      await orderCur.update({ status: "failed" });
+    }
+
+    const socket = new WebSocket(process.env.URL_WEBSOCKET);
+    socket.on("open", () => {
+      socket.send(JSON.stringify({
+        type: "order_update",
+        data: { order_id: reference, status },
+      }));
+    });
+
+    res.status(200).json({ message: "Status order diperbarui" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Update order gagal" });
+  }
 };
 
 const sendEmail = async (userEmail, orderDetails, orderCur) => {
@@ -211,123 +249,38 @@ const sendEmail = async (userEmail, orderDetails, orderCur) => {
 
 
 
-const updateOrder = async (req, res) => {
-    const { status_code, transaction_status, order_id, status_message } =
-        req.body;
-    try {
-        const orderCur = await Order.findOne({
-            where: { midtrans_id: order_id },
-        });
-        if (!orderCur) {
-            return res.status(400).json({
-                message: "Order tidak ditemukan",
-            });
-        }
-        const orderItemsCur = await OrderItem.findAll({
-            where: { order_id: orderCur.id },
-            include: [{ model: Product }],
-        })
-        if (status_code[0] != "2") {
-            return res.status(Number(status_code)).json({
-                message: status_message,
-            });
-        }
-        let status = "";
-        if (
-            transaction_status == "capture" ||
-            transaction_status == "settlement"
-        ) {
-            status = "success";
-            const orderItems = await OrderItem.findAll({
-                where: { order_id: orderCur.id },
-                include: [{ model: Product }],
-            });
 
-            orderItemsCur.forEach(async (item) => {
-                const product = await Product.findByPk(item.Product.id);
-                product.produk_terjual += item.quantity;
-                await product.save();
-            });
-            
-            let orderDetails = orderItems
-                .map((item) => {
-                    return `${item.dataValues.Product.nama} x ${item.dataValues.quantity} - ${item.dataValues.Product.harga}`;
-                })
-                .join("\n");
 
-            // Kirim email ke pembeli
-            sendEmail(orderCur.user_email, orderDetails, orderCur);
-        } else if (transaction_status == "pending") {
-            status = "pending";
-        } else {
-            status = "failed";
+const getOrderHistory = async (req, res) => {
+  try {
+    const orders = await Order.findAll({
+      where: { user_id: req.user.id },
+      order: [["createdAt", "DESC"]],
+      include: [{ model: OrderItem, include: [{ model: Product }] }],
+    });
 
-            //ini itu kalou customernya kadalursa/gagal bayar/refund/apalah pokonya yg gagal
-            // stok dikembalikan
-            orderItemsCur.forEach(async (item) => {
-                await Product.update(
-                    { stock: item.dataValues.Product.stock + item.dataValues.quantity },
-                    { where: { id: item.dataValues.Product.id } }
-                );
-            });
-        }
-        await Order.update({ status }, { where: { midtrans_id: order_id } });
+    const formattedOrders = orders.map((order) => ({
+      id: order.id,
+      midtrans_id: order.midtrans_id,
+      total: order.total_harga,
+      status: order.status,
+      createdAt: order.createdAt,
+      items: order.OrderItems.map((item) => ({
+        id: item.id,
+        productId: item.Product.id,
+        nama: item.Product.nama,
+        harga: item.Product.harga,
+        gambar: `${baseUrl}/uploads/${item.Product.gambar}`,
+        quantity: item.quantity,
+      }))
+    }));
 
-        if (status != "pending") {
-            const socket = new WebSocket(process.env.URL_WEBSOCKET);
-            socket.on("open", () => {
-                const message = {
-                    type: "order_update",
-                    data: {
-                        order_id,
-                        status,
-                    },
-                };
-                socket.send(JSON.stringify(message));
-            });
-        }
-
-        res.status(200).json({
-            message: status_message,
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error" });
-    }
+    res.status(200).json(formattedOrders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Gagal ambil riwayat order" });
+  }
 };
-
-const getOrderHistory  = async (req,res) => {
-    try {
-        const orders = await Order.findAll({
-            where: { user_id: req.user.id },
-            order: [["createdAt", "DESC"]],
-            include: [{ model: OrderItem, include: [{ model: Product }] }],
-        });
-
-        const baseUrl = process.env.BASE_URL || "http://localhost:4000";
-
-        const formattedOrders = orders.map((order) => ({
-            id: order.id,
-            midtrans_id: order.midtrans_id,
-            total: order.total,
-            status: order.status,
-            createdAt: order.createdAt,
-            items: order.OrderItems.map((item) => ({
-                id: item.id,
-                productId: item.Product.id,
-                nama: item.Product.nama,
-                harga: item.Product.harga,
-                gambar: `${baseUrl}/uploads/${item.Product.gambar}`,
-                quantity: item.quantity,
-            })),
-        }));
-
-        res.status(200).json(formattedOrders);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Fail to get order" });
-    }
-}
 
 
 
