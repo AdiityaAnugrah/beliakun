@@ -24,6 +24,19 @@ Product.belongsTo(Category, { foreignKey: "categoryId", as: "category" });
 Category.hasMany(Product, { foreignKey: "categoryId", as: "products" });
 // Category.hasMany(Product, { foreignKey: "categoryId", as: "products" });
 
+// Cart <-> Product
+Cart.belongsTo(Product, { foreignKey: "product_id", onDelete: "CASCADE" });
+Product.hasMany(Cart, { foreignKey: "product_id", onDelete: "CASCADE" });
+
+// OrderItem <-> Product
+OrderItem.belongsTo(Product, { foreignKey: "product_id", onDelete: "CASCADE" });
+Product.hasMany(OrderItem, { foreignKey: "product_id", onDelete: "CASCADE" });
+
+// Wishlist <-> Product
+Wishlist.belongsTo(Product, { foreignKey: "product_id", onDelete: "CASCADE" });
+Product.hasMany(Wishlist, { foreignKey: "product_id", onDelete: "CASCADE" });
+
+
 const initModels = async () => {
     try {
         await sequelize.authenticate();

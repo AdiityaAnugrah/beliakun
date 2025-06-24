@@ -18,8 +18,8 @@ const Cart = sequelize.define(
     }
 );
 
-Cart.belongsTo(User, { foreignKey: "user_id" });
-User.hasMany(Cart, { foreignKey: "user_id" });
+Cart.belongsTo(Product, { foreignKey: "product_id", onDelete: "CASCADE" });
+Product.hasMany(Cart, { foreignKey: "product_id", onDelete: "CASCADE" });
 
 Cart.belongsTo(Product, { foreignKey: "product_id" });
 Product.hasMany(Cart, { foreignKey: "product_id" });

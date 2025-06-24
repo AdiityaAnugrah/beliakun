@@ -26,7 +26,7 @@ const OrderItem = sequelize.define(
 );
 
 // Relasi
-OrderItem.belongsTo(Product, { foreignKey: "product_id" });
-Product.hasMany(OrderItem, { foreignKey: "product_id" });
+OrderItem.belongsTo(Product, { foreignKey: "product_id", onDelete: "CASCADE" });
+Product.hasMany(OrderItem, { foreignKey: "product_id", onDelete: "CASCADE" });
 
 module.exports = OrderItem;
