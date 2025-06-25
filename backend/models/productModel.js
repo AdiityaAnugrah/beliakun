@@ -5,6 +5,18 @@ const Category = require("./categoryModel.js");
 const Product = sequelize.define(
     "Product",
     {
+        slug: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            unique: true,
+            validate: {
+                is: /^[a-z0-9]+(?:-[a-z0-9]+)*$/, 
+                len: [1, 100], 
+            },
+            set(value) {
+                this.setDataValue('slug', value.toLowerCase().replace(/\s+/g, '-'));
+            },
+        },
         nama: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -45,6 +57,8 @@ const Product = sequelize.define(
                 key: 'id',
             },
         },
+        
+
         // kategori: {
         //     type: DataTypes.ENUM("games", "tools"),
         //     defaultValue: "games",

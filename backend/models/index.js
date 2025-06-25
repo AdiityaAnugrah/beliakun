@@ -42,7 +42,7 @@ const initModels = async () => {
         await sequelize.authenticate();
         console.log("✅ DB connected with Sequelize");
 
-        await sequelize.sync(); // { force: true } untuk drop & recreate
+        await sequelize.sync({ alter: true }); // { force: true } untuk drop & recreate
         console.log("✅ All models were synchronized");
     } catch (error) {
         console.error("❌ Sequelize error:", error);

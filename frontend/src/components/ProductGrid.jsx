@@ -210,10 +210,12 @@ export default function ProductGrid() {
         <div className="category-header">BROWSE BY BEST SELLER</div>
         <div className="product-grid">
           {products.map((p) => (
+            console.log("ISI ANJAYY"),
+            console.log(p),
             <Link
               className="product-card"
               key={p.id}
-              to={`/detail/${p.id}`}
+              to={`/product/${p.slug}`}
               tabIndex={0}
             >
               <div className="product-img-wrap"> {/* Pastikan kelas ini sesuai dengan SCSS Anda */}

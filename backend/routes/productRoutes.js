@@ -6,6 +6,7 @@ const {
     updateProduct,
     deleteProduct,
     getProductLaris,
+    getProductBySlug,
 } = require("../controllers/productController.js");
 const { filterAdmin } = require("./filterAuth.js");
 const multer = require("multer");
@@ -29,6 +30,7 @@ const upload = multer({
 router.post("/", filterAdmin, upload, addProduct);
 router.get("/", getAllProducts);
 router.get("/laris", getProductLaris);
+router.get("/slug/:slug", getProductBySlug);
 router.get("/:id", getAllProducts);
 router.put("/:id", filterAdmin, upload, updateProduct);
 router.delete("/:id", filterAdmin, deleteProduct);

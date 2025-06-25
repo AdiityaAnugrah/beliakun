@@ -44,9 +44,6 @@ exports.chatGptChat = async (req, res) => {
 
         const data = await openaiRes.json();
 
-        // Debug log ke terminal
-        console.log("RESPON DARI OPENAI:", JSON.stringify(data, null, 2));
-
         if (data.error) {
             return res.status(500).json({ reply: data.error.message });
         }

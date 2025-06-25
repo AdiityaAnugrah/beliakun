@@ -1,9 +1,20 @@
 const API_URL = `${import.meta.env.VITE_URL_BACKEND}`;
 
 
-export const getProducts = async (id = false) => {
+export const getProducts = async (params = null) => {
     try {
-        const res = await fetch(`${API_URL}/product${id ? `/${id}` : ""}`);
+        let url = `${API_URL}/product`;
+
+        if (typeof params === "number" || typeof params === "string") {
+            url += `/${params}`;
+        }
+
+        if (typeof params === "object" && params !== null && !Array.isArray(params)) {
+            const queryString = new URLSearchParams(params).toString();
+            url += `?${queryString}`;
+        }
+
+        const res = await fetch(url);
         const resJson = await res.json();
 
         if (res.ok) {
@@ -17,6 +28,28 @@ export const getProducts = async (id = false) => {
     } catch (err) {
         console.error("Request error:", err);
         return { status: 500, message: "Server error. Please try again." };
+    }
+};
+
+export const getProductBySlug = async (slug) => {
+    try {
+        const res = await fetch(`${API_URL}/product/slug/${slug}`);
+        const resJson = await res.json();
+
+        if (res.ok) {
+            return { status: res.status, data: resJson };
+        } else {
+            return {
+                status: res.status,
+                message: resJson.message || "Failed to fetch product by slug",
+            };
+        }
+    } catch (err) {
+        console.error("Request error:", err);
+        return {
+            status: 500,
+            message: "Server error. Please try again.",
+        };
     }
 };
 

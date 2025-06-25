@@ -52,7 +52,7 @@ const addToCart = async (req, res) => {
                 gambar: `${baseUrl}/uploads/${c.Product.gambar}`,
                 quantity: c.quantity,
                 stok: c.Product.stock,
-                kategori: c.Product.categoryId?.label,
+                kategori: c.Product.category?.label,
             }))
         );
     } catch (error) {
@@ -78,7 +78,7 @@ const getCart = async (req, res) => {
                 gambar: `${baseUrl}/uploads/${c.Product.gambar}`,
                 quantity: c.quantity,
                 stok: c.Product.stock,
-                kategori: c.Product.categoryId?.label,
+                kategori: c.Product.category?.label,
             }))
         );
     } catch (error) {

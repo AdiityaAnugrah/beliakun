@@ -52,7 +52,7 @@ createRoot(document.getElementById("root")).render(
                 <Route path="signup" element={<Signup />} />
                 <Route path="verify" element={<Verify />} />
                 <Route path="product" element={<Product />} />
-                <Route path="detail/:id" element={<ProductDetail />} />
+                <Route path="/product/:slug" element={<ProductDetail />} />
                 <Route path="cart" element={<Cart />} />
                 <Route path="wishlist" element={<Wishlist />} />
                 <Route path="checkout" element={<Checkout />} />

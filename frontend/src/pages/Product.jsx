@@ -166,7 +166,7 @@ const Product = () => {
                             <Link
                                 className="product-card"
                                 key={p.id}
-                                to={`/detail/${p.id}`} 
+                                to={`/product/${p.slug}`}
                                 tabIndex={0} 
                             >
                                 <div className="product-img-wrap">

@@ -1,23 +1,14 @@
-// ProductDetail.scss
-// Menggunakan variabel dari index.css Anda
-
-// --- Variabel Lokal (jika perlu, untuk kemudahan) ---
+// --- Variabel Global ---
 $text-primary: var(--hitam, #232323);
-$text-secondary: #5f6c7b; // Warna abu-abu yang lebih lembut untuk teks sekunder
+$text-secondary: #5f6c7b;
 $text-light: var(--abu-abu-gelap, #999);
 $accent-color: var(--merah, #f7374f);
-$background-page: var(--abu2, #f6f7fb); // Latar belakang halaman yang lebih terang
+$background-page: var(--abu2, #f6f7fb);
 $background-card: var(--putih, #ffffff);
-$border-color: var(--abu-abu, #e9ecef); // Border yang lebih halus
-$button-primary-bg: var(--hitam, #1a1a1a); // Hitam pekat untuk tombol utama
-$button-primary-text: var(--putih, #ffffff);
-$button-secondary-bg: var(--putih, #ffffff);
-$button-secondary-text: $text-primary;
-$button-secondary-border: var(--abu-abu-gelap, #d1d5db);
-$success-color: var(--hijau, #28a745);
-$font-main: 'Inter', sans-serif; // Pastikan font Inter sudah di-load global
+$border-color: var(--abu-abu, #e9ecef);
+$font-main: 'Inter', sans-serif;
 
-// --- Mixins ---
+// --- Utility ---
 @mixin button-reset {
   background: none;
   border: none;
@@ -33,94 +24,96 @@ $font-main: 'Inter', sans-serif; // Pastikan font Inter sudah di-load global
   justify-content: center;
 }
 
-// --- Base Styles ---
+// --- Animasi Slide Up ---
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0%);
+    opacity: 1;
+  }
+}
+
+// --- Base Layout ---
 .product-detail-page {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   background-color: $background-page;
-  color: $text-primary;
   font-family: $font-main;
+  color: $text-primary;
 }
 
-// --- Header (Mobile Only) ---
 .product-detail-header {
-  display: flex; // Tampil di mobile
+  display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0.8rem 1rem;
   background-color: $background-card;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); // Shadow lebih halus
   position: sticky;
   top: 0;
   z-index: 200;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
   .header-action-button {
     @include button-reset;
     padding: 0.6rem;
-    color: $text-secondary;
     border-radius: 50%;
-    transition: background-color 0.2s ease, color 0.2s ease;
-
-    &:hover {
-      background-color: var(--abu2, #f0f0f0);
-      color: $text-primary;
-    }
-    svg { display: block; width: 20px; height: 20px; }
-  }
-
-  .wishlist-button-header { // Target elemen <button> dengan kelas ini
+    transition: background 0.2s ease;
     svg {
-      width: 22px; height: 22px;
-      transition: color 0.2s ease-in-out, transform 0.2s ease;
-      &.wishlisted { color: $accent-color; transform: scale(1.1); }
+      width: 20px;
+      height: 20px;
     }
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
+    &:hover {
+      background-color: #f0f0f0;
+    }
+    &.wishlist-button-header {
+      svg {
+        width: 22px;
+        height: 22px;
+        &.wishlisted {
+          color: $accent-color;
+        }
+      }
+    }
   }
 
   .header-title {
-    font-size: 1.05rem; // Sedikit lebih kecil
+    font-size: 1.05rem;
     font-weight: 600;
-    text-align: center;
     flex-grow: 1;
+    text-align: center;
     margin: 0 0.5rem;
   }
 }
 
-// --- Main Content Area ---
 .product-detail-main-content {
   flex-grow: 1;
-  padding-bottom: 7rem; // Ruang untuk footer mobile sticky yang lebih tinggi
+  padding-bottom: 7rem;
 }
 
-// Kolom Kiri (Gambar)
 .product-gallery-column {
-  background-color: $background-card; // Latar putih untuk area gambar di mobile
-
+  background: $background-card;
   .product-image-container {
-    position: relative;
-    padding: 1rem; // Padding di sekitar gambar
+    padding: 1rem;
     .product-image-main {
       width: 100%;
-      height: auto;
       max-height: 60vh;
       object-fit: cover;
-      display: block;
-      margin: 0 auto;
-      border-radius: 16px; // Sudut lebih membulat
+      border-radius: 16px;
     }
   }
 }
 
-// Kolom Kanan (Info) / Kartu Info Mobile
 .product-info-column {
-  background-color: $background-card;
-  padding: 1.5rem; // Padding konsisten
-  margin-top: -2rem; // Efek tumpuk mobile
+  background: $background-card;
+  padding: 1.5rem;
+  margin-top: -2rem;
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
   position: relative;
-  z-index: 10;
   box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.06);
 
   .product-info-header {
@@ -128,51 +121,40 @@ $font-main: 'Inter', sans-serif; // Pastikan font Inter sudah di-load global
     .product-name {
       font-size: 1.85rem;
       font-weight: 700;
-      line-height: 1.25;
-      color: $text-primary;
-      margin-bottom: 0.35rem;
     }
     .product-category-tag {
-      display: inline-block;
-      background-color: var(--abu2, #eef1f5);
+      background-color: #eef1f5;
       color: $text-secondary;
       padding: 0.3rem 0.8rem;
-      border-radius: 1rem;
       font-size: 0.7rem;
       font-weight: 500;
+      border-radius: 1rem;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
   }
 
   .product-price {
-    font-size: 17px;
+    font-size: 1.1rem;
     font-weight: 700;
-    color: var(--hitam);
     margin-bottom: 0.5rem;
   }
 
   .product-stock-info {
     font-size: 0.9rem;
-    color: var(--hitam);
     font-weight: 500;
     margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
+    color: $text-primary;
   }
 
   .product-description-container {
     margin-bottom: 2rem;
     .description-title {
-      font-size: 1rem;
       font-weight: 600;
-      margin-bottom: 0.75rem;
-      color: $text-primary;
+      margin-bottom: 0.5rem;
       border-bottom: 1px solid $border-color;
       padding-bottom: 0.5rem;
     }
     .product-description {
-      font-size: 0.9rem;
       color: $text-secondary;
       line-height: 1.75;
       white-space: pre-wrap;
@@ -180,94 +162,68 @@ $font-main: 'Inter', sans-serif; // Pastikan font Inter sudah di-load global
   }
 }
 
-// Tombol Aksi (Container untuk Desktop)
 .product-actions-container {
-  display: none; // Sembunyikan di mobile, akan diatur ulang di desktop
+  display: none;
 }
 
-
-// Footer Mobile (Sticky)
-.product-detail-footer-mobile {
-  padding: 0.75rem 1rem;
-  background-color: $background-card;
-  border-top: 1px solid $border-color;
+// --- Floating Button Mobile ---
+.floating-action-mobile {
   position: fixed;
-  bottom: 0;
+  bottom: 80px;
   left: 0;
   right: 0;
-  z-index: 150;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  width: 100vw;
+  background-color: #fff;
+  padding: 12px 16px;
   display: flex;
-  align-items: center;
-  gap: 1rem;
-
-  .footer-price-mobile {
-    flex-grow: 1;
-    text-align: left;
-    .price-label {
-      display: block;
-      font-size: 14px;
-      color: $text-light;
-      margin-bottom: 0.1rem;
-    }
-    .price-value {
-      font-size: 17px;
-      font-weight: 600;
-      color: $accent-color;
-    }
-  }
-
-  .buy-now-button-mobile { // Target komponen Tombol
-    flex-shrink: 0;
-    padding: 0.85rem 1.75rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    background-color: $button-primary-bg;
-    color: var(--merah);
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
-    &:hover:not(:disabled) {
-      background-color: var(--abu2, #f0f0f0);
-    }
-     &:active:not(:disabled) {
-      transform: scale(0.98);
-    }
-    &:disabled {
-      background-color: var(--abu-abu-gelap, #ccc);
-      color: #888;
-      cursor: not-allowed;
-    }
-  }
+  gap: 10px;
+  z-index: 200;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
 }
 
-// Loading, Error, Not Found States
+.floating-btn {
+  flex: 1;
+  font-size: 14px;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.floating-btn.cart {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.floating-btn.checkout {
+  background-color: $accent-color;
+  color: #fff;
+}
+
+// --- Loading/Error State ---
 .product-detail-loading,
 .product-detail-error,
 .product-detail-not-found {
   display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 120px);
+  min-height: 50vh;
   text-align: center;
-  padding: 1rem;
+  padding: 2rem;
   p {
     font-size: 1rem;
     color: $text-secondary;
-    margin-top: 1rem;
   }
 }
 .product-detail-error p {
   color: $accent-color;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 // --- Desktop Styles ---
 @media (min-width: 1024px) {
   .product-detail-header {
-    display: none; // Sembunyikan header di desktop
+    display: none;
   }
 
   .product-detail-main-content {
@@ -277,25 +233,18 @@ $font-main: 'Inter', sans-serif; // Pastikan font Inter sudah di-load global
     padding: 3rem;
     max-width: 1320px;
     margin: 0 auto;
-    align-items: flex-start;
-    padding-bottom: 3rem;
   }
 
   .product-gallery-column {
     position: sticky;
-    top: 7.5rem; // Jarak dari atas viewport (karena header tidak ada)
-    align-self: flex-start;
-    background-color: transparent;
-
+    top: 6rem;
     .product-image-container {
       padding: 0;
       .product-image-main {
         border-radius: 20px;
-        background-color: $background-card;
-        box-shadow: 0 12px 30px rgba(0,0,0,0.12);
-        max-height: 80vh;
+        background: $background-card;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
         aspect-ratio: 4/3;
-        object-fit: cover;
       }
     }
   }
@@ -305,68 +254,38 @@ $font-main: 'Inter', sans-serif; // Pastikan font Inter sudah di-load global
     border-radius: 0;
     box-shadow: none;
     padding: 0.5rem;
-    background-color: transparent;
-    z-index: auto;
+    background: transparent;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    // min-height: 50vh;
 
-    .product-info-header {
-      margin-bottom: 0.75rem;
-      .product-name { font-size: 1,2rem; }
-      .product-category-tag { font-size: 0.8rem;; }
-    }
-    .product-price { font-size: 14PX; }
-    .product-stock-info { font-size: 1rem; margin-bottom: 2rem; }
     .product-description-container {
-        margin-bottom: 1rem;
-        .description-title { font-size: 1rem; }
-        .product-description { font-size: 0.95rem; }
+      margin-bottom: 2rem;
     }
   }
 
-  .product-actions-container { // Wrapper untuk tombol desktop
-    display: block; // Tampilkan di desktop
-    margin-top: auto; // Dorong ke bawah dalam .product-info-column
-  }
-
-  .product-actions-desktop {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding-top: 1.5rem;
-
-    // Target komponen Tombol yang memiliki kelas .add-to-cart-button
-    .add-to-cart-button.main-action-button {
-      flex-grow: 1;
-      padding: 1rem 2.5rem;
-      font-size: 1.05rem;
-      font-weight: 600;
-      background-color: $button-primary-bg;
-      color: $button-primary-text;
-      border: none;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+  .product-actions-container {
+    display: block;
+    margin-top: auto;
+    .product-actions-desktop {
       display: flex;
       align-items: center;
-      justify-content: center;
-      transition: background-color 0.2s ease, transform 0.15s ease;
-      &:hover:not(:disabled) {
-        background-color: var(--abu2, #f0f0f0);
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      gap: 1rem;
+      padding-top: 1.5rem;
+      .add-to-cart-button.main-action-button {
+        flex-grow: 1;
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        background-color: var(--hitam);
+        color: white;
+        border-radius: 10px;
+        &:hover {
+          background-color: #333;
+        }
       }
-      &:active:not(:disabled) {
-        transform: translateY(-1px);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-      }
-      .icon-cart { margin-right: 0.85rem; }
     }
-
   }
 
-  .product-detail-footer-mobile {
-      display: none;
+  .floating-action-mobile {
+    display: none;
   }
 }
