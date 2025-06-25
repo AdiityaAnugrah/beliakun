@@ -28,6 +28,7 @@ const addProduct = async (req, res) => {
             message: "Nama, harga, stok, deskripsi, dan kategori diperlukan",
         });
     }
+    
 
     try {
         let baseSlug = slugify(nama);
