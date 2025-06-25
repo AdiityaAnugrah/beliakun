@@ -144,8 +144,6 @@ export const getProductLaris = async () => {
     try {
         const res = await fetch(`${API_URL}/product/laris`);
         const resJson = await res.json();
-        console.log("Produk terlaris:", resJson);
-
         if (res.ok) {
             return { status: res.status, data: resJson };
         } else {
