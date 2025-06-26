@@ -243,8 +243,9 @@ const sendEmail = async (userEmail, orderDetails, orderCur) => {
             }
         });
     } catch (error) {
-        console.error("Error preparing email:", error);
-    }
+    console.error("🔥 getOrderHistory error:", error);
+    res.status(500).json({ message: "Gagal ambil riwayat order" });
+  }
 };
 
 
