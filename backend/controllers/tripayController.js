@@ -111,32 +111,53 @@ const createTripayTransaction = async (req, res) => {
 };
 
 const handleTripayCallback = async (req, res) => {
-  const { reference, status, signature } = req.body;
-  const expectedSignature = crypto
-    .createHmac("sha256", process.env.TRIPAY_PRIVATE_KEY)
-    .update(reference + status)
-    .digest("hex");
-
-  if (signature !== expectedSignature) {
-    return res.status(403).json({ message: "Signature tidak valid" });
-  }
-
   try {
-    const order = await Order.findOne({ where: { tripay_reference: reference } });
-    if (!order) return res.status(404).end();
+    const { reference, status } = req.body;
+    const signature = req.headers["x-callback-signature"];
 
-    const statusMap = {
-      PAID: "success",
-      FAILED: "failed",
-      EXPIRED: "failed"
-    };
-    await order.update({ status: statusMap[status] || "pending" });
+    console.log("🔥 Tripay callback:", req.body);
 
-    return res.status(200).json({ message: "Callback processed" });
-  } catch (error) {
-    return res.status(500).json({ message: "Callback error" });
+    const raw = process.env.TRIPAY_MERCHANT_CODE + reference + status;
+    const expected = crypto
+      .createHmac("sha256", process.env.TRIPAY_PRIVATE_KEY)
+      .update(raw)
+      .digest("hex");
+
+    if (signature !== expected) {
+      console.warn("❌ Signature tidak valid");
+      return res.status(403).json({ message: "Signature tidak valid" });
+    }
+
+    const order = await Order.findOne({
+      where: { tripay_reference: reference },
+      include: [OrderItem],
+    });
+
+    if (!order) return res.status(404).json({ message: "Order tidak ditemukan" });
+
+    const map = { PAID: "success", FAILED: "failed", EXPIRED: "failed", UNPAID: "pending" };
+    order.status = map[status] || "pending";
+    order.data_tripay = req.body;
+
+    /* Rollback stok jika gagal */
+    if (order.status === "failed") {
+      for (const item of order.OrderItems) {
+        const product = await Product.findByPk(item.product_id);
+        if (product) {
+          product.stock += item.quantity;
+          await product.save();
+        }
+      }
+    }
+
+    await order.save();
+    return res.status(200).json({ message: "Callback OK" });
+  } catch (err) {
+    console.error("❌ Callback error:", err);
+    return res.status(500).json({ message: "Internal error" });
   }
 };
+
 
 module.exports = {
   getTripayChannels,

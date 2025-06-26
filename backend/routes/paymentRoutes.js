@@ -18,17 +18,21 @@ router.get("/channels", tripayController.getTripayChannels);
 router.get("/thank-you", (req, res) => {
   const { tripay_reference, tripay_merchant_ref } = req.query;
 
-  // Jika tak ada parameter sama sekali, arahkan ke beranda
+  // Jika dua-duanya kosong, arahkan ke beranda
   if (!tripay_reference && !tripay_merchant_ref) {
     return res.redirect("https://beliakun.com/");
   }
 
-  const target = `https://beliakun.com/thank-you?tripay_reference=${encodeURIComponent(
-    tripay_reference || ""
-  )}&tripay_merchant_ref=${encodeURIComponent(tripay_merchant_ref || "")}`;
+  const reference    = tripay_reference     || "";
+  const merchantRef  = tripay_merchant_ref  || "";
+  const target = `https://beliakun.com/thank-you` +
+                 `?tripay_reference=${encodeURIComponent(reference)}` +
+                 `&tripay_merchant_ref=${encodeURIComponent(merchantRef)}`;
 
+  res.set("Cache-Control", "no-store");
   return res.redirect(target);
 });
+
 
 router.get("/order-detail", async (req, res) => {
   try {
