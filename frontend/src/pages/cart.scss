@@ -1,88 +1,118 @@
-/* ==== CART (hanya tampilan) ==== */
+/* ----------  CART  ---------- */
 
 .cart-container {
-  padding: 1.5rem 1rem;
-  max-width: 1040px;
+  padding: 2rem 1rem;
+  max-width: 1120px;
   margin: 0 auto;
-}
-
-/* pesan “loading / kosong” */
-.cart-container > p {
-  text-align: center;
-  font-size: 1.1rem;
-  margin-top: 2rem;
-  color: var(--text, #333);
-}
-
-/* ===== LIST ===== */
-.cart-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-}
+  gap: 2rem;
 
-/* tiap kartu item */
-.cart-item {
-  display: grid;
-  grid-template-columns: 90px 1fr auto auto;
-  gap: 1rem;
-  align-items: center;
-  background: #fff;
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
-
-  @media (max-width: 640px) {
-    grid-template-columns: 80px 1fr;
-    grid-template-areas:
-      "thumb info"
-      "thumb qty";
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: flex-start;
   }
 }
 
-.cart-item img {
-  width: 100%;
-  height: 90px;
+/* ===== LIST & HEADERS ===== */
+.cart-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.cart-list::before {
+  /* header bar (desktop) */
+  content: "";
+  display: none;
+
+  @media (min-width: 768px) {
+    display: grid;
+    grid-template-columns: 60px 1fr 120px 140px 40px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 0 0.8rem 0.6rem;
+    color: var(--hitam);
+    column-gap: 1rem;
+
+    /* headings */
+    &::after {
+      content: "PRODUCT      PRICE    QUANTITY    TOTAL      ";
+      white-space: pre;
+    }
+  }
+}
+
+/* ===== ITEM ===== */
+.cart-item {
+  display: grid;
+  grid-template-columns: 60px 1fr auto auto 40px;
+  column-gap: 1rem;
+  align-items: center;
+  background: var(--putih);
+  border-radius: 12px;
+  padding: 0.8rem;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+
+  @media (max-width: 767px) {
+    grid-template-columns: 70px 1fr;
+    grid-template-areas:
+      "thumb info"
+      "qty   qty";
+    row-gap: 0.6rem;
+  }
+}
+
+/* thumbnail */
+.cart-item > img {
+  width: 60px;
+  height: 60px;
   object-fit: cover;
   border-radius: 8px;
   grid-area: thumb;
 }
 
+/* info (nama & stok) */
 .item-info {
-  h3 {
-    margin: 0 0 0.2rem 0;
-    font-size: 1rem;
-    color: var(--text, #222);
-  }
+  grid-area: info;
 
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--hitam);
+  }
   p {
     margin: 0.15rem 0;
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     color: #666;
   }
-
-  grid-area: info;
 }
 
-/* ===== QTY ( + / – ) ===== */
+/* harga (tabel kolom kedua) – diambil dari .item-info > p pertama */
+.item-info p:first-of-type {
+  font-weight: 600;
+  color: var(--hitam);
+}
+
+/* ===== QTY ===== */
 .quantity-control {
   display: flex;
-  align-items: center;
   gap: 0.45rem;
+  align-items: center;
 
   button {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     border: none;
     border-radius: 6px;
-    background: var(--primary, #111827);
-    color: #fff;
-    font-size: 1.1rem;
+    background: var(--hitam);
+    color: var(--putih);
+    font-size: 1rem;
     cursor: pointer;
-    transition: background 0.25s;
 
     &:hover {
-      background: var(--accent, #ef4444);
+      background: var(--merah);
     }
   }
 
@@ -92,60 +122,76 @@
     font-weight: 600;
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 767px) {
     grid-area: qty;
     justify-self: start;
   }
 }
 
-/* Hapus item */
+/* tombol hapus */
 .delete-btn {
   border: none;
   background: transparent;
-  color: var(--accent, #ef4444);
-  font-size: 1.4rem;
+  font-size: 1.3rem;
+  color: var(--merah);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.25s;
 
-  &:hover { transform: scale(1.15); }
+  &:hover {
+    transform: scale(1.15);
+  }
+
+  @media (max-width: 767px) {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+  }
 }
 
-/* ===== RINGKASAN ===== */
+/* ====== RINGKASAN ====== */
 .cart-summary {
-  margin-top: 2rem;
-  text-align: center;
+  width: 100%;
+  max-width: 280px;
+  background: var(--abu);
+  border: 1px solid var(--abu-abu-gelap);
+  border-radius: 10px;
+  padding: 1.2rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+
+  @media (min-width: 768px) {
+    position: sticky;
+    top: 90px;
+  }
 }
 
 .total-price {
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: right;
+  border-top: 1px solid var(--abu-abu-gelap);
+  padding-top: 0.7rem;
 }
 
 .checkout-btn {
-  background: var(--primary, #111827);
-  color: #fff;
+  background: var(--hijau);
+  color: var(--putih);
   border: none;
-  padding: 0.9rem 2.6rem;
-  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  border-radius: 8px;
   font-size: 1rem;
   cursor: pointer;
   transition: background 0.3s;
 
-  &:hover { background: var(--accent, #ef4444); }
+  &:hover {
+    background: var(--hijau-gelap);
+  }
 }
 
-/* ==== OPTIONAL: Dark-mode via OS preference ==== */
-@media (prefers-color-scheme: dark) {
-  .cart-item      { background: #1f2937; }
-  .item-info h3,
-  .total-price    { color: #f3f3f3; }
-  .cart-container > p { color: #e5e7eb; }
-}
-@media (prefers-color-scheme: dark) {
-  .cart-item img { filter: brightness(0.8); }
-  .delete-btn    { color: #f87171; }
-  .checkout-btn  { background: #374151; }
+/* ===== MOBILE tweaks: summary di bawah ===== */
+@media (max-width: 767px) {
+  .cart-summary {
+    max-width: 100%;
+  }
 }
