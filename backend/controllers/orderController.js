@@ -282,6 +282,4 @@ const getOrderHistory = async (req, res) => {
   }
 };
 
-
-
 module.exports = { getOrder, updateOrder, getOrderHistory };
