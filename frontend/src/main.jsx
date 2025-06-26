@@ -20,6 +20,7 @@ import Setting from "./pages/Setting";
 import History from "./pages/History.jsx";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import ThankYou from "./pages/ThankYou.jsx";
 
 // Admin
 import HomeAdmin from "./pages/admin/HomeAdmin.jsx";
@@ -59,6 +60,7 @@ createRoot(document.getElementById("root")).render(
                 <Route path="profile" element={<Profile />} />
                 <Route path="setting" element={<Setting />} />
                 <Route path="history" element={<History />} />
+                <Route path="/thank-you" element={<ThankYou />} />
                 <Route
                     path="/payment-info/:orderId"
                     element={<PaymentInfo />}

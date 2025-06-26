@@ -55,7 +55,7 @@ const createTripayTransaction = async (req, res) => {
         quantity: item.quantity
       })),
       callback_url: `${process.env.BASE_URL}/api/payment/tripay-callback`,
-      return_url: `${process.env.BASE_URL}/thank-you`,
+      return_url: `${process.env.FRONTEND_URL}/thank-you`,
       expired_time: expiredTime,
       signature
     };
@@ -81,9 +81,11 @@ const createTripayTransaction = async (req, res) => {
       alamat,
       catatan,
       total_harga: amount,
-      midtrans_id: merchantRef,
-      data_mid: result.data,
+      tripay_merchant_ref: merchantRef,         
+      tripay_reference: result.data.reference,  
+      data_tripay: result.data,                 
     });
+
 
     for (const item of cartItems) {
       await OrderItem.create({
@@ -119,7 +121,7 @@ const handleTripayCallback = async (req, res) => {
   }
 
   try {
-    const order = await Order.findOne({ where: { midtrans_id: reference } });
+    const order = await Order.findOne({ where: { tripay_reference: reference } });
     if (!order) return res.status(404).end();
 
     const statusMap = {

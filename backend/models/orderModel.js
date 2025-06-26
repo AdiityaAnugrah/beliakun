@@ -14,6 +14,16 @@ const Order = sequelize.define(
         midtrans_id: {
             type: DataTypes.TEXT,
         },
+        tripay_reference: {
+            type: DataTypes.STRING,
+        },
+        tripay_merchant_ref: {
+            type: DataTypes.STRING,
+        },
+        data_tripay: {
+            type: DataTypes.JSON,
+        },
+
         email: {
             type: DataTypes.STRING,
             allowNull: false,
