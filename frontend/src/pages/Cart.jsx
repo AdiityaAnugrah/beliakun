@@ -11,7 +11,8 @@ import useNotifStore from "../../store/notifStore";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import Topbar from "../components/Topbar";
-import "./cart.css";
+
+import "./cart.scss";
 
 const Cart = () => {
     const [loading, setLoading] = useState(true);
