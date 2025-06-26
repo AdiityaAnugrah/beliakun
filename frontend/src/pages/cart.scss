@@ -1,0 +1,151 @@
+
+.cart {
+  padding: 1.5rem 1rem;
+  max-width: 1024px;
+  margin: 0 auto;
+
+  &__empty {
+    text-align: center;
+    font-size: 1.1rem;
+    color: var(--text);
+  }
+
+  /* LIST */
+  &__list {
+    display: grid;
+    gap: 1.2rem;
+  }
+
+  &__item {
+    display: grid;
+    grid-template-columns: 90px 1fr auto auto;
+    gap: 1rem;
+    align-items: center;
+    background: var(--bg-card);
+    border-radius: 10px;
+    padding: 1rem;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+
+    @media (max-width: 640px) {
+      grid-template-columns: 70px 1fr auto;
+      grid-template-areas:
+        "thumb info delete"
+        "qty qty qty";
+    }
+  }
+
+  &__thumb {
+    width: 100%;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 8px;
+    grid-area: thumb;
+  }
+
+  &__info {
+    h3 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--text);
+    }
+    .cart__price {
+      display: block;
+      font-weight: 600;
+      margin: 0.25rem 0;
+      color: var(--accent);
+    }
+    small {
+      color: #666;
+    }
+    grid-area: info;
+  }
+
+  &__qty {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    button {
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 6px;
+      background: var(--primary);
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.25s;
+
+      &:hover {
+        background: var(--accent);
+      }
+    }
+
+    span {
+      min-width: 26px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    @media (max-width: 640px) {
+      grid-area: qty;
+      justify-self: start;
+    }
+  }
+
+  &__delete {
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: scale(1.15);
+    }
+
+    @media (max-width: 640px) {
+      grid-area: delete;
+    }
+  }
+
+  /* SUMMARY */
+  &__summary {
+    margin-top: 2rem;
+    text-align: center;
+
+    p {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+  }
+
+  &__checkout {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 0.9rem 3rem;
+    border-radius: 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+
+    &:hover {
+      background: var(--accent);
+    }
+  }
+}
+
+/* DARK MODE support (optional) */
+@media (prefers-color-scheme: dark) {
+  .cart {
+    &__item {
+      background: var(--bg-dark-card);
+    }
+    &__info h3,
+    &__empty {
+      color: var(--text-dark);
+    }
+  }
+}
