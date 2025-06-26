@@ -6,19 +6,19 @@ import {
 } from "../services/cartService";
 import useUserStore from "../../store/userStore";
 import useCartStore from "../../store/cartStore";
-import Notif from "../components/Notif";
 import useNotifStore from "../../store/notifStore";
+import Notif from "../components/Notif";
+import Topbar from "../components/Topbar";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import Topbar from "../components/Topbar";
 
-import "./cart.scss";             // ⬅️ impor SCSS baru
+import "./cart.scss";
 
 const Cart = () => {
   const [loading, setLoading] = useState(true);
   const { token, emptyUser } = useUserStore();
-  const { showNotif, setNotif } = useNotifStore();
   const { cart, setCart } = useCartStore();
+  const { showNotif, setNotif } = useNotifStore();
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -44,11 +44,11 @@ const Cart = () => {
 
   useEffect(() => {
     fetchCart();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const updateQty = async (productId, newQty) => {
-    const res = await updateCartQuantity(productId, newQty, token);
+  const handleQtyChange = async (productId, quantity, stok) => {
+    if (quantity < 1 || quantity > stok) return;
+    const res = await updateCartQuantity(productId, quantity, token);
     if (res.status === 401) {
       emptyUser();
       return navigate("/login");
@@ -56,7 +56,7 @@ const Cart = () => {
     fetchCart();
   };
 
-  const removeItem = async (productId) => {
+  const handleDelete = async (productId) => {
     const res = await deleteCartItem(productId, token);
     if (res.status === 401) {
       emptyUser();
@@ -65,7 +65,7 @@ const Cart = () => {
     fetchCart();
   };
 
-  const subtotal = cart.reduce((acc, item) => acc + item.harga * item.quantity, 0);
+  const total = cart.reduce((acc, item) => acc + item.harga * item.quantity, 0);
 
   return (
     <>
@@ -79,61 +79,39 @@ const Cart = () => {
           <p className="cart__empty">{t("cart.empty")}</p>
         ) : (
           <>
-            {/* list items */}
             <div className="cart__list">
               {cart.map((item) => (
-                <article className="cart__item" key={item.productId}>
-                  <img src={item.gambar} alt={item.nama} className="cart__thumb" />
+                <div className="cart__item" key={item.productId}>
+                  <img src={item.gambar} alt={item.nama} className="cart__image" />
 
-                  <div className="cart__info">
+                  <div className="cart__detail">
                     <h3>{item.nama}</h3>
-                    <span className="cart__price">
+                    <span className="cart__harga">
                       Rp {item.harga.toLocaleString("id-ID")}
                     </span>
-                    <small>
+                    <small className="cart__stok">
                       {t("cart.stockAvailable", { stok: item.stok })}
                     </small>
+
+                    <div className="cart__qty">
+                      <button onClick={() => handleQtyChange(item.productId, item.quantity - 1, item.stok)}>-</button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => handleQtyChange(item.productId, item.quantity + 1, item.stok)}>+</button>
+                    </div>
                   </div>
 
-                  <div className="cart__qty">
-                    <button
-                      onClick={() =>
-                        item.quantity > 1 && updateQty(item.productId, item.quantity - 1)
-                      }
-                    >
-                      &minus;
-                    </button>
-                    <span>{item.quantity}</span>
-                    <button
-                      onClick={() =>
-                        item.quantity < item.stok &&
-                        updateQty(item.productId, item.quantity + 1)
-                      }
-                    >
-                      &#43;
-                    </button>
-                  </div>
-
-                  <button
-                    className="cart__delete"
-                    onClick={() => removeItem(item.productId)}
-                  >
+                  <button className="cart__remove" onClick={() => handleDelete(item.productId)}>
                     &times;
                   </button>
-                </article>
+                </div>
               ))}
             </div>
 
-            {/* summary */}
-            <div className="cart__summary">
-              <p>
-                {t("cart.total")}:{" "}
-                <strong>Rp {subtotal.toLocaleString("id-ID")}</strong>
-              </p>
-              <button
-                className="cart__checkout"
-                onClick={() => navigate("/checkout")}
-              >
+            <div className="cart__checkout-bar">
+              <div className="cart__total">
+                {t("cart.total")}: <strong>Rp {total.toLocaleString("id-ID")}</strong>
+              </div>
+              <button className="cart__checkout" onClick={() => navigate("/checkout")}>
                 {t("cart.checkout")}
               </button>
             </div>
