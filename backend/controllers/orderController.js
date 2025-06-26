@@ -258,12 +258,12 @@ const getOrderHistory = async (req, res) => {
       where: { user_id: req.user.id },
       order: [["createdAt", "DESC"]],
       include: [
-                {
-                  model: OrderItem,
-                  as: "OrderItems",
-                  include: [Product]
-                }
-              ],
+        {
+          model: OrderItem,
+          as: "OrderItems",
+          include: [Product]
+        }
+      ],
     });
 
     const formattedOrders = orders.map((order) => ({
@@ -272,14 +272,16 @@ const getOrderHistory = async (req, res) => {
       total: order.total_harga,
       status: order.status,
       createdAt: order.createdAt,
-      items: order.OrderItems.map((item) => ({
-        id: item.id,
-        productId: item.Product.id,
-        nama: item.Product.nama,
-        harga: item.Product.harga,
-        gambar: `${baseUrl}/uploads/${item.Product.gambar}`,
-        quantity: item.quantity,
-      }))
+      items: (order.OrderItems || [])          
+        .filter((it) => it.Product)            
+        .map((item) => ({
+          id: item.id,
+          productId: item.Product.id,
+          nama: item.Product.nama,
+          harga: item.Product.harga,
+          gambar: `${baseUrl}/uploads/${item.Product.gambar}`,
+          quantity: item.quantity,
+        })),
     }));
 
     res.status(200).json(formattedOrders);
