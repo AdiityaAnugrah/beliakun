@@ -12,14 +12,11 @@ export const signup = async (data) => {
         const resJson = await res.json();
 
         if (res.status >= 200 && res.status < 300) {
-            console.log("RESPON DARI SI backend:", resJson);
             return {
                 status: res.status,
                 message: resJson.message,
             };
         } else {
-            // Tangani jika status bukan 2xx (gagal)
-            console.log("Error response from backend:", resJson);
             return {
                 status: res.status,
                 message: resJson.message || "Something went wrong!",

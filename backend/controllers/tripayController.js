@@ -115,8 +115,6 @@ const handleTripayCallback = async (req, res) => {
     const { reference, status } = req.body;
     const signature = req.headers["x-callback-signature"];
 
-    console.log("🔥 Tripay callback:", req.body);
-
     const raw = process.env.TRIPAY_MERCHANT_CODE + reference + status;
     const expected = crypto
       .createHmac("sha256", process.env.TRIPAY_PRIVATE_KEY)
@@ -124,7 +122,6 @@ const handleTripayCallback = async (req, res) => {
       .digest("hex");
 
     if (signature !== expected) {
-      console.warn("❌ Signature tidak valid");
       return res.status(403).json({ message: "Signature tidak valid" });
     }
 
@@ -153,7 +150,6 @@ const handleTripayCallback = async (req, res) => {
     await order.save();
     return res.status(200).json({ message: "Callback OK" });
   } catch (err) {
-    console.error("❌ Callback error:", err);
     return res.status(500).json({ message: "Internal error" });
   }
 };
