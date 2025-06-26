@@ -20,7 +20,7 @@ const OrderItem = sequelize.define(
         },
     },
     {
-        tableName: "order_items", // ✅ ubah dari 'carts'
+        tableName: "order_items",
         timestamps: true,
     }
 );

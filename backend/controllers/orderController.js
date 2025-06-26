@@ -256,7 +256,13 @@ const getOrderHistory = async (req, res) => {
     const orders = await Order.findAll({
       where: { user_id: req.user.id },
       order: [["createdAt", "DESC"]],
-      include: [{ model: OrderItem, include: [{ model: Product }] }],
+      include: [
+                {
+                  model: OrderItem,
+                  as: "OrderItems",
+                  include: [Product]
+                }
+              ],
     });
 
     const formattedOrders = orders.map((order) => ({
