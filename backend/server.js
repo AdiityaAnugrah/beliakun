@@ -42,6 +42,17 @@ app.use("/api", chatgptRoutes);
 app.use("/api", geminiRoutes);
 app.use("/bennerhome", bennerHomeRoutes);
 app.use("/api/newsletter", newsletterRoutes);
+// Redirect dari Tripay ke frontend React
+app.get("/thank-you", (req, res) => {
+  const { tripay_reference, tripay_merchant_ref } = req.query;
+
+  const target = `https://beliakun.com/thank-you?tripay_reference=${encodeURIComponent(
+    tripay_reference || ""
+  )}&tripay_merchant_ref=${encodeURIComponent(tripay_merchant_ref || "")}`;
+
+  return res.redirect(target);
+});
+
 
 // Menginisialisasi model
 const { initModels } = require("./models/index.js");

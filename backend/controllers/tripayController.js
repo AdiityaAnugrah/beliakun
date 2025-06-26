@@ -54,11 +54,12 @@ const createTripayTransaction = async (req, res) => {
         price: item.Product.harga,
         quantity: item.quantity
       })),
-      callback_url: `${process.env.BASE_URL}/api/payment/tripay-callback`,
-      return_url: `${process.env.FRONTEND_URL}/thank-you`,
+      callback_url: `${process.env.BASE_URL}/payment/tripay-callback`,   
+      return_url:   `${process.env.FRONTEND_URL}/thank-you`,
       expired_time: expiredTime,
       signature
     };
+
 
     const response = await fetch(`${TRIPAY_API}/transaction/create`, {
       method: "POST",
