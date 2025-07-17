@@ -372,6 +372,7 @@ const ProductDetail = () => {
           </h3>
           <div className="similar-products-list">
             {similarProducts.map((p) => (
+              
               <Link
                 key={p.id}
                 to={`/product/${p.slug}`}

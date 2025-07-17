@@ -55,7 +55,6 @@ $font-main:          'Inter', sans-serif;
   z-index: 200;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
-  // sembunyikan pada tablet ke atas
   @media (min-width: 768px) {
     display: none;
   }
@@ -87,7 +86,7 @@ $font-main:          'Inter', sans-serif;
 .product-detail-main-content {
   display: flex;
   flex-direction: column;
-  background: $background-page; // Terapkan background halaman di sini
+  background: $background-page;
 
   @media (min-width: 1024px) {
     display: grid;
@@ -103,7 +102,7 @@ $font-main:          'Inter', sans-serif;
 // Kolom Galeri
 // ————————————————
 .product-gallery-column {
-  background: $background-page; // Ganti dari $background-card
+  background: $background-page;
 
   .product-image-container {
     padding: 1rem;
@@ -121,10 +120,9 @@ $font-main:          'Inter', sans-serif;
 // Kolom Informasi
 // ————————————————
 .product-info-column {
-  background: $background-page; // Ganti dari $background-card
+  background: $background-page;
   padding: 1.5rem;
   margin-top: -2rem;
-  // Upaya mempertahankan sedikit jarak, tapi gunakan background-page
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
   box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.06);
@@ -156,9 +154,7 @@ $font-main:          'Inter', sans-serif;
     margin-bottom: 1rem;
   }
 
-  // ————————————————
   // Tombol Checkout & Wishlist Inline
-  // ————————————————
   .product-purchase-container {
     display: flex;
     flex-direction: column;
@@ -208,64 +204,61 @@ $font-main:          'Inter', sans-serif;
     }
   }
 
-  // ————————————————
   // Deskripsi dengan Read More
-  // ————————————————
   .product-description-container {
-  .description-content {
-    > h4, > h5, > h6 {
-      margin: 1rem 0 0.5rem;
-      font-weight: 600;
-    }
-    > p {
-      margin: 0.75rem 0;
-      font-size: 0.95rem;
-      line-height: 1.6;
-    }
-    > ul, > ol {
-      margin: 0.75rem 0 0.75rem 1.25rem;
-      padding: 0;
-      li {
-        margin-bottom: 0.5rem;
+    .description-content {
+      > h4, > h5, > h6 {
+        margin: 1rem 0 0.5rem;
+        font-weight: 600;
       }
-    }
-    > blockquote {
-      margin: 1rem 0;
-      padding: 0.5rem 1rem;
-      border-left: 4px solid $accent-color;
-      background: white;
+      > p {
+        margin: 0.75rem 0;
+        font-size: 0.95rem;
+        line-height: 1.6;
+      }
+      > ul, > ol {
+        margin: 0.75rem 0 0.75rem 1.25rem;
+        padding: 0;
+        li {
+          margin-bottom: 0.5rem;
+        }
+      }
+      > blockquote {
+        margin: 1rem 0;
+        padding: 0.5rem 1rem;
+        border-left: 4px solid $accent-color;
+        background: $background-card;
+      }
+
+      &.truncated {
+        max-height: 6.4rem;
+        overflow: hidden;
+        position: relative;
+        &:after {
+          content: "";
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          height: 1.5rem;
+          background: linear-gradient(rgba($background-page, 0), $background-page);
+        }
+      }
+      &.expanded {
+        max-height: none;
+      }
     }
 
-    &.truncated {
-      max-height: 6.4rem;
-      overflow: hidden;
-      position: relative;
-      &:after {
-        content: "";
-        position: absolute;
-        bottom: 0; left: 0; right: 0;
-        height: 1.5rem;
-        background: linear-gradient(rgba($background-page,0), $background-page);
-      }
-    }
-    &.expanded {
-      max-height: none;
+    .read-more-link {
+      display: block;
+      margin-top: 0.5rem;
+      color: $accent-color;
+      cursor: pointer;
+      font-weight: 500;
     }
   }
 
-  .read-more-link {
-    display: block;
-    margin-top: 0.5rem;
-    color: $accent-color;
-    cursor: pointer;
-    font-weight: 500;
-  }
-}
-
-
-  // ————————————————
   // Social Sharing
-  // ————————————————
   .social-sharing {
     @include flex-center;
     flex-wrap: wrap;
@@ -289,24 +282,26 @@ $font-main:          'Inter', sans-serif;
 }
 
 // ————————————————
-  // Wrappers untuk aspect‐ratio gambar
-  // ————————————————
-  .similar-product-image-container,
-  .recent-image-container {
-    position: relative;
-    width: 100%;
-    padding-bottom: 66.66%; // 3:2 untuk similar, atau 75% (4:3) untuk recent kalau suka
-    overflow: hidden;
-    border-radius: 8px;
-  }
+// Wrappers untuk aspect‐ratio gambar
+// ————————————————
+.similar-product-image-container,
+.recent-image-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 66.66%; // 3:2 untuk similar, bisa disesuaikan
+  overflow: hidden;
+  border-radius: 8px;
+}
 
-  .similar-product-image,
-  .item-image {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-  }
+.similar-product-image,
+.item-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
 // ————————————————
 // Produk Serupa
@@ -339,13 +334,6 @@ $font-main:          'Inter', sans-serif;
       &:hover {
         transform: translateY(-4px);
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      }
-
-      .similar-product-image {
-        width: 100%;
-        height: 0;
-        padding-bottom: 66.66%; // aspect ratio 3:2
-        object-fit: cover;
       }
 
       .similar-product-info {
@@ -399,11 +387,8 @@ $font-main:          'Inter', sans-serif;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       }
 
-      .item-image {
-        width: 100%;
-        height: 0;
-        padding-bottom: 75%; // aspect ratio 4:3
-        object-fit: cover;
+      .recent-image-container {
+        // pembungkus image, definisi di atas
       }
 
       .item-info {
