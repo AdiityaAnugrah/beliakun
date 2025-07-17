@@ -1,48 +1,72 @@
 // ProductDetail.jsx
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { getProductBySlug, getProducts } from "../services/productService";
-import { FaHeart, FaShoppingCart, FaArrowLeft } from "react-icons/fa";
-import Tombol from "../components/Tombol"; // Pastikan path ini benar
-import { useTranslation } from "react-i18next";
 import { addToCart, getCart } from "../services/cartService";
-import useUserStore from "../../store/userStore";
-import { useNavigate, useParams, Link } from "react-router-dom"; // Tambahkan Link
-import useCartStore from "../../store/cartStore";
-import useNotifStore from "../../store/notifStore";
-import useWishlistStore from "../../store/wishlistStore";
-import Notif from "../components/Notif"; // Pastikan path ini benar
 import {
   addToWishlist,
   removeFromWishlist,
-  getWishlist as fetchUserWishlist, // Rename untuk menghindari konflik jika ada
+  getWishlist as fetchUserWishlist,
 } from "../services/wishlistService";
-import './ProductDetail.scss'; // Impor file SCSS Anda
+import Tombol from "../components/Tombol";
+import Notif from "../components/Notif";
+import {
+  FaHeart,
+  FaShoppingCart,
+  FaArrowLeft,
+  FaFacebookF,
+  FaWhatsapp,
+  FaTwitter,
+  FaLink,
+} from "react-icons/fa";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import useUserStore from "../../store/userStore";
+import useCartStore from "../../store/cartStore";
+import useNotifStore from "../../store/notifStore";
+import useWishlistStore from "../../store/wishlistStore";
+import "./ProductDetail.scss";
 
-// Komponen kecil untuk item produk sejenis
 const SimilarProductItem = React.memo(({ product, formatPrice }) => {
   const { t } = useTranslation();
-  if (!product || !product.id) return null;
-
+  if (!product?.id) return null;
   return (
-    <Link to={`/product/${product.slug}`} className="similar-product-item" aria-label={`Lihat detail untuk ${product.nama}`}>
+    <Link
+      to={`/product/${product.slug}`}
+      className="similar-product-item"
+      aria-label={`Lihat detail untuk ${product.nama}`}
+    >
       <img
         src={product.gambar || "https://placehold.co/300x200/e0e0e0/757575?text=Produk"}
         alt={product.nama || "Gambar produk sejenis"}
         className="similar-product-image"
-        onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/300x200/e0e0e0/757575?text=" + t('image.loadError', "Gagal Muat"); }}
-        loading="lazy" // Lazy load images for similar products
+        onError={e => {
+          e.target.onerror = null;
+          e.target.src =
+            "https://placehold.co/300x200/e0e0e0/757575?text=" +
+            t("image.loadError", "Gagal Muat");
+        }}
+        loading="lazy"
       />
       <div className="similar-product-info">
-        <h4 className="similar-product-name">{product.nama || t('product.unknownName', 'Nama Tidak Diketahui')}</h4>
+        <h4 className="similar-product-name">
+          {product.nama || t("product.unknownName", "Nama Tidak Diketahui")}
+        </h4>
         <p className="similar-product-price">{formatPrice(product.harga)}</p>
       </div>
     </Link>
   );
 });
 
-
 const ProductDetail = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { slug } = useParams();
+
+  const { token, emptyUser } = useUserStore();
+  const { setCart: updateCartInStore } = useCartStore();
+  const { setNotif, showNotif } = useNotifStore();
+  const { wishlist, setWishlist: setWishlistInStore } = useWishlistStore();
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -53,360 +77,314 @@ const ProductDetail = () => {
   const [loadingSimilar, setLoadingSimilar] = useState(false);
   const [errorSimilar, setErrorSimilar] = useState("");
 
-  const { token, emptyUser } = useUserStore();
-  const { setCart: updateCartInStore } = useCartStore(); // Rename untuk kejelasan
-  const { setNotif, showNotif } = useNotifStore();
-  const navigate = useNavigate();
-  const { wishlist, setWishlist: setWishlistInStore } = useWishlistStore();
-  const { slug } = useParams();
-  // const { id: productId } = useParams();
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
 
-  // Menggunakan useCallback untuk fungsi yang di-pass ke dependency array atau sebagai props
+  // stable callbacks
   const stableSetNotif = useCallback(setNotif, [setNotif]);
   const stableShowNotif = useCallback(showNotif, [showNotif]);
   const stableEmptyUser = useCallback(emptyUser, [emptyUser]);
   const stableUpdateCartInStore = useCallback(updateCartInStore, [updateCartInStore]);
   const stableSetWishlistInStore = useCallback(setWishlistInStore, [setWishlistInStore]);
 
-  const formatPrice = useCallback((price) => {
-    if (price === undefined || price === null || typeof price !== 'number') return "N/A";
-    return `Rp ${price.toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-  },[]);
+  const formatPrice = useCallback(price => {
+    if (typeof price !== "number") return "N/A";
+    return `Rp ${price.toLocaleString("id-ID", { minimumFractionDigits:0, maximumFractionDigits:0 })}`;
+  }, []);
 
+  // fetch product
   useEffect(() => {
     let unmounted = false;
-    const fetchProductData = async () => {
+    (async () => {
       if (!slug) {
-        if (!unmounted) {
-          setError(t("product.invalidId", "Slug Produk tidak valid."));
-          setLoading(false);
-        }
+        setError(t("product.invalidId","Slug Produk tidak valid."));
+        setLoading(false);
         return;
       }
-
       try {
-        const result = await getProductBySlug(slug);
+        const res = await getProductBySlug(slug);
         if (!unmounted) {
-          if (result.status === 200 && result.data) {
-            setProduct(result.data);
-          } else {
-            setError(result.message || t("product.notFound", "Produk tidak ditemukan."));
-          }
+          if (res.status===200 && res.data) setProduct(res.data);
+          else setError(res.message||t("product.notFound","Produk tidak ditemukan."));
         }
-      } catch (err) {
-        console.error("Error fetching product:", err);
-        if (!unmounted) {
-          setError(t("error.fetch", "Gagal mengambil data produk."));
-        }
+      } catch {
+        if (!unmounted) setError(t("error.fetch","Gagal mengambil data produk."));
       } finally {
         if (!unmounted) setLoading(false);
       }
-    };
-    fetchProductData();
-    return () => { unmounted = true; };
-  }, [slug, t]);
+    })();
+    return () => { unmounted=true; };
+  },[slug,t]);
 
+  // fetch similar
   useEffect(() => {
-    let unmounted = false;
-    const fetchSimilarProductsData = async () => {
-      if (!product || !product.kategori || !product.id) {
-        if (!unmounted) {
-          setSimilarProducts([]);
-          setLoadingSimilar(false);
-          setErrorSimilar(""); 
-        }
-        return;
+    let unmounted=false;
+    (async () => {
+      if (!product?.kategori||!product.id) {
+        setSimilarProducts([]); setLoadingSimilar(false); setErrorSimilar(""); return;
       }
-
-      if (!unmounted) {
-        setLoadingSimilar(true);
-        setErrorSimilar("");
-      }
-
+      setLoadingSimilar(true);
       try {
-        const result = await getProducts({
-          kategori: product.kategori,
-          excludeId: product.id,
-          limit: 5
-        });
-
-        if (result.status === 200 && Array.isArray(result.data.products)) {
-          const filtered = result.data.products;
-          setSimilarProducts(filtered);
-        } else {
-          setSimilarProducts([]);
-        }
-
-
+        const res = await getProducts({ kategori:product.kategori, excludeId:product.id, limit:5 });
         if (!unmounted) {
-          if (result.status !== 200) {
-            console.warn("Gagal mengambil produk sejenis:", result.message);
-            setErrorSimilar(result.message || t("product.similarNotFound", "Produk sejenis tidak ditemukan."));
-            setSimilarProducts([]);
+          if (res.status===200 && Array.isArray(res.data.products)) {
+            setSimilarProducts(res.data.products); setErrorSimilar("");
+          } else {
+            setSimilarProducts([]); setErrorSimilar(res.message||t("product.similarNotFound","Produk sejenis tidak ditemukan."));
           }
         }
-
-      } catch (err) {
-        console.error("Error fetching similar products:", err);
+      } catch {
         if (!unmounted) {
-          setErrorSimilar(t("error.fetchSimilar", "Terjadi kesalahan saat mengambil produk sejenis."));
-          setSimilarProducts([]);
+          setSimilarProducts([]); setErrorSimilar(t("error.fetchSimilar","Terjadi kesalahan saat mengambil produk sejenis."));
         }
       } finally {
-        if (!unmounted) {
-          setLoadingSimilar(false);
-        }
+        if (!unmounted) setLoadingSimilar(false);
       }
-    };
+    })();
+    return ()=>{unmounted=true;};
+  },[product,t]);
 
-    if (product && product.id && product.kategori) {
-      fetchSimilarProductsData();
-    } else {
-        // Jika produk utama tidak ada, pastikan similar products juga kosong dan tidak loading
-        if (!unmounted) {
-            setSimilarProducts([]);
-            setLoadingSimilar(false);
-        }
+  // recently viewed
+  useEffect(()=>{
+    if (product?.id) {
+      const stored=JSON.parse(localStorage.getItem("recentlyViewed")||"[]");
+      const filtered=stored.filter(p=>p.id!==product.id);
+      const updated=[{ id:product.id, slug:product.slug, nama:product.nama, gambar:product.gambar, harga:product.harga }, ...filtered].slice(0,6);
+      localStorage.setItem("recentlyViewed", JSON.stringify(updated));
+      setRecentlyViewed(updated);
     }
+  },[product]);
 
-    return () => { unmounted = true; };
-  }, [product, t]);
+  // wishlist status
+  const isWishlisted=useMemo(()=>{
+    return product?.id && Array.isArray(wishlist)
+      ? wishlist.some(item=>item.productId===product.id||item.id===product.id)
+      : false;
+  },[product,wishlist]);
 
-  const isWishlisted = useMemo(() => {
-    if (!product || !wishlist || !wishlist.length) return false;
-    // Pastikan product.id ada sebelum membandingkan
-    return product.id ? wishlist.some((item) => item.productId === product.id || item.id === product.id) : false;
-  }, [product, wishlist]);
-
-  const handleAddToCart = async () => {
-    if (!product || !product.id || processingCart) return;
+  // add to cart
+  const handleAddToCart=async()=>{
+    if (!product?.id||processingCart) return;
     if (!token) {
-      stableSetNotif(t("cart.notLogin", "Anda harus login untuk menambahkan ke keranjang.")); stableShowNotif(); return;
+      stableSetNotif(t("cart.notLogin","Anda harus login untuk menambahkan ke keranjang."));
+      stableShowNotif();
+      return;
     }
-    if (product.stock <= 0) {
-      stableSetNotif(t("cart.outOfStock", "Stok produk habis.")); stableShowNotif(); return;
+    if (product.stock<=0) {
+      stableSetNotif(t("cart.outOfStock","Stok produk habis."));
+      stableShowNotif();
+      return;
     }
     setProcessingCart(true);
     try {
-      const response = await addToCart(product.id, 1, token);
-      if (response.status === 401) {
-        stableEmptyUser(); stableSetNotif(t("cart.sessionExpired", "Sesi Anda berakhir, silakan login kembali.")); stableShowNotif(); navigate("/login"); return;
+      const resp=await addToCart(product.id,1,token);
+      if (resp.status===401) {
+        stableEmptyUser();
+        stableSetNotif(t("cart.sessionExpired","Sesi Anda berakhir, silakan login kembali."));
+        stableShowNotif();
+        navigate("/login");
+        return;
       }
-      if (response.status === 200 || response.status === 201) {
-        const updatedCart = await getCart(token); // Ambil keranjang terbaru
-        if(updatedCart.status === 200 && updatedCart.data){ stableUpdateCartInStore(updatedCart.data); }
-        else { console.warn("Failed to fetch updated cart or cart data is invalid", updatedCart); }
-        stableSetNotif(t("cart.addSuccess", "Produk berhasil ditambahkan ke keranjang!")); stableShowNotif();
+      if ([200,201].includes(resp.status)) {
+        const cartRes=await getCart(token);
+        if (cartRes.status===200&&cartRes.data) stableUpdateCartInStore(cartRes.data);
+        stableSetNotif(t("cart.addSuccess","Produk berhasil ditambahkan ke keranjang!"));
       } else {
-        stableSetNotif(response.message || t("cart.addFailed", "Gagal menambahkan ke keranjang.")); stableShowNotif();
+        stableSetNotif(resp.message||t("cart.addFailed","Gagal menambahkan ke keranjang."));
       }
-    } catch (err) {
-      console.error("Gagal menambah ke keranjang:", err);
-      stableSetNotif(t("cart.addFailed", "Terjadi kesalahan. Gagal menambahkan ke keranjang.")); stableShowNotif();
+      stableShowNotif();
+    } catch {
+      stableSetNotif(t("cart.addFailed","Terjadi kesalahan. Gagal menambahkan ke keranjang."));
+      stableShowNotif();
     } finally {
       setProcessingCart(false);
     }
   };
 
-  const handleToggleWishlist = async (event) => {
-    if (event) event.stopPropagation();
-    if (!product || !product.id || processingWishlist) return;
+  // toggle wishlist
+  const handleToggleWishlist=async(e)=>{
+    e?.stopPropagation();
+    if (!product?.id||processingWishlist) return;
     if (!token) {
-      stableSetNotif(t("wishlist.notLogin", "Anda harus login untuk menggunakan wishlist.")); stableShowNotif(); return;
+      stableSetNotif(t("wishlist.notLogin","Anda harus login untuk menggunakan wishlist."));
+      stableShowNotif();
+      return;
     }
     setProcessingWishlist(true);
     try {
-      let response;
-      const currentWishlistStatus = isWishlisted; // Gunakan status yang sudah di-memoize
-      if (currentWishlistStatus) {
-        response = await removeFromWishlist(product.id, token);
+      const current=isWishlisted;
+      const resp=current
+        ? await removeFromWishlist(product.id,token)
+        : await addToWishlist(product.id,token);
+      if (resp.status===401) {
+        stableEmptyUser();
+        stableSetNotif(t("wishlist.sessionExpired","Sesi Anda berakhir, silakan login kembali."));
+        stableShowNotif();
+        navigate("/login");
+        return;
+      }
+      if ([200,201].includes(resp.status)) {
+        const wishRes=await fetchUserWishlist(token);
+        if (wishRes.status===200&&wishRes.data) stableSetWishlistInStore(wishRes.data);
+        stableSetNotif(
+          current
+            ? t("wishlist.removed","Produk dihapus dari wishlist.")
+            : t("wishlist.added","Produk ditambahkan ke wishlist.")
+        );
       } else {
-        response = await addToWishlist(product.id, token);
+        stableSetNotif(resp.message||t("wishlist.toggleFailed","Gagal mengubah wishlist."));
       }
-
-      if (response.status === 401) {
-        stableEmptyUser(); stableSetNotif(t("wishlist.sessionExpired", "Sesi Anda berakhir, silakan login kembali.")); stableShowNotif(); navigate("/login"); return;
-      }
-
-      if (response.status === 200 || response.status === 201) {
-        const fetchRes = await fetchUserWishlist(token); // Ambil wishlist terbaru
-        if (fetchRes.status === 200 && fetchRes.data) { stableSetWishlistInStore(fetchRes.data); }
-        else { console.warn("Failed to fetch updated wishlist or wishlist data is invalid", fetchRes); }
-        stableSetNotif(currentWishlistStatus ? t("wishlist.removed", "Produk dihapus dari wishlist.") : t("wishlist.added", "Produk ditambahkan ke wishlist.")); stableShowNotif();
-      } else {
-        stableSetNotif(response.message || t("wishlist.toggleFailed", "Gagal mengubah wishlist.")); stableShowNotif();
-      }
-    } catch (err) {
-      console.error("Gagal memproses wishlist:", err);
-      stableSetNotif(t("wishlist.toggleFailed", "Terjadi kesalahan. Gagal mengubah wishlist.")); stableShowNotif();
+      stableShowNotif();
+    } catch {
+      stableSetNotif(t("wishlist.toggleFailed","Terjadi kesalahan. Gagal mengubah wishlist."));
+      stableShowNotif();
     } finally {
       setProcessingWishlist(false);
     }
   };
 
-  if (loading) return (<div className="product-detail-loading"><p>{t("loading", "Memuat...")}</p></div>);
-  if (error) return (<div className="product-detail-error"><p>{error}</p></div>);
-  if (!product) return (<div className="product-detail-not-found"><p>{t("product.notFoundInitial", "Produk tidak ditemukan.")}</p></div>);
+  // social share
+  const shareUrl=window.location.href;
+  const share=platform=>{
+    let url="";
+    if(platform==="facebook") url=`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+    if(platform==="whatsapp") url=`https://api.whatsapp.com/send?text=${encodeURIComponent(shareUrl)}`;
+    if(platform==="twitter") url=`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}`;
+    window.open(url,"_blank");
+  };
+  const copyLink=()=>{
+    navigator.clipboard.writeText(shareUrl);
+    stableSetNotif(t("link.copied","Link disalin!"));
+    stableShowNotif();
+  };
+
+  if (loading)
+    return <div className="product-detail-loading"><p>{t("loading","Memuat...")}</p></div>;
+  if (error)
+    return <div className="product-detail-error"><p>{error}</p></div>;
+  if (!product)
+    return <div className="product-detail-not-found"><p>{t("product.notFoundInitial","Produk tidak ditemukan.")}</p></div>;
 
   return (
     <div className="product-detail-page">
       <Notif />
+
+      {/* HEADER: hanya mobile */}
       <header className="product-detail-header">
-        <button onClick={() => navigate(-1)} aria-label={t('go_back', "Kembali")} className="header-action-button back-button">
-          <FaArrowLeft />
+        <button onClick={()=>navigate(-1)} className="header-action-button" aria-label={t("go_back","Kembali")}>
+          <FaArrowLeft/>
         </button>
-        <h2 className="header-title">{t('product_details', "Detail Produk")}</h2>
-        <button onClick={handleToggleWishlist} aria-label={isWishlisted ? t('wishlist.removeFrom', 'Hapus dari Wishlist') : t('wishlist.addTo', 'Tambah ke Wishlist')} className="header-action-button wishlist-button-header" disabled={processingWishlist}>
-          <FaHeart className={isWishlisted ? "wishlisted" : ""} />
+        <h2 className="header-title">{t("product_details","Detail Produk")}</h2>
+        <button onClick={handleToggleWishlist} className="header-action-button wishlist-button-header" disabled={processingWishlist}
+                aria-label={isWishlisted?t("wishlist.removeFrom","Hapus dari Wishlist"):t("wishlist.addTo","Tambah ke Wishlist")}>
+          <FaHeart className={isWishlisted?"wishlisted":""}/>
         </button>
       </header>
 
       <main className="product-detail-main-content">
+        {/* GALLERY */}
         <div className="product-gallery-column">
           <div className="product-image-container">
             <img
-              src={product.gambar || "https://placehold.co/800x600/e0e0e0/757575?text=Produk"}
-              alt={product.nama || "Gambar Produk"}
+              src={product.gambar||"https://placehold.co/800x600/e0e0e0/757575?text=Produk"}
+              alt={product.nama||"Gambar Produk"}
               className="product-image-main"
-              onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/800x600/e0e0e0/757575?text=" + t('image.loadError', "Gagal Muat"); }}
+              onError={e=>{e.target.onerror=null;e.target.src="https://placehold.co/800x600/e0e0e0/757575?text="+t("image.loadError","Gagal Muat")}}
             />
           </div>
         </div>
 
+        {/* INFO */}
         <div className="product-info-column">
-            <div className="product-info-header">
-                <h1 className="product-name">{product.nama || t('product.unknownName', 'Nama Tidak Diketahui')}</h1>
-                {product.kategori && (
-                    <span className="product-category-tag">
-                        {t(`category.${product.kategori}`, product.kategori.charAt(0).toUpperCase() + product.kategori.slice(1))}
-                    </span>
-                )}
-            </div>
-            <p className="product-price">{formatPrice(product.harga)}</p>
-            <div className="product-stock-info">
-                <p>{t("cart.stockAvailable", { stok: product.stock !== undefined ? product.stock : 0 })}</p>
-            </div>
-            <div className="product-description-container">
-                <h3 className="description-title">{t('product.descriptionTitle', 'Deskripsi Produk')}</h3>
-                <p className="product-description">
-                    {product.deskripsi || t('product.noDescription', 'Tidak ada deskripsi untuk produk ini.')}
-                </p>
-            </div>
+          <div className="product-info-header">
+            <h1 className="product-name">{product.nama}</h1>
+            {product.kategori && (
+              <span className="product-category-tag">
+                {t(`category.${product.kategori}`, product.kategori)}
+              </span>
+            )}
+          </div>
+          <p className="product-price">{formatPrice(product.harga)}</p>
+          <p className="product-stock-info">
+            {t("cart.stockAvailable",{stok:product.stock??0})}
+          </p>
 
-            <div className="product-actions-container">
-                <div className="product-actions-desktop">
-                    <Tombol
-                        style="merah"
-                        text=""
-                        icon={<FaShoppingCart className="icon-cart" />}
-                        onClick={handleAddToCart}
-                        disabled={product.stock === 0 || processingCart}
-                        className="add-to-cart-button main-action-button"
-                        aria-label={t('cart.add_to_cart', 'Tambah ke Keranjang')}
-                    >
-                        <FaShoppingCart className="icon-cart" />
-                        <span>
-                            {product.stock === 0 ? t('cart.outOfStock', "Stok Habis") : t('cart.add_to_cart', 'Tambah Keranjang')}
-                        </span>
-                    </Tombol>
-                    <Tombol
-                        text=""
-                        style="merah"
-                        icon={<FaHeart className={isWishlisted ? "wishlisted" : ""} />}
-                        className="wishlist-button secondary-action-button"
-                        onClick={handleToggleWishlist} // Langsung panggil handleToggleWishlist
-                        disabled={processingWishlist}
-                        aria-label={isWishlisted ? t('wishlist.removeFrom', 'Hapus dari Wishlist') : t('wishlist.addTo', 'Tambah ke Wishlist')}
-                        >
-                        <span>{isWishlisted ? t('wishlist.inWishlist', 'Di Wishlist') : t('wishlist.addToWishlistText', 'Wishlist')}</span>
-                    </Tombol>
-                </div>
-            </div>
+          {/* INLINE PURCHASE (Checkout + Wishlist) */}
+          <div className="product-purchase-container">
+            <Tombol
+              text=""
+              className="purchase-button"
+              onClick={handleAddToCart}
+              disabled={product.stock===0||processingCart}
+              icon={<FaShoppingCart/>}
+            >
+              {product.stock>0?t("cart.buyNow","Checkout"):t("cart.outOfStock","Stok Habis")}
+            </Tombol>
+            <Tombol
+              text=""
+              className="purchase-wishlist-button"
+              onClick={handleToggleWishlist}
+              disabled={processingWishlist}
+              icon={<FaHeart className={isWishlisted?"wishlisted":""}/>}
+            >
+              {isWishlisted?t("wishlist.inWishlist","Di Wishlist"):t("wishlist.addToWishlistText","Wishlist")}
+            </Tombol>
+          </div>
+
+          {/* DESKRIPSI */}
+          <div className="product-description-container">
+            <h3 className="description-title">{t("product.descriptionTitle","Deskripsi Produk")}</h3>
+            <p className={`description-content ${descExpanded?"expanded":"truncated"}`}>
+              {product.deskripsi||t("product.noDescription","Tidak ada deskripsi untuk produk ini.")}
+            </p>
+            {product.deskripsi?.length>300 && (
+              <span className="read-more-link" role="button" onClick={()=>setDescExpanded(!descExpanded)}>
+                {descExpanded?t("product.readLess","Lihat Lebih Sedikit"):t("product.readMore","Lihat Selengkapnya")}
+              </span>
+            )}
+          </div>
+
+          {/* SOCIAL */}
+          <div className="social-sharing">
+            <button className="share-button" onClick={()=>share("facebook")}><FaFacebookF/> Facebook</button>
+            <button className="share-button" onClick={()=>share("whatsapp")}><FaWhatsapp/> WhatsApp</button>
+            <button className="share-button" onClick={()=>share("twitter")}><FaTwitter/> Twitter</button>
+            <button className="share-button" onClick={copyLink}><FaLink/> Salin Link</button>
+          </div>
         </div>
       </main>
 
-      {/* Bagian Produk Sejenis */}
-      {loadingSimilar && (
-        <div className="similar-products-loading">
-          <p>{t("product.loadingSimilar", "Memuat produk sejenis...")}</p>
-        </div>
-      )}
-      {!loadingSimilar && errorSimilar && (
-        <div className="similar-products-error">
-          <p>{errorSimilar}</p>
-        </div>
-      )}
-      {!loadingSimilar && !errorSimilar && similarProducts.length > 0 && (
+      {/* SIMILAR */}
+      {!loadingSimilar && !errorSimilar && similarProducts.length>0 && (
         <section className="similar-products-section" aria-labelledby="similar-products-title">
           <h3 id="similar-products-title" className="similar-products-title">
-            {t("product.similarProductsTitle", "Anda Mungkin Juga Suka")}
+            {t("product.similarProductsTitle","Anda Mungkin Juga Suka")}
           </h3>
           <div className="similar-products-list">
-            {similarProducts.map((p) => (
-              <SimilarProductItem key={p.id} product={p} formatPrice={formatPrice} />
+            {similarProducts.map(p=>(
+              <SimilarProductItem key={p.id} product={p} formatPrice={formatPrice}/>
             ))}
           </div>
         </section>
       )}
-       {!loadingSimilar && !errorSimilar && similarProducts.length === 0 && product && product.kategori && (
-        <div className="similar-products-empty">
-          {/* Opsional: Pesan jika tidak ada produk sejenis yang ditemukan */}
-          {/* <p>{t("product.noSimilarFound", "Tidak ada produk sejenis lainnya.")}</p> */}
-        </div>
+
+      {/* RECENTLY VIEWED */}
+      {recentlyViewed.length>1 && (
+        <section className="recently-viewed-section">
+          <h3 className="section-title">{t("recentlyViewed","Anda Juga Melihat")}</h3>
+          <div className="recently-viewed-list">
+            {recentlyViewed.filter(p=>p.id!==product.id).map(p=>(
+              <Link key={p.id} to={`/product/${p.slug}`} className="recent-item">
+                <img src={p.gambar} alt={p.nama} className="item-image"/>
+                <div className="item-info">
+                  <p className="item-name">{p.nama}</p>
+                  <p className="item-price">{formatPrice(p.harga)}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
-
-
-      {product && (
-        <div className="floating-action-mobile">
-          {token ? (
-            <Tombol
-              style="cart w-full"
-              text={product.stock === 0 ? t("cart.outOfStock", "Stok Habis") : t("cart.buyNow", "Checkout")}
-              disabled={product.stock === 0 || processingCart}
-              onClick={async () => {
-                if (!token) {
-                  stableSetNotif(t("cart.notLogin", "Anda harus login untuk menambahkan ke keranjang."));
-                  stableShowNotif();
-                  return navigate("/login");
-                }
-
-                setProcessingCart(true);
-                try {
-                  const response = await addToCart(product.id, 1, token);
-                  if (response.status === 200 || response.status === 201) {
-                    const updatedCart = await getCart(token);
-                    if (updatedCart.status === 200 && updatedCart.data) {
-                      stableUpdateCartInStore(updatedCart.data);
-                    }
-                    navigate("/cart"); // ✅ langsung ke halaman keranjang
-                  } else {
-                    stableSetNotif(response.message || t("cart.addFailed", "Gagal menambahkan ke keranjang."));
-                    stableShowNotif();
-                  }
-                } catch (err) {
-                  console.error("Error saat checkout langsung:", err);
-                  stableSetNotif(t("cart.addFailed", "Terjadi kesalahan. Gagal menambahkan ke keranjang."));
-                  stableShowNotif();
-                } finally {
-                  setProcessingCart(false);
-                }
-              }}
-            />
-          ) : (
-            <Tombol
-              style="cart w-full"
-              text={t("cart.loginToBuy", "Login untuk Checkout")}
-              onClick={() => navigate("/login")}
-              
-            />
-          )}
-        </div>
-      )}
-
-
-
-
-
     </div>
   );
 };
