@@ -289,6 +289,26 @@ $font-main:          'Inter', sans-serif;
 }
 
 // ————————————————
+  // Wrappers untuk aspect‐ratio gambar
+  // ————————————————
+  .similar-product-image-container,
+  .recent-image-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 66.66%; // 3:2 untuk similar, atau 75% (4:3) untuk recent kalau suka
+    overflow: hidden;
+    border-radius: 8px;
+  }
+
+  .similar-product-image,
+  .item-image {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+// ————————————————
 // Produk Serupa
 // ————————————————
 .similar-products-section {

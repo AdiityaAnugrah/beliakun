@@ -359,36 +359,86 @@ const ProductDetail = () => {
       </main>
 
       {/* SIMILAR */}
-      {!loadingSimilar && !errorSimilar && similarProducts.length>0 && (
-        <section className="similar-products-section" aria-labelledby="similar-products-title">
-          <h3 id="similar-products-title" className="similar-products-title">
-            {t("product.similarProductsTitle","Anda Mungkin Juga Suka")}
+      {!loadingSimilar && !errorSimilar && similarProducts.length > 0 && (
+        <section
+          className="similar-products-section"
+          aria-labelledby="similar-products-title"
+        >
+          <h3
+            id="similar-products-title"
+            className="similar-products-title"
+          >
+            {t("product.similarProductsTitle", "Anda Mungkin Juga Suka")}
           </h3>
           <div className="similar-products-list">
-            {similarProducts.map(p=>(
-              <SimilarProductItem key={p.id} product={p} formatPrice={formatPrice}/>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* RECENTLY VIEWED */}
-      {recentlyViewed.length>1 && (
-        <section className="recently-viewed-section">
-          <h3 className="section-title">{t("recentlyViewed","Anda Juga Melihat")}</h3>
-          <div className="recently-viewed-list">
-            {recentlyViewed.filter(p=>p.id!==product.id).map(p=>(
-              <Link key={p.id} to={`/product/${p.slug}`} className="recent-item">
-                <img src={p.gambar} alt={p.nama} className="item-image"/>
-                <div className="item-info">
-                  <p className="item-name">{p.nama}</p>
-                  <p className="item-price">{formatPrice(p.harga)}</p>
+            {similarProducts.map((p) => (
+              <Link
+                key={p.id}
+                to={`/product/${p.slug}`}
+                className="similar-product-item"
+                aria-label={`Lihat detail untuk ${p.nama}`}
+              >
+                {/* WRAPPER BARU */}
+                <div className="similar-product-image-container">
+                  <img
+                    src={p.gambar}
+                    alt={p.nama}
+                    className="similar-product-image"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src =
+                        "https://placehold.co/300x200/e0e0e0/757575?text=Gagal+Muat";
+                    }}
+                    loading="lazy"
+                  />
+                </div>
+                <div className="similar-product-info">
+                  <h4 className="similar-product-name">{p.nama}</h4>
+                  <p className="similar-product-price">
+                    {formatPrice(p.harga)}
+                  </p>
                 </div>
               </Link>
             ))}
           </div>
         </section>
       )}
+
+      {/* RECENTLY VIEWED */}
+      {recentlyViewed.length > 1 && (
+        <section className="recently-viewed-section">
+          <h3 className="section-title">
+            {t("recentlyViewed", "Anda Juga Melihat")}
+          </h3>
+          <div className="recently-viewed-list">
+            {recentlyViewed
+              .filter((p) => p.id !== product.id)
+              .map((p) => (
+                <Link key={p.id} to={`/product/${p.slug}`} className="recent-item">
+                  {/* WRAPPER BARU */}
+                  <div className="recent-image-container">
+                    <img
+                      src={p.gambar}
+                      alt={p.nama}
+                      className="item-image"
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src =
+                          "https://placehold.co/100x75/e0e0e0/757575?text=Gagal+Muat";
+                      }}
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="item-info">
+                    <p className="item-name">{p.nama}</p>
+                    <p className="item-price">{formatPrice(p.harga)}</p>
+                  </div>
+                </Link>
+              ))}
+          </div>
+        </section>
+      )}
+
     </div>
   );
 };
