@@ -334,9 +334,11 @@ const ProductDetail = () => {
           {/* DESKRIPSI */}
           <div className="product-description-container">
             <h3 className="description-title">{t("product.descriptionTitle","Deskripsi Produk")}</h3>
-            <p className={`description-content ${descExpanded?"expanded":"truncated"}`}>
-              {product.deskripsi||t("product.noDescription","Tidak ada deskripsi untuk produk ini.")}
-            </p>
+            <div
+              className={`description-content ${descExpanded ? 'expanded' : 'truncated'}`}
+              dangerouslySetInnerHTML={{ __html: product.deskripsi }}
+            />
+
             {product.deskripsi?.length>300 && (
               <span className="read-more-link" role="button" onClick={()=>setDescExpanded(!descExpanded)}>
                 {descExpanded?t("product.readLess","Lihat Lebih Sedikit"):t("product.readMore","Lihat Selengkapnya")}
