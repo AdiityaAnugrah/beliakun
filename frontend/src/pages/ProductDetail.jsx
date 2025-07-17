@@ -1,5 +1,7 @@
 // ProductDetail.jsx
 import React, { useEffect, useState, useMemo, useCallback } from "react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { getProductBySlug, getProducts } from "../services/productService";
 import { addToCart, getCart } from "../services/cartService";
 import {
@@ -334,14 +336,14 @@ const ProductDetail = () => {
           {/* DESKRIPSI */}
           <div className="product-description-container">
             <h3 className="description-title">{t("product.descriptionTitle","Deskripsi Produk")}</h3>
-            <div
-              className={`description-content ${descExpanded ? 'expanded' : 'truncated'}`}
-              dangerouslySetInnerHTML={{ __html: product.deskripsi }}
-            />
-
-            {product.deskripsi?.length>300 && (
-              <span className="read-more-link" role="button" onClick={()=>setDescExpanded(!descExpanded)}>
-                {descExpanded?t("product.readLess","Lihat Lebih Sedikit"):t("product.readMore","Lihat Selengkapnya")}
+              <div className={`description-content ${descExpanded ? 'expanded' : 'truncated'}`}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {product.deskripsi || t("product.noDescription","Tidak ada deskripsi")}
+                </ReactMarkdown>
+              </div>
+                {product.deskripsi?.split('\n').length > 5 && (
+              <span className="read-more-link" onClick={()=>setDescExpanded(!descExpanded)}>
+                {descExpanded ? t("product.readLess","Lihat Lebih Sedikit") : t("product.readMore","Lihat Selengkapnya")}
               </span>
             )}
           </div>

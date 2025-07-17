@@ -213,26 +213,31 @@ $font-main:          'Inter', sans-serif;
   // ————————————————
   .product-description-container {
   .description-content {
-    // Untuk spacing antar paragraf
+    > h4, > h5, > h6 {
+      margin: 1rem 0 0.5rem;
+      font-weight: 600;
+    }
     > p {
       margin: 0.75rem 0;
       font-size: 0.95rem;
       line-height: 1.6;
     }
-
-    // Jika ada <ul> … </ul> di HTML Anda
-    > ul {
-      margin: 1rem 0;
-      padding-left: 1.25rem;
-      list-style-type: disc;
-      > li {
+    > ul, > ol {
+      margin: 0.75rem 0 0.75rem 1.25rem;
+      padding: 0;
+      li {
         margin-bottom: 0.5rem;
       }
     }
+    > blockquote {
+      margin: 1rem 0;
+      padding: 0.5rem 1rem;
+      border-left: 4px solid $accent-color;
+      background: lighten($accent-color, 52%);
+    }
 
-    // Overlay untuk versi 'truncated'
     &.truncated {
-      max-height: 6.4rem; // kira-kira 4 baris
+      max-height: 6.4rem;
       overflow: hidden;
       position: relative;
       &:after {
@@ -240,10 +245,7 @@ $font-main:          'Inter', sans-serif;
         position: absolute;
         bottom: 0; left: 0; right: 0;
         height: 1.5rem;
-        background: linear-gradient(
-          rgba($background-page, 0),
-          $background-page
-        );
+        background: linear-gradient(rgba($background-page,0), $background-page);
       }
     }
     &.expanded {
@@ -259,6 +261,7 @@ $font-main:          'Inter', sans-serif;
     font-weight: 500;
   }
 }
+
 
   // ————————————————
   // Social Sharing
