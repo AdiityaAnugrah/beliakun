@@ -233,7 +233,7 @@ $font-main:          'Inter', sans-serif;
       margin: 1rem 0;
       padding: 0.5rem 1rem;
       border-left: 4px solid $accent-color;
-      background: lighten($accent-color, 52%);
+      background: white;
     }
 
     &.truncated {
