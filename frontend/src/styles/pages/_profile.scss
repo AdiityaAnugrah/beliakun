@@ -1,0 +1,50 @@
+.profile-container {
+  max-width: 380px; margin: 40px auto; background: #fff;
+  border-radius: 22px; padding: 32px 20px 18px;
+  box-shadow: 0 10px 28px rgba(0,0,0,.06); position: relative;
+}
+.profile-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 22px; }
+.profile-avatar {
+  width: 88px; height: 88px; border-radius: 50%; object-fit: cover;
+  border: 3px solid #fff; box-shadow: 0 6px 18px rgba(0,0,0,.08); margin-bottom: 10px;
+}
+.profile-user h3 { margin: 0; font-size: 1.25rem; font-weight: 700; }
+.profile-user .username { color: #9ca3af; font-size: .9rem; }
+
+.edit-btn {
+  margin-top: 10px; background: #fa5858; color: #fff;
+  border: none; padding: 8px 18px; border-radius: 18px; font-weight: 600;
+  cursor: pointer; transition: background .18s, transform .06s;
+}
+.edit-btn:hover { background: #e84040; }
+.edit-btn:active { transform: translateY(1px); }
+
+.profile-menu {
+  list-style: none; padding: 0; margin: 20px 0 16px;
+  border-top: 1px solid #eee; border-bottom: 1px solid #eee;
+}
+.profile-menu li {
+  display: flex; align-items: center; padding: 12px 0; font-size: 15px;
+  border-bottom: 1px solid #f8f8f8;
+}
+.profile-menu li .icon { font-size: 18px; margin-right: 14px; }
+
+.logout-btn {
+  width: 100%; background: none; border: 1px solid #fa5858; color: #fa5858;
+  padding: 10px 0; border-radius: 18px; font-weight: 600; cursor: pointer; margin-top: 14px;
+  transition: background .18s, color .18s, transform .06s;
+}
+.logout-btn:hover { background: #fa5858; color: #fff; }
+.logout-btn:active { transform: translateY(1px); }
+
+.page-container {
+  max-width: 400px; margin: 40px auto; border-radius: 22px;
+  padding: 32px 20px 18px; position: relative;
+  transition: box-shadow .2s, transform .06s;
+}
+@media (min-width: 768px) {
+  .page-container { max-width: 100%; padding: 56px 48px 32px; border-radius: 32px; font-size: 1.04rem; }
+}
+@media (max-width: 500px) {
+  .page-container { max-width: 98vw; padding: 16px 4vw 12px; border-radius: 14px; font-size: .98rem; }
+}

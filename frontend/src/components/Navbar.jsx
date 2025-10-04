@@ -7,15 +7,7 @@ import useWishlistStore from "../../store/wishlistStore";
 import useNotifStore from "../../store/notifStore";
 import "../styles/Navbar.scss";
 
-import {
-  FaPowerOff,
-  FaShoppingCart,
-  FaHeart,
-  FaHistory,
-  FaUser,
-} from "react-icons/fa";
-import { FiMenu, FiX } from "react-icons/fi";
-
+import { FaPowerOff, FaShoppingCart, FaHeart, FaHistory, FaUser } from "react-icons/fa";
 import { logout } from "../services/authService";
 import { useTranslation } from "react-i18next";
 
@@ -29,53 +21,47 @@ const Navbar = () => {
   const location = useLocation();
 
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  // theme on scroll
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
+  // close dropdown on outside click
+  useEffect(() => {
     const handleClickOutside = (e) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(false);
       }
     };
-
-    window.addEventListener("scroll", handleScroll);
     document.addEventListener("mousedown", handleClickOutside);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const toggleMenu = () => setMenuOpen((prev) => !prev);
-  const toggleDropdown = () => setDropdownOpen((prev) => !prev);
+  const toggleDropdown = () => setDropdownOpen((p) => !p);
 
   const handleLogout = async () => {
     await logout(user.token);
     user.emptyUser();
     setCart([]);
     setNotif(t("logout_successful"));
-    setMenuOpen(false);
     navigate("/login");
   };
 
-  const changeLanguage = (lang) => {
-    i18n.changeLanguage(lang);
-  };
+  const changeLanguage = (lang) => i18n.changeLanguage(lang);
+
+  const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+  const wishCount = wishlist.length;
 
   return (
     <nav className={`nav ${scrolled ? "scrolled" : "top"}`}>
       <div className="navbar-container">
-        <Link to="/" className="logo" onClick={() => setMenuOpen(false)}>
+        <Link to="/" className="logo">
           <Img
             className="logo-web"
             src={scrolled ? "/logo-dark.svg?v=2" : "/logo-light.svg?v=2"}
@@ -83,57 +69,47 @@ const Navbar = () => {
           />
         </Link>
 
-        <button className="menu-toggle" onClick={toggleMenu}>
-          {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-        </button>
-
-        <ul className={`menu-right ${menuOpen ? "open" : ""}`}>
+        {/* DESKTOP MENU */}
+        <ul className="menu-right">
           {user.token ? (
             <>
               <li>
                 <Link
                   to="/history"
-                  onClick={() => setMenuOpen(false)}
                   className={location.pathname === "/history" ? "active" : ""}
+                  title="History"
                 >
                   <FaHistory />
                 </Link>
               </li>
 
               <li className="relative">
-                <Link to="/wishlist" onClick={() => setMenuOpen(false)}>
-                  {wishlist.length > 0 && (
-                    <span className="badge">{wishlist.length}</span>
-                  )}
+                <Link to="/wishlist" title="Wishlist">
+                  {wishCount > 0 && <span className="badge">{wishCount}</span>}
                   <FaHeart />
                 </Link>
               </li>
 
               <li className="relative">
-                <Link to="/cart" onClick={() => setMenuOpen(false)}>
-                  {cart.length > 0 && (
-                    <span className="badge">
-                      {cart.reduce((sum, item) => sum + item.quantity, 0)}
-                    </span>
-                  )}
+                <Link to="/cart" title="Cart">
+                  {cartCount > 0 && <span className="badge">{cartCount}</span>}
                   <FaShoppingCart />
                 </Link>
               </li>
-              
+
               <li className="relative profile-menu" ref={dropdownRef}>
-                <button onClick={toggleDropdown} className="profile-button">
+                <button
+                  onClick={toggleDropdown}
+                  className="profile-button"
+                  aria-expanded={dropdownOpen ? "true" : "false"}
+                  title={t("profile")}
+                >
                   <FaUser />
                   {user.username}
                 </button>
                 {dropdownOpen && (
                   <div className="dropdown-menu">
-                    <Link
-                      to="/profile"
-                      onClick={() => {
-                        setDropdownOpen(false);
-                        setMenuOpen(false);
-                      }}
-                    >
+                    <Link to="/profile" onClick={() => setDropdownOpen(false)}>
                       {t("profile")}
                     </Link>
                     <button onClick={handleLogout}>
@@ -150,7 +126,6 @@ const Navbar = () => {
                 <Link
                   to="/login"
                   className={location.pathname === "/login" ? "active" : ""}
-                  onClick={() => setMenuOpen(false)}
                 >
                   {t("login")}
                 </Link>
@@ -159,18 +134,19 @@ const Navbar = () => {
                 <Link
                   to="/signup"
                   className={location.pathname === "/signup" ? "active" : ""}
-                  onClick={() => setMenuOpen(false)}
                 >
                   {t("signup")}
                 </Link>
               </li>
             </>
           )}
+
           <li>
             <select
               className="language-dropdown"
               onChange={(e) => changeLanguage(e.target.value)}
               value={i18n.language}
+              aria-label="Change language"
             >
               <option value="en">EN</option>
               <option value="id">ID</option>

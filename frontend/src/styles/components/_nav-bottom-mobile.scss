@@ -1,0 +1,114 @@
+/* _navbar-mobile.scss — modern bottom nav (mobile-first, fixed, warna asli) */
+
+.nav-bottom-mobile {
+  position: fixed;                 /* <-- penting: fixed, bukan sticky */
+  left: 0; right: 0; bottom: 0;
+  z-index: 1000;
+
+  background: var(--hitam);        /* <-- pakai warna navbar yang sudah ada */
+  border-top: 1px solid #e4e4e4;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.07);
+
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+
+  padding: 8px max(10px, env(safe-area-inset-left))
+           max(8px, env(safe-area-inset-bottom))
+           max(10px, env(safe-area-inset-right));
+  width: 100%;
+}
+
+.nav-bottom-mobile .nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  justify-content: center;
+
+  color: #888;
+  font-size: 11px;
+  text-decoration: none;
+  position: relative;
+  padding: 6px 0;
+  transition: color 160ms ease, transform 160ms ease;
+
+  svg {
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  &:active {
+    transform: translateY(1px) scale(0.98);
+  }
+
+  &.active {
+    color: var(--merah, #f7374f);
+    svg { color: var(--merah, #f7374f); }
+  }
+}
+
+.nav-bottom-mobile .nav-item .nav-label {
+  line-height: 1;
+  letter-spacing: 0.2px;
+}
+
+/* Badge (wishlist/cart) */
+.nav-bottom-mobile .badge {
+  position: absolute;
+  top: 2px;
+  right: 24%;
+  transform: translateX(50%);
+
+  background: var(--merah, #f7374f);
+  color: #fff;
+  border-radius: 999px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(247, 55, 79, 0.35);
+}
+
+/* Very small phones — rapikan ukuran */
+@media (max-width: 380px) {
+  .nav-bottom-mobile {
+    padding-top: 6px;
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+  }
+  .nav-bottom-mobile .nav-item {
+    font-size: 10px;
+    padding: 4px 0;
+    svg { font-size: 18px; }
+  }
+  .nav-bottom-mobile .badge {
+    min-width: 14px;
+    height: 14px;
+    font-size: 9px;
+    right: 22%;
+  }
+}
+
+/* Sembunyikan bar di tablet/desktop */
+@media (min-width: 768px) {
+  .nav-bottom-mobile { display: none !important; }
+}
+
+/* Dark mode: tetap gelap (biarkan var(--hitam) yang dominan) */
+@media (prefers-color-scheme: dark) {
+  .nav-bottom-mobile {
+    background: var(--hitam);
+    border-top-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.25);
+  }
+  .nav-bottom-mobile .nav-item { color: #a3a3a3; }
+  .nav-bottom-mobile .nav-item.active { color: var(--merah, #f7374f); }
+}

@@ -112,6 +112,7 @@ $font-main:          'Inter', sans-serif;
       max-height: 60vh;
       object-fit: cover;
       border-radius: 16px;
+      background: #fff;
     }
   }
 }
@@ -154,58 +155,39 @@ $font-main:          'Inter', sans-serif;
     margin-bottom: 1rem;
   }
 
-  // Tombol Checkout & Wishlist Inline
+  /* PURCHASE CTA — pakai .btn dari Tombol */
   .product-purchase-container {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     margin: 1.5rem 0;
 
-    .purchase-button,
-    .purchase-wishlist-button {
-      @include button-reset;
-      @include flex-center;
-      gap: 0.5rem;
-      padding: 0.8rem 1.5rem;
-      border-radius: 8px;
-      font-weight: 600;
-      transition: filter 0.2s;
+    /* .btn.home = CTA utama (merah) */
+    .btn.home {
+      font-weight: 700;
     }
 
-    .purchase-button {
-      background: $accent-color;
-      color: #fff;
-      &:disabled {
-        background: #ccc;
-        cursor: not-allowed;
-        filter: none;
-      }
-      &:hover:not(:disabled) {
-        filter: brightness(0.92);
-      }
-    }
-
-    .purchase-wishlist-button {
-      background: #f0f0f0;
+    /* .btn.kotak = sekunder (outlined) */
+    .btn.kotak {
+      border-color: #d4d6da; /* sedikit halus */
       color: $text-primary;
-      &:hover {
-        filter: brightness(0.95);
-      }
-      svg.wishlisted {
-        color: $accent-color;
-      }
+      &:hover { border-color: $text-primary; }
+      svg.wishlisted { color: $accent-color; }
     }
 
     @media (min-width: 768px) {
       flex-direction: row;
-      .purchase-button {
-        margin-right: 1rem;
-      }
+      .btn.home { margin-right: 1rem; }
     }
   }
 
-  // Deskripsi dengan Read More
+  /* Deskripsi dengan Read More */
   .product-description-container {
+    .description-title {
+      font-weight: 700;
+      margin: 1rem 0 .5rem;
+    }
+
     .description-content {
       > h4, > h5, > h6 {
         margin: 1rem 0 0.5rem;
@@ -219,9 +201,7 @@ $font-main:          'Inter', sans-serif;
       > ul, > ol {
         margin: 0.75rem 0 0.75rem 1.25rem;
         padding: 0;
-        li {
-          margin-bottom: 0.5rem;
-        }
+        li { margin-bottom: 0.5rem; }
       }
       > blockquote {
         margin: 1rem 0;
@@ -237,20 +217,17 @@ $font-main:          'Inter', sans-serif;
         &:after {
           content: "";
           position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
+          bottom: 0; left: 0; right: 0;
           height: 1.5rem;
-          background: linear-gradient(rgba($background-page, 0), $background-page);
+          /* FIX: pakai transparent → var(...) agar aman untuk CSS var */
+          background: linear-gradient(transparent, $background-page);
         }
       }
-      &.expanded {
-        max-height: none;
-      }
+      &.expanded { max-height: none; }
     }
 
     .read-more-link {
-      display: block;
+      display: inline-block;
       margin-top: 0.5rem;
       color: $accent-color;
       cursor: pointer;
@@ -258,7 +235,7 @@ $font-main:          'Inter', sans-serif;
     }
   }
 
-  // Social Sharing
+  /* Social Sharing */
   .social-sharing {
     @include flex-center;
     flex-wrap: wrap;
@@ -274,21 +251,19 @@ $font-main:          'Inter', sans-serif;
       border-radius: 6px;
       font-size: 0.9rem;
       transition: filter 0.2s;
-      &:hover {
-        filter: brightness(0.95);
-      }
+      &:hover { filter: brightness(0.95); }
     }
   }
 }
 
 // ————————————————
-// Wrappers untuk aspect‐ratio gambar
+// Wrappers aspect‐ratio gambar
 // ————————————————
 .similar-product-image-container,
 .recent-image-container {
   position: relative;
   width: 100%;
-  padding-bottom: 66.66%; // 3:2 untuk similar, bisa disesuaikan
+  padding-bottom: 66.66%; // 3:2
   overflow: hidden;
   border-radius: 8px;
 }
@@ -296,11 +271,11 @@ $font-main:          'Inter', sans-serif;
 .similar-product-image,
 .item-image {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  background: #fff;
 }
 
 // ————————————————
@@ -383,13 +358,7 @@ $font-main:          'Inter', sans-serif;
       overflow: hidden;
       transition: box-shadow 0.2s;
 
-      &:hover {
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      }
-
-      .recent-image-container {
-        // pembungkus image, definisi di atas
-      }
+      &:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
 
       .item-info {
         padding: 0.5rem;
@@ -399,6 +368,9 @@ $font-main:          'Inter', sans-serif;
           font-weight: 500;
           margin-bottom: 0.25rem;
           color: $text-primary;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
         .item-price {
           font-size: 0.8rem;

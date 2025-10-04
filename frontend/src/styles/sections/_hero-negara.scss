@@ -1,0 +1,61 @@
+.container-negara {
+  width: 100%; height: 70svh; max-height: 520px; min-height: 220px;
+  position: relative; display: flex; align-items: stretch; justify-content: center; overflow: hidden; background: #212533;
+}
+@media (max-width: 700px) { .container-negara { height: 37vh; max-height: 220px; min-height: 120px; } }
+
+.container-negara .content {
+  position: absolute; inset: 0; z-index: 5;
+  background: linear-gradient(to bottom, rgba(35,36,53,.6) 80%, #191b2e 99%, transparent 100%);
+}
+.container-negara .content .anak-content {
+  position: relative; width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center; flex-direction: column; z-index: 10;
+}
+.container-negara .content .anak-content .isi {
+  position: relative; z-index: 12; width: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  margin-bottom: 36px;
+}
+.container-negara .content .anak-content .isi .anak-isi { width: 100%; position: relative; }
+
+.container-negara .content .anak-content .isi .anak-isi .item {
+  position: absolute; inset: 0; opacity: 0; scale: 1;
+  transition: .85s cubic-bezier(.53,.2,.4,1.08);
+  display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+  pointer-events: none;
+}
+.container-negara .content .anak-content .isi .anak-isi .item.active { opacity: 1; scale: 1.06; pointer-events: auto; }
+.container-negara .content .anak-content .isi .anak-isi .item p {
+  color: #fff; font-weight: 700; font-size: 1.02rem; margin-bottom: .4em; letter-spacing: .02em;
+  text-shadow: 0 2px 10px rgba(0,0,0,.8);
+}
+.container-negara .content .anak-content .isi .anak-isi .item h1 {
+  color: #fff; font-size: clamp(1.8rem, 6vw, 3.2rem); font-weight: 900; line-height: 1.07; letter-spacing: .01em; margin-bottom: .2em;
+  text-shadow: 0 2px 16px rgba(0,0,0,.7), 0 1px 0 rgba(17,136,17,.86);
+}
+
+.container-negara .content .anak-content .slider {
+  position: absolute; left: 0; bottom: 0; width: 100%; z-index: 15;
+  display: flex; align-items: flex-end; justify-content: center; pointer-events: none;
+}
+.container-negara .content .anak-content .slider .flex { pointer-events: auto; gap: 18px; }
+.container-negara .content .anak-content .slider span {
+  cursor: pointer; display: block; height: 8px; width: 30px; border-radius: 10px;
+  background: rgba(255,255,255,.19); transition: .35s cubic-bezier(.53,.2,.4,1.08);
+  margin-bottom: 23px; box-shadow: 0 1px 8px rgba(0,0,0,.27);
+}
+.container-negara .content .anak-content .slider span:hover { background: #fff; }
+.container-negara .content .anak-content .slider span.active { background: #fff; width: 90px; box-shadow: 0 2px 14px rgba(0,0,0,.4); }
+
+.container-negara .gambar { position: absolute; inset: 0; z-index: 2; overflow: hidden; }
+.container-negara .gambar img,
+.container-negara .gambar video,
+.container-negara .gambar iframe {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; opacity: 0; scale: 1; border: none; background: #161728;
+  transition: 1.2s cubic-bezier(.53,.2,.4,1.08);
+}
+.container-negara .gambar img.active,
+.container-negara .gambar video.active,
+.container-negara .gambar iframe.active { scale: 1.08; opacity: 1; z-index: 4; }

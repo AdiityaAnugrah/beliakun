@@ -1,0 +1,9 @@
+.search { display: flex; gap: .25rem; transition: gap .2s; }
+.search input {
+  width: 0; overflow: hidden; padding: 0;
+  border: 1px solid var(--line); border-radius: 8px;
+  transition: width .2s, padding .2s, border-color .2s;
+}
+.search.show { gap: .5rem; }
+.search.show input { width: 120px; padding: .55em .85em; }
+.search.show input:focus { border-color: var(--merah); outline: none; }

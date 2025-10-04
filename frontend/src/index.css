@@ -1,50 +1,108 @@
 @import "tailwindcss";
 
-* {
-    box-sizing: border-box;
-    scrollbar-width: none;
-    &::-webkit-scrollbar {
-        display: none;
-    }
+/* =========================
+   Reset ringan & scrollbar
+   ========================= */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+*::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
+html { -webkit-tap-highlight-color: transparent; }
+body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+/* =========================================================
+   TOKENS (LIGHT) — Neo Slate Minimal
+   - Elegan, airy, fokus mobile.
+   - Nama variabel dipertahankan agar sistem tetap aman.
+   ========================================================= */
+:root {
+  /* Dasar */
+  --putih: #ffffff;
+  --hitam: #0f172a;            /* slate-900: teks utama tajam */
+
+  /* Layering (background → panel) */
+  --abu:  #f7f9fc;             /* page bg (lebih soft dari F8FAFC) */
+  --abu2: #e9effa;             /* panel/card halus */
+  --abu-abu: #cbd5e1;          /* neutral medium (border sekunder) */
+  --abu-abu-gelap: #94a3b8;    /* neutral gelap (CTA netral, icon, badge) */
+
+  /* Aksen utama (untuk link/brand highlight) */
+  --merah: #2563eb;            /* blue-600: kuat tapi tetap elegan */
+  --merah-gelap: #1e40af;      /* blue-800: hover/active */
+
+  /* Aksen sekunder (netral & status) */
+  --oren: #475569;             /* slate-600: tombol netral/ikon */
+  --hijau: #10b981;            /* emerald-500: success/positive */
+  --hijau-gelap: #059669;      /* emerald-600 */
+
+  /* Komponen/bubble/header/input */
+  --bubble-user: var(--merah);
+  --bubble-bot: var(--putih);
+  --bubble-user-text: var(--putih);
+  --bubble-bot-text: var(--hitam);
+  --header-bg: var(--putih);
+  --header-text: var(--merah);
+  --input-bg: #eef4ff;         /* biru-abu muda, nyaman untuk input */
+
+  /* Panel & garis (satu sumber kebenaran) */
+  --panel: var(--abu2);
+  --line: rgba(15, 23, 42, 0.08); /* slate-900 @ 8% untuk hairline */
 }
 
-:root {
-    --putih: #ffffff;
-    --abu-abu: #f5f5f5;
-    --abu-abu-gelap: #d1d5db;
-    --hitam: #000000;
-    --merah: #f7374f;
-    --merah-gelap: #88304e;
-    --oren: #bb3e00;
-    --hijau: #52b86a;
-    --hijau-gelap: #006400;
-}
-:root {
-    --merah: #f7374f;
-    --hitam: #232323;
-    --putih: #fff;
-    --abu: #f8f9fa;
-    --abu2: #f6f7fb;
-    --bubble-user: var(--merah);
-    --bubble-bot: var(--putih);
-    --bubble-user-text: var(--putih);
-    --bubble-bot-text: var(--hitam);
-    --header-bg: var(--putih);
-    --header-text: var(--merah);
-    --input-bg: #f5f7fa;
-}
+/* =========================================================
+   TOKENS (DARK) — Deep Navy Minimal
+   - Kontras cukup, aksen biru lembut.
+   ========================================================= */
 body.dark-mode,
 html[data-theme="dark"] {
-    --merah: #fc5c77;
-    --hitam: #f1f1f1;
-    --putih: #18171d;
-    --abu: #23222b;
-    --abu2: #292836;
-    --bubble-user: var(--merah);
-    --bubble-bot: #272634;
-    --bubble-user-text: #fff;
-    --bubble-bot-text: #f1f1f1;
-    --header-bg: #23222b;
-    --header-text: #fc5c77;
-    --input-bg: #1a1a25;
+  --putih: #0b1220;            /* deep navy bg (untuk elemen "putih") */
+  --hitam: #e5e7eb;            /* slate-200 teks terang */
+
+  --abu:  #0a0f1a;             /* page bg */
+  --abu2: #111827;             /* panel/card */
+  --abu-abu: #1f2937;          /* neutral medium */
+  --abu-abu-gelap: #334155;    /* neutral gelap (CTA netral dark) */
+
+  /* Aksen utama (lebih lembut di dark) */
+  --merah: #60a5fa;            /* blue-400 */
+  --merah-gelap: #3b82f6;      /* blue-500 */
+
+  /* Sekunder */
+  --oren: #94a3b8;             /* slate-400/500 mix: netral tombol */
+  --hijau: #34d399;            /* emerald-400 */
+  --hijau-gelap: #10b981;      /* emerald-500 */
+
+  --bubble-user: var(--merah);
+  --bubble-bot: var(--abu2);
+  --bubble-user-text: #ffffff;
+  --bubble-bot-text: var(--hitam);
+
+  --header-bg: var(--abu2);
+  --header-text: var(--merah);
+  --input-bg: #0f172a;         /* field dark */
+
+  --panel: var(--abu2);
+  --line: rgba(229, 231, 235, 0.14); /* slate-200 @14% */
+}
+
+/* =========================================================
+   Base style (aman, tidak ganggu komponenmu)
+   ========================================================= */
+body {
+  background: var(--abu);
+  color: var(--hitam);
+}
+
+/* Opsional kecil: focus ring universal yang halus (aman untuk mobile) */
+:where(button, a, input, textarea, [role="button"]):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--merah);
+  border-radius: 8px;
+}
+
+/* Opsional kecil: disabled state */
+:where(button, [role="button"]):disabled {
+  opacity: .6;
+  cursor: not-allowed;
 }

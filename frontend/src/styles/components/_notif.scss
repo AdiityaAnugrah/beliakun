@@ -1,0 +1,85 @@
+/* _notif.scss — Modern top toast notification (refined mobile style) */
+
+.notif {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translate(-50%, -20px);
+  opacity: 0;
+  z-index: 9999;
+  pointer-events: none;
+  transition: all 0.35s ease;
+}
+
+.notif.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+
+.notif__inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-size: 0.92rem;
+  color: #0f172a;
+  min-width: 160px;
+  max-width: 85vw;
+  text-align: center;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.notif__icon {
+  display: flex;
+  color: var(--merah, #f7374f);
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.notif__text {
+  margin: 0;
+  line-height: 1.25;
+}
+
+/* Mobile fine-tuning (≤480px) */
+@media (max-width: 480px) {
+  .notif {
+    top: 12px;
+  }
+
+  .notif__inner {
+    padding: 6px 10px;
+    font-size: 0.8rem; /* 🔹 lebih kecil, nyaman di layar kecil */
+    border-radius: 8px;
+    max-width: 88vw;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .notif__icon svg {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+/* Dark mode adaptation */
+@media (prefers-color-scheme: dark) {
+  .notif__inner {
+    background: rgba(28, 28, 34, 0.9);
+    color: #f3f4f6;
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+  .notif__icon {
+    color: #f87171;
+  }
+}

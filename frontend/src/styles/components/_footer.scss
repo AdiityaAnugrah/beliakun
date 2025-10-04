@@ -1,0 +1,148 @@
+/* Footer — pakai tema warna existing, hide di mobile */
+
+footer {
+  background-color: var(--hitam);
+  color: #fff;
+  font-size: 0.9rem;
+  padding: 1.8rem 1rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+  .footer-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .footer-top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+
+    a {
+      color: #fff;
+      opacity: 0.8;
+      text-decoration: none;
+      transition: 0.3s;
+      font-weight: 500;
+
+      &:hover {
+        color: var(--merah);
+        opacity: 1;
+      }
+    }
+  }
+
+  .footer-partners {
+    text-align: center;
+
+    h4 {
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      opacity: 0.85;
+    }
+
+    .partner-logos {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+
+      img {
+        height: 32px;
+        filter: grayscale(1);
+        opacity: 0.9;
+        transition: all 0.3s ease;
+
+        &:hover {
+          filter: grayscale(0);
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  .footer-separator {
+    border: none;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .footer-bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+
+    .footer-socials {
+      display: flex;
+      gap: 1rem;
+
+      a {
+        color: #fff;
+        opacity: 0.8;
+        transition: 0.3s;
+        font-size: 1.1rem;
+
+        &:hover {
+          color: var(--merah);
+          opacity: 1;
+        }
+      }
+    }
+
+    .footer-legal {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+
+      a {
+        color: #fff;
+        opacity: 0.65;
+        font-size: 0.85rem;
+        transition: 0.3s;
+        text-decoration: none;
+
+        &:hover {
+          color: var(--merah);
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  .footer-copy {
+    margin-top: 0.5rem;
+    opacity: 0.5;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+
+  @media (min-width: 768px) {
+    .footer-top,
+    .footer-bottom {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      text-align: left;
+    }
+  }
+}
+
+/* Hide footer di mobile karena sudah ada NavbarMobile */
+@media (max-width: 767px) {
+  .footer-desktop { display: none !important; } /* jika Footer dibungkus wrapper */
+  /* atau kalau komponen Footer langsung dipakai tanpa wrapper: */
+  /* footer { display: none !important; } */
+}

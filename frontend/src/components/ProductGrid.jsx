@@ -1,56 +1,54 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { getProductLaris } from "../services/productService"; // Menggunakan service Anda
-import { addToCart, getCart } from "../services/cartService"; // Menggunakan service Anda
+import { getProductLaris } from "../services/productService";
+import { addToCart, getCart } from "../services/cartService";
 import {
   addToWishlist,
   removeFromWishlist,
   getWishlist,
-} from "../services/wishlistService"; // Menggunakan service Anda
-import useNotifStore from "../../store/notifStore"; // Sesuaikan path jika perlu
-import useUserStore from "../../store/userStore"; // Sesuaikan path jika perlu
-import useCartStore from "../../store/cartStore"; // Sesuaikan path jika perlu
+} from "../services/wishlistService";
+import useNotifStore from "../../store/notifStore";
+import useUserStore from "../../store/userStore";
+import useCartStore from "../../store/cartStore";
 import { FiHeart, FiShoppingCart } from "react-icons/fi";
-import "./ProductGrid.scss"; // Pastikan file SCSS ini ada dan path-nya benar
+import "./ProductGrid.scss";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function ProductGrid() {
   const { token, emptyUser } = useUserStore();
-  const { setCart } = useCartStore(); // cart state tidak diambil langsung, tapi diupdate via setCart
+  const { setCart } = useCartStore();
   const { setNotif, showNotif } = useNotifStore();
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [wishlistIds, setWishlistIds] = useState([]); // Menyimpan ID produk yang ada di wishlist
-  const [processing, setProcessing] = useState(null); // Untuk disable tombol spesifik: 'cart-PRODUCT_ID' atau 'wishlist-PRODUCT_ID'
+  const [wishlistIds, setWishlistIds] = useState([]);
+  const [processing, setProcessing] = useState(null); // "cart-<id>" | "wishlist-<id>" | null
 
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  // jaga stabilitas fungsi ke deps effect
   const stableSetNotif = useCallback(setNotif, []);
   const stableShowNotif = useCallback(showNotif, []);
   const stableEmptyUser = useCallback(emptyUser, []);
   const stableSetCart = useCallback(setCart, []);
 
-  // Fetch produk dan wishlist
+  // Fetch produk & wishlist
   useEffect(() => {
     let unmounted = false;
+
     async function fetchData() {
       setLoading(true);
       try {
-        const productResponse = await getProductLaris(); // Menggunakan service Anda untuk mendapatkan produk laris
-        if (!productResponse || productResponse.status !== 200) {
-          console.error("Gagal mengambil produk laris:", productResponse.message);
-          stableSetNotif(t("error.fetchProducts", "Gagal memuat produk."));
-          stableShowNotif();
-        }
+        const productResponse = await getProductLaris();
         let fetchedProducts = [];
-        if (productResponse.status === 200 && productResponse.data) {
-          // Asumsi productResponse.data adalah array produk jika id tidak diberikan
-          // Jika productResponse.data adalah objek { products: [...] }, sesuaikan di bawah
-          fetchedProducts = Array.isArray(productResponse.data) ? productResponse.data : (productResponse.data.products || []);
+
+        if (productResponse?.status === 200) {
+          fetchedProducts = Array.isArray(productResponse.data)
+            ? productResponse.data
+            : productResponse.data?.products || [];
         } else {
-          console.error("Gagal mengambil produk:", productResponse.message);
+          console.error("Gagal mengambil produk:", productResponse?.message);
           stableSetNotif(t("error.fetchProducts", "Gagal memuat produk."));
           stableShowNotif();
         }
@@ -58,10 +56,12 @@ export default function ProductGrid() {
         let fetchedWishlistIds = [];
         if (token) {
           const wishlistResponse = await getWishlist(token);
-          if (wishlistResponse.status === 200 && Array.isArray(wishlistResponse.data)) {
-            fetchedWishlistIds = wishlistResponse.data.map(item => item.productId || item.id); // Sesuaikan dengan struktur data wishlist Anda
-          } else if (wishlistResponse.status !== 401) { // Jangan notif jika hanya sesi habis
-            console.error("Gagal mengambil wishlist:", wishlistResponse.message);
+          if (wishlistResponse?.status === 200 && Array.isArray(wishlistResponse.data)) {
+            fetchedWishlistIds = wishlistResponse.data.map(
+              (item) => item.productId ?? item.id
+            );
+          } else if (wishlistResponse?.status !== 401) {
+            console.error("Gagal mengambil wishlist:", wishlistResponse?.message);
           }
         }
 
@@ -69,31 +69,33 @@ export default function ProductGrid() {
           setProducts(fetchedProducts);
           setWishlistIds(fetchedWishlistIds);
         }
-      } catch (error) {
-        console.error("Error saat mengambil data awal:", error);
+      } catch (err) {
+        console.error("Error saat mengambil data awal:", err);
         if (!unmounted) {
           stableSetNotif(t("error.fetchData", "Terjadi kesalahan saat memuat data."));
           stableShowNotif();
         }
       } finally {
-        if (!unmounted) {
-          setLoading(false);
-        }
+        if (!unmounted) setLoading(false);
       }
     }
+
     fetchData();
-    return () => { unmounted = true; };
+    return () => {
+      unmounted = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, t, stableSetNotif, stableShowNotif]);
 
-  // Fetch keranjang awal
+  // Fetch keranjang awal (jika sudah login)
   useEffect(() => {
     async function fetchCartInit() {
       if (!token) return;
       try {
         const cartResponse = await getCart(token);
-        if (cartResponse.status === 200) {
+        if (cartResponse?.status === 200) {
           stableSetCart(cartResponse.data);
-        } else if (cartResponse.status === 401) {
+        } else if (cartResponse?.status === 401) {
           stableEmptyUser();
           stableSetNotif(t("cart.sessionExpired", "Sesi login habis. Silakan login ulang."));
           stableShowNotif();
@@ -105,36 +107,34 @@ export default function ProductGrid() {
     fetchCartInit();
   }, [token, stableSetCart, stableEmptyUser, stableSetNotif, stableShowNotif, t]);
 
-
   const handleAddCart = async (event, productId) => {
     event.stopPropagation();
+    event.preventDefault();
     if (!token) {
       stableSetNotif(t("cart.notLogin", "Anda harus login untuk menambah ke keranjang."));
       stableShowNotif();
       return;
     }
-    if (processing) return; // Jika ada proses lain, jangan lakukan apa-apa
+    if (processing) return;
 
     setProcessing(`cart-${productId}`);
     try {
-      const response = await addToCart(productId, 1, token); // Kuantitas 1
-      if (response.status === 200 || response.status === 201) {
-        stableSetNotif(t("cart.addedSuccess", "Produk berhasil ditambahkan ke keranjang!"));
-        // Fetch ulang keranjang untuk update
+      const response = await addToCart(productId, 1, token);
+      if (response?.status === 200 || response?.status === 201) {
+        stableSetNotif(t("cart.addSuccess", "Produk berhasil ditambahkan ke keranjang!"));
         const updatedCartData = await getCart(token);
-        if (updatedCartData.status === 200) {
+        if (updatedCartData?.status === 200) {
           stableSetCart(updatedCartData.data);
         }
-      } else if (response.status === 401) {
+      } else if (response?.status === 401) {
         stableEmptyUser();
         stableSetNotif(t("cart.sessionExpired", "Sesi login habis."));
-        stableShowNotif();
       } else {
-        stableSetNotif(response.message || t("cart.addError", "Gagal menambah ke keranjang."));
+        stableSetNotif(response?.message || t("cart.addFailed", "Gagal menambah ke keranjang."));
       }
-    } catch (error) {
-      console.error("Error saat menambah ke keranjang:", error);
-      stableSetNotif(t("cart.addError", "Terjadi kesalahan."));
+    } catch (err) {
+      console.error("Error saat menambah ke keranjang:", err);
+      stableSetNotif(t("cart.addFailed", "Terjadi kesalahan."));
     } finally {
       setProcessing(null);
       stableShowNotif();
@@ -143,41 +143,40 @@ export default function ProductGrid() {
 
   const handleWishlist = async (event, productId) => {
     event.stopPropagation();
+    event.preventDefault();
     if (!token) {
-      stableSetNotif(t("wishlist.notLogin", "Anda harus login untuk mengubah wishlist."));
+      stableSetNotif(t("wishlist_notLogin", "Silakan login untuk mengubah wishlist."));
       stableShowNotif();
       return;
     }
     if (processing) return;
 
     setProcessing(`wishlist-${productId}`);
-    const isCurrentlyWishlisted = wishlistIds.includes(productId);
+    const isWishlisted = wishlistIds.includes(productId);
     try {
-      let response;
-      if (isCurrentlyWishlisted) {
-        response = await removeFromWishlist(productId, token);
-      } else {
-        response = await addToWishlist(productId, token);
-      }
+      const response = isWishlisted
+        ? await removeFromWishlist(productId, token)
+        : await addToWishlist(productId, token);
 
-      if (response.status === 200 || response.status === 201) {
-        // Update state wishlistIds secara manual atau fetch ulang
-        if (isCurrentlyWishlisted) {
-          setWishlistIds(prevIds => prevIds.filter(id => id !== productId));
-        } else {
-          setWishlistIds(prevIds => [...prevIds, productId]);
-        }
-        stableSetNotif(response.message || (isCurrentlyWishlisted ? t("wishlist.removed") : t("wishlist.added")));
-      } else if (response.status === 401) {
+      if (response?.status === 200 || response?.status === 201) {
+        setWishlistIds((prev) =>
+          isWishlisted ? prev.filter((id) => id !== productId) : [...prev, productId]
+        );
+        stableSetNotif(
+          response?.message ||
+            (isWishlisted
+              ? t("wishlist_removed", "Dihapus dari wishlist!")
+              : t("wishlist_added", "Ditambahkan ke wishlist!"))
+        );
+      } else if (response?.status === 401) {
         stableEmptyUser();
-        stableSetNotif(t("wishlist.sessionExpired", "Sesi login habis."));
-        stableShowNotif();
+        stableSetNotif(t("wishlist_sessionExpired", "Sesi Anda telah berakhir. Silakan login kembali."));
         navigate("/login");
       } else {
-        stableSetNotif(response.message || t("wishlist.error", "Gagal memproses wishlist."));
+        stableSetNotif(response?.message || t("wishlist.error", "Gagal memproses wishlist."));
       }
-    } catch (error) {
-      console.error("Error saat memproses wishlist:", error);
+    } catch (err) {
+      console.error("Error saat memproses wishlist:", err);
       stableSetNotif(t("wishlist.error", "Terjadi kesalahan."));
     } finally {
       setProcessing(null);
@@ -185,80 +184,121 @@ export default function ProductGrid() {
     }
   };
 
+  // Loading skeleton
   if (loading) {
     return (
-      <div className="product-grid-container"> {/* Tambahkan container jika perlu untuk styling loading */}
-        <div className="loading-state">{t("product.loading", "Memuat produk...")}</div>
+      <div className="product-grid-container">
+        <div className="category-header">
+          {t("home_best_selling_products", "BROWSE BY BEST SELLER")}
+        </div>
+        <div className="product-grid skeleton-grid">
+          {Array.from({ length: 8 }).map((_, idx) => (
+            <div className="skeleton-card" key={`sk-${idx}`}>
+              <div className="skeleton-img" />
+              <div className="skeleton-line short" />
+              <div className="skeleton-line" />
+            </div>
+          ))}
+        </div>
       </div>
     );
-  } 
+  }
 
   if (!products.length) {
     return (
       <div className="product-grid-container">
-        <div className="empty-state"></div>
+        <div className="category-header">
+          {t("home_best_selling_products", "BROWSE BY BEST SELLER")}
+        </div>
+        <div className="empty-state">
+          {t("home_no_products", "Tidak ada produk yang ditemukan.")}
+        </div>
       </div>
     );
   }
 
   return (
-    <>
-      {/* Komponen Notif idealnya ada di App.js atau layout utama */}
-      {/* <Notif /> */}
-      
-      <div className="container mx-auto py-10">
-        <div className="category-header">BROWSE BY BEST SELLER</div>
-        <div className="product-grid">
-          {products.map((p) => (
-            console.log("ISI ANJAYY"),
-            console.log(p),
+    <div className="product-grid-container">
+      <div className="category-header">
+        {t("home_best_selling_products", "BROWSE BY BEST SELLER")}
+      </div>
+
+      <div className="product-grid">
+        {products.map((p) => {
+          const pid = p.id;
+          const inWishlist = wishlistIds.includes(pid);
+          const price = Number(p.harga || 0);
+          const kategoriText =
+            p.kategori
+              ? typeof p.kategori === "string"
+                ? p.kategori.toLowerCase()
+                : p.kategori?.nama?.toLowerCase() || ""
+              : "";
+
+          return (
             <Link
               className="product-card"
-              key={p.id}
+              key={pid}
               to={`/product/${p.slug}`}
               tabIndex={0}
+              aria-label={`${p.nama} - Rp ${price.toLocaleString("id-ID")}`}
             >
-              <div className="product-img-wrap"> {/* Pastikan kelas ini sesuai dengan SCSS Anda */}
+              <div className="product-img-wrap">
                 <img
-                  src={p.gambar || `https://placehold.co/300x200/e0e0e0/757575?text=${encodeURIComponent(p.nama)}`}
+                  src={
+                    p.gambar ||
+                    `https://placehold.co/600x400/e0e0e0/757575?text=${encodeURIComponent(
+                      p.nama || "Product"
+                    )}`
+                  }
                   alt={p.nama}
+                  loading="lazy"
                   onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src=`https://placehold.co/300x200/e0e0e0/757575?text=Error+Loading+Image`;
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src =
+                      "https://placehold.co/600x400/e0e0e0/757575?text=Image+Not+Available";
                   }}
                 />
+
                 <div className="product-actions">
                   <button
-                    className={`fav-btn ${wishlistIds.includes(p.id) ? "active" : ""}`}
-                    onClick={(e) => handleWishlist(e, p.id)}
-                    aria-label={wishlistIds.includes(p.id) ? t('wishlist.removeFromWishlist') : t('wishlist.addToWishlist')}
-                    disabled={processing === `wishlist-${p.id}`}
+                    className={`fav-btn ${inWishlist ? "active" : ""}`}
+                    onClick={(e) => handleWishlist(e, pid)}
+                    aria-label={
+                      inWishlist
+                        ? t("wishlist_removed", "Hapus dari wishlist")
+                        : t("wishlist_added", "Tambah ke wishlist")
+                    }
+                    aria-pressed={inWishlist ? "true" : "false"}
+                    disabled={processing === `wishlist-${pid}`}
                   >
                     <FiHeart />
                   </button>
+
                   <button
                     className="cart-btn"
-                    onClick={(e) => handleAddCart(e, p.id)}
-                    aria-label={t('cart.addToCart', 'Tambah ke Keranjang')}
-                    disabled={processing === `cart-${p.id}`}
+                    onClick={(e) => handleAddCart(e, pid)}
+                    aria-label={t("cart.addToCart", "Tambah ke Keranjang")}
+                    disabled={processing === `cart-${pid}`}
                   >
                     <FiShoppingCart />
                   </button>
                 </div>
               </div>
+
               <div className="product-info">
-                <div className="product-category">
-                  {p.kategori ? (typeof p.kategori === 'string' ? p.kategori.toLowerCase() : p.kategori.nama?.toLowerCase()) : ""}
-                </div>
-                <h3 className="product-title">{p.nama}</h3>
+                <div className="product-category">{kategoriText}</div>
+                <h3 className="product-title" title={p.nama}>
+                  {p.nama}
+                </h3>
                 <div className="product-price">
-                  Rp {Number(p.harga).toLocaleString("id-ID")}
+                  Rp {price.toLocaleString("id-ID")}
                 </div>
               </div>
             </Link>
-          ))}
-        </div>
+          );
+        })}
       </div>
-    </>
+    </div>
   );
 }

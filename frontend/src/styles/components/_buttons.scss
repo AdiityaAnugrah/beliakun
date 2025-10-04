@@ -1,0 +1,142 @@
+/* _buttons.scss — modern, compact, mobile-first */
+
+/* ===== BASE ===== */
+.btn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  background: transparent;
+  padding: 10px 18px;
+  font-size: 15px;
+  letter-spacing: .08em;
+  line-height: 1; /* compact di mobile */
+  cursor: pointer;
+  transition: all .18s ease;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  gap: 8px; /* jarak label-icon */
+}
+
+/* Aksesibilitas: focus ring halus (pakai brand merah) */
+.btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(247, 55, 79, 0.25);
+}
+
+/* Pointer & disabled handling */
+.btn.is-loading,
+.btn[aria-busy="true"],
+.btn.is-disabled,
+.btn[aria-disabled="true"] {
+  pointer-events: none;
+}
+.btn.is-disabled,
+.btn[aria-disabled="true"],
+.btn:disabled,
+.btn[disabled] {
+  opacity: .65;
+  cursor: not-allowed;
+}
+
+/* Konten internal */
+.btn__label { display: inline-flex; align-items: center; }
+.btn__icon  { display: inline-flex; align-items: center; line-height: 0; }
+.btn__icon-left  { margin-right: 8px; }
+.btn__icon-right { margin-left: 8px; }
+.btn__spinner {
+  display: inline-flex;
+  align-items: center;
+  width: 16px; height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: btnspin .8s linear infinite;
+}
+
+/* Icon-only button (opsional) */
+.btn.icon-only { padding: 8px; border-radius: 10px; }
+.btn.icon-only .btn__label { display: none; }
+
+/* Utilitas */
+.btn--block { width: 100%; }
+.btn--sm { padding: 8px 12px; font-size: 13.5px; border-radius: 7px; }
+.btn--lg { padding: 12px 22px; font-size: 16px; border-radius: 10px; }
+.btn--pill { border-radius: 999px; }
+
+/* ===== VARIAN EXISTING (TIDAK DIUBAH) ===== */
+.btn.kotak { border-color: var(--hitam); }
+
+.btn.buy,
+.btn.cart {
+  color: var(--hitam);
+  border-color: var(--hitam);
+  border-radius: 8px;
+}
+.btn.buy:hover,
+.btn.cart:hover {
+  background-color: var(--hitam);
+  color: var(--putih);
+}
+
+.btn.polos { color: var(--putih); }
+.btn.polos:hover { color: var(--merah); }
+
+/* ===== VARIAN YANG KAMU PAKAI DI HOME ===== */
+/* (Sama seperti definisi lama kamu; tidak mengubah warna tema) */
+.btn.home {
+  color: var(--putih);
+  background-color: var(--merah);
+  border: 1px solid var(--merah);
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 16px; /* lebih tebal untuk CTA */
+  font-weight: 700;
+  transition: background-color .18s ease, color .18s ease, transform .06s ease;
+}
+.btn.home:hover {
+  background-color: var(--putih);
+  color: var(--merah);
+  border-color: var(--merah);
+}
+.btn.home:active {
+  transform: translateY(0.5px) scale(0.99);
+}
+.btn.home:disabled,
+.btn.home[disabled],
+.btn.home[aria-disabled="true"] {
+  background-color: var(--abu-abu-gelap);
+  color: var(--putih);
+  border-color: var(--abu-abu-gelap);
+  cursor: not-allowed;
+  opacity: .9;
+}
+
+/* ===== MOBILE FINE-TUNE ===== */
+@media (max-width: 480px) {
+  .btn {
+    padding: 9px 14px;
+    font-size: 13.5px;
+    letter-spacing: .06em;
+    border-radius: 7px;
+    gap: 6px;
+  }
+  .btn.home {
+    font-size: 14px;
+    padding: 10px 16px;
+    border-radius: 8px;
+  }
+  .btn--lg { padding: 11px 18px; font-size: 15px; }
+}
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+  .btn__spinner { animation: none; }
+}
+
+/* ===== KEYFRAMES ===== */
+@keyframes btnspin { to { transform: rotate(360deg); } }

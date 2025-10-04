@@ -1,252 +1,224 @@
+/* ===========================================
+   CART — Mobile-first, Elegant Simple Modern
+   Terikat ke token index.css milikmu
+   Tidak mengubah logic/JS — style only
+   =========================================== */
+
+/* fallback kalau --panel / --line tidak ada di index.css */
+:root {
+  --panel: var(--panel, var(--putih));
+  --line: var(--line, rgba(0,0,0,.08));
+  --muted: #6b7280;
+
+  /* skala kecil khusus mobile */
+  --fs-xxs: 11px;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 14px;
+
+  --rad: 12px;
+  --tap: 30px;   /* minimal touch target */
+  --thumb: 54px; /* ukuran gambar item */
+}
+
+/* ===== Container ===== */
 .cart-container {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    padding: 2rem;
-    max-width: 1200px;
-    margin: auto;
+  background: var(--abu);
+  padding: 12px;
+  max-width: 480px;
+  margin: 0 auto;
+  display: grid;
+  gap: 12px;
+  font-size: var(--fs-sm);
 }
 
+/* ===== Skeleton minimal ===== */
+.skeleton { display: grid; gap: 10px; }
+.sk-row {
+  display: grid;
+  grid-template-columns: var(--thumb) 1fr;
+  gap: 10px;
+  padding: 10px;
+  border-radius: var(--rad);
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+.sk-img {
+  width: var(--thumb); height: var(--thumb); border-radius: 10px;
+  background: linear-gradient(90deg,#f3f4f6 0%,#e5e7eb 50%,#f3f4f6 100%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+.sk-lines { display: grid; gap: 6px; align-content: center; }
+.sk-lines span {
+  height: 10px; border-radius: 6px;
+  background: linear-gradient(90deg,#f3f4f6 0%,#e5e7eb 50%,#f3f4f6 100%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+.sk-lines .short { width: 60%; }
+@keyframes shimmer { 0% { background-position: -600px 0 } 100% { background-position: 600px 0 } }
+
+/* ===== Empty state ===== */
+.empty {
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--rad);
+  padding: 16px 12px;
+}
+.empty .emoji { font-size: 26px; margin-bottom: 4px; }
+.empty .title { font-size: var(--fs-md); margin: 0; color: var(--hitam); font-weight: 700; }
+.empty .hint  { font-size: var(--fs-xs); margin: 4px 0 10px; color: var(--bubble-bot-text, #4b5563); }
+.btn-ghost {
+  border: 1px solid var(--line);
+  background: var(--putih);
+  color: var(--hitam);
+  padding: 8px 12px;
+  font-size: var(--fs-xs);
+  border-radius: 10px;
+}
+
+/* ===== List container (flat + hairline) ===== */
 .cart-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--rad);
+  overflow: hidden;
 }
 
-.cart-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    background-color: var(--putih);
-    padding: 1rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    gap: 1rem;
-    transition: box-shadow 0.3s ease;
+/* ===== Row item ===== */
+.row {
+  display: grid;
+  grid-template-columns: var(--thumb) 1fr auto;
+  grid-template-areas:
+    "img meta rem"
+    "img ctrl rem";
+  align-items: center;
+  gap: 8px 10px;
+  padding: 10px 12px;
+}
+.row + .row { border-top: 1px solid var(--line); }
 
-    &:hover {
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-    }
-
-    img {
-        width: 80px;
-        height: 80px;
-        object-fit: cover;
-        border-radius: 8px;
-    }
-
-    .item-info {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 0.3rem;
-        min-width: 150px;
-
-        h3 {
-            margin: 0;
-            font-size: 1.1rem;
-            color: var(--hitam);
-            font-weight: 600;
-        }
-
-        p {
-            margin: 0;
-            font-size: 0.95rem;
-            color: #555;
-        }
-    }
-
-    .quantity-control {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-
-        button {
-            background-color: var(--abu-abu-gelap);
-            color: var(--hitam);
-            border: none;
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-
-            &:hover {
-                background-color: var(--oren);
-                color: var(--putih);
-            }
-        }
-
-        span {
-            min-width: 28px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 1rem;
-        }
-    }
-
-    .delete-btn {
-        background-color: transparent;
-        border: 1px solid var(--merah);
-        color: var(--merah);
-        padding: 0.4rem 0.8rem;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: bold;
-        transition: 0.3s ease;
-
-        &:hover {
-            background-color: var(--merah);
-            color: var(--putih);
-        }
-    }
+.thumb {
+  grid-area: img;
+  width: var(--thumb); height: var(--thumb);
+  object-fit: cover; border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #f6f6f6;
 }
 
-.cart-summary {
-    background-color: var(--putih);
-    border-radius: 10px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 1rem;
-    max-width: 350px;
-    margin-left: auto;
-
-    .total-price {
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: var(--hitam);
-    }
-
-    .checkout-btn {
-        background-color: var(--hitam);
-        color: var(--putih);
-        padding: 0.75rem 2rem;
-        font-size: 1rem;
-        font-weight: 600;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-
-        &:hover {
-            background-color: var(--merah);
-        }
-    }
+/* meta: nama/price/stok */
+.meta {
+  grid-area: meta;
+  min-width: 150px;
+  display: grid; gap: 2px;
+}
+.meta .name {
+  font-size: var(--fs-sm);
+  color: var(--hitam);
+  font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.meta .price {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  color: var(--bubble-bot-text, #111827);
+}
+.meta .stock {
+  font-size: var(--fs-xxs);
+  color: var(--bubble-bot-text, #6b7280);
+  opacity: .9;
 }
 
-/* Medium screen (Tablet) */
-@media (max-width: 992px) {
-    .cart-item {
-        flex-direction: column;
-        align-items: flex-start;
-
-        img {
-            width: 70px;
-            height: 70px;
-        }
-
-        .item-info h3 {
-            font-size: 1rem;
-        }
-
-        .quantity-control button,
-        .delete-btn {
-            font-size: 0.9rem;
-        }
-    }
-
-    .cart-summary {
-        width: 100%;
-        margin-left: 0;
-        align-items: center;
-        text-align: center;
-    }
+/* controls: segmented + / - */
+.controls {
+  grid-area: ctrl;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--abu2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 4px;
+}
+.controls .seg {
+  min-width: var(--tap); height: var(--tap);
+  border-radius: 999px;
+  border: none; cursor: pointer;
+  background: var(--abu-abu-gelap);
+  color: var(--hitam);
+  font-weight: 800; font-size: 16px;
+  transition: background-color .15s ease, transform .06s ease, color .15s ease;
+}
+.controls .seg:hover { background: var(--oren); color: var(--putih); }
+.controls .seg:active { transform: scale(.96); }
+.controls .seg:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+.controls .qty {
+  min-width: 22px; text-align: center;
+  font-weight: 800; font-size: var(--fs-sm);
+  color: var(--hitam);
 }
 
-/* Small screen (Mobile) */
-@media (max-width: 576px) {
-    .cart-container {
-        padding: 1rem;
-    }
-
-    .cart-item {
-        display: grid;
-        grid-template-columns: 60px 1fr auto;
-        grid-template-rows: auto auto;
-        grid-gap: 0.5rem;
-        align-items: center;
-        padding: 0.8rem;
-
-        img {
-            grid-row: span 2;
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 6px;
-        }
-
-        .item-info {
-            grid-column: 2 / 3;
-            gap: 0.2rem;
-
-            h3 {
-                font-size: 0.95rem;
-                margin-bottom: 0;
-            }
-
-            p {
-                font-size: 0.8rem;
-                color: #666;
-            }
-        }
-
-        .quantity-control {
-            grid-column: 2 / 3;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-
-            button {
-                padding: 0.2rem 0.5rem;
-                font-size: 0.8rem;
-            }
-
-            span {
-                font-size: 0.9rem;
-            }
-        }
-
-        .delete-btn {
-            grid-column: 3 / 4;
-            grid-row: span 2;
-            font-size: 0.75rem;
-            padding: 0.4rem 0.6rem;
-        }
-    }
-
-    .cart-summary {
-        width: 100%;
-        padding: 1rem;
-        margin-left: 0;
-        align-items: center;
-        text-align: center;
-
-        .total-price {
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .checkout-btn {
-            width: 100%;
-            padding: 0.75rem;
-            font-size: 1rem;
-            border-radius: 8px;
-        }
-    }
+/* tombol hapus: teks merah agar simple */
+.remove {
+  grid-area: rem;
+  justify-self: end;
+  background: transparent;
+  border: none;
+  color: var(--merah);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  padding: 6px 8px;
 }
 
+/* ===== Footer sticky ===== */
+.footer {
+  position: sticky;
+  bottom: 8px;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--rad) + 2px);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+
+  /* aman untuk perangkat dengan gesture bar */
+  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+}
+.sum { display: grid; gap: 2px; }
+.sum span   { font-size: var(--fs-xs); color: var(--bubble-bot-text, #6b7280); }
+.sum strong { font-size: var(--fs-md); color: var(--hitam); }
+
+/* tombol checkout tegas tapi simple */
+.cta {
+  border: none; cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: var(--fs-sm);
+  background: var(--hitam);
+  color: var(--putih);
+}
+
+/* ===== Dark mode: gunakan token milikmu ===== */
+body.dark-mode, html[data-theme="dark"] {
+  .cart-container { background: var(--abu); }
+  .btn-ghost { background: var(--abu2); color: var(--hitam); }
+  .controls { background: var(--abu); }
+}
+
+/* ===== Sedikit scale up di ≥400px (masih mobile) ===== */
+@media (min-width: 400px) {
+  :root {
+    --fs-xxs: 11.5px; --fs-xs: 12.5px; --fs-sm: 13.5px; --fs-md: 14.5px;
+    --tap: 32px; --thumb: 58px;
+  }
+}
+
+/* ===== Reduced motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

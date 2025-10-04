@@ -1,0 +1,14 @@
+.topbar {
+  display: flex; align-items: center; justify-content: center;
+  position: sticky; top: 0; z-index: 9;
+  background: #fff; border-radius: 0 0 18px 18px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.06);
+  padding: 14px 0 10px; margin-bottom: 14px; min-height: 52px;
+}
+.topbar-back {
+  position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; font-size: 1.2rem; color: #0c1631;
+  cursor: pointer; padding: 0; display: flex; align-items: center;
+}
+.topbar-title { font-weight: 700; font-size: 1.08rem; color: #23283a; letter-spacing: .02em; }
+@media (min-width: 768px) { .topbar { display: none; } }

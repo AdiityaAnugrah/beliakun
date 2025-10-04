@@ -1,142 +1,259 @@
-.payment-methods {
-  margin-top: 1.5rem;
+/* ================================
+   Fresh • Elegant • Simple Theme (v2)
+   Tweak: mobile font smaller + less bold
+   ================================ */
+
+/* Design tokens */
+:root {
+  --surface: #ffffff;
+  --bg: #f6f7fb;
+  --text: #0f172a;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --ring: rgba(15, 23, 42, 0.08);
+  --brand: var(--merah, #e63946);
+  --brand-weak: rgba(230, 57, 70, .08);
+
+  --radius-lg: 18px;
+  --radius: 12px;
+  --radius-sm: 10px;
+
+  --shadow-1: 0 10px 30px rgba(2, 6, 23, .06);
+  --shadow-2: 0 18px 50px rgba(2, 6, 23, .08);
 }
 
-.payment-methods label {
-  font-weight: 600;
-  display: block;
-  margin-bottom: 0.5rem;
-  font-size: 1rem;
-  color: #333;
+/* Page */
+.checkout-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 18px 64px;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 600px at 100% -10%, rgba(230,57,70,0.06), transparent 40%),
+    radial-gradient(1200px 600px at -10% 100%, rgba(2,6,23,0.06), transparent 40%),
+    var(--bg);
+  min-height: 100dvh;
 }
 
-.bank-category-label {
-  margin-top: 2rem;
+/* ↓ kurangi bold dari 800 -> 700 */
+.checkout-page h1 {
+  font-size: clamp(1.25rem, 1.05rem + 1vw, 1.7rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+
+.page-sub {
+  color: var(--muted);
+  margin-bottom: 18px;
+  font-size: .96rem;
+}
+
+/* Progress mini */
+.progress-mini {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 20px 0;
+}
+.progress-mini .dot {
+  width: 8px; height: 8px; border-radius: 999px;
+  background: var(--line);
+}
+.progress-mini .dot.active {
+  background: var(--brand);
+  box-shadow: 0 0 0 6px var(--brand-weak);
+}
+.progress-mini .line { flex: 1; height: 2px; background: var(--line); }
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1.2fr .8fr;
+  gap: 20px;
+}
+@media (max-width: 960px) { .checkout-grid { grid-template-columns: 1fr; } }
+
+/* Card */
+.card {
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-1);
+  overflow: clip;
+}
+.card-section { padding: 20px; }
+
+/* ↓ kurangi bold dari 800 -> 600 */
+.card-title {
   font-weight: 600;
   font-size: 1rem;
-  border-top: 1px solid #eee;
-  padding-top: 1rem;
-  color: #444;
+  letter-spacing: .2px;
+  margin-bottom: 12px;
+}
+
+/* ====== Form ====== */
+.checkout-page .form-section { display: grid; gap: 14px; }
+
+.floating { position: relative; }
+.floating > label {
+  position: absolute;
+  top: 50%; left: 12px;
+  transform: translateY(-50%);
+  background: transparent; color: var(--muted);
+  transition: all .18s ease; pointer-events: none; padding: 0 6px;
+}
+.floating input,
+.floating textarea {
+  width: 100%;
+  padding: 18px 12px 12px 12px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--line);
+  background: #fbfbfd;
+  font-size: .96rem;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.floating textarea { min-height: 110px; resize: vertical; }
+.floating input::placeholder, .floating textarea::placeholder { opacity: 0; }
+
+.floating input:focus, .floating textarea:focus {
+  outline: none; border-color: var(--brand); background: #fff;
+  box-shadow: 0 0 0 6px var(--brand-weak);
+}
+.floating input:not(:placeholder-shown) + label,
+.floating textarea:not(:placeholder-shown) + label,
+.floating input:focus + label,
+.floating textarea:focus + label {
+  top: 0; transform: translateY(-50%) scale(.88);
+  background: var(--surface); color: var(--brand); margin-left: 6px;
+}
+
+/* Phone input */
+.phone-input {
+  display: flex; align-items: center; gap: 0;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfbfd;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.phone-input:focus-within {
+  border-color: var(--brand); background: #fff; box-shadow: 0 0 0 6px var(--brand-weak);
+}
+.phone-input .country-code {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 12px; border-right: 1px solid var(--line);
+  /* ↓ semula 700, tone down */
+  font-weight: 600; color: #1f2937; background: #f4f5f7;
+}
+.phone-input .flag { width: 18px; height: 12px; border-radius: 2px; }
+.phone-input input[type="tel"] {
+  border: none; outline: none; flex: 1;
+  padding: 14px 12px; background: transparent; font-size: .96rem;
+}
+
+/* Helper */
+.input-hint { color: var(--muted); font-size: .86rem; margin-top: 6px; }
+.input-error { color: #dc2626; font-size: .86rem; margin-top: 6px; }
+
+/* ====== Payment Methods ====== */
+.payment-methods { margin-top: 2px; }
+
+/* ↓ kurangi bold: 800 -> 600 */
+.payment-methods > label {
+  display: block; font-weight: 600; color: #0b1220; margin-bottom: 8px;
 }
 
 .bank-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
 }
-
 .bank-grid-item {
-  padding: 0.5rem;
-  background-color: #f9f9f9;
-  border: 2px solid transparent;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 60px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  height: 64px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fff, #fafafb);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; user-select: none;
+  transition: transform .08s ease, border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  position: relative;
 }
-
-.bank-grid-item img {
-  max-height: 36px;
-  max-width: 100%;
-  object-fit: contain;
-}
-
+.bank-grid-item:hover { transform: translateY(-1px); border-color: #dfe3ea; box-shadow: 0 8px 20px rgba(2,6,23,.06); }
 .bank-grid-item.selected {
-  border-color: var(--merah, #e63946);
-  background-color: #fff;
-  box-shadow: 0 0 0 2px rgba(230, 57, 70, 0.2);
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px var(--brand-weak), 0 10px 26px rgba(230,57,70,.18);
+  background: #fff;
+}
+.bank-grid-item img { max-height: 32px; max-width: 92px; object-fit: contain; filter: saturate(1.04); }
+.check-badge {
+  position: absolute; top: 8px; right: 8px;
+  background: var(--brand); color: #fff; font-weight: 700; font-size: 10px;
+  padding: 6px 7px; border-radius: 999px; box-shadow: 0 8px 18px rgba(230,57,70,.35);
+  opacity: 0; transform: scale(.9); transition: all .16s ease;
+}
+.bank-grid-item.selected .check-badge { opacity: 1; transform: scale(1); }
+
+/* ====== Summary ====== */
+.summary-sticky { position: sticky; top: 14px; }
+.summary-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.summary-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; border-radius: 12px;
+  background: #fbfbfd; border: 1px dashed #e8e9ef;
+}
+.summary-total {
+  margin-top: 8px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: #fff5f5; border: 1px solid #ffe4e6;
+  padding: 12px; border-radius: 14px;
+  /* ↓ kurangi heavy bold */
+  font-weight: 700; letter-spacing: .1px;
 }
 
-@media (max-width: 480px) {
-  .bank-grid-item {
-    height: 48px;
-  }
+/* ====== Actions ====== */
+.checkout-actions { display: grid; gap: 10px; margin-top: 12px; }
 
-  .bank-grid {
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: 0.75rem;
-  }
-
-  .bank-grid-item img {
-    max-height: 30px;
-  }
+/* ↓ kurangi bold button: 900 -> 600; padding lebih kecil */
+.checkout-page button {
+  border: none; appearance: none; cursor: pointer;
+  padding: 12px 16px; border-radius: 12px; font-weight: 600;
+  background: var(--brand); color: #fff;
+  box-shadow: 0 12px 24px rgba(230,57,70,.18);
+  transition: transform .06s ease, box-shadow .16s ease, background .16s ease;
 }
-
-/* === FORM INPUTS === */
-.checkout-page .form-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+.checkout-page button:hover:not(:disabled) {
+  transform: translateY(-1px); box-shadow: 0 16px 30px rgba(230,57,70,.24);
 }
-
-.checkout-page .form-section input,
-.checkout-page .form-section textarea {
-  width: 100%;
-  padding: 1rem;
-  border: 2px solid #e0e0e0;
-  border-radius: 10px;
-  background-color: #fafafa;
-  font-size: 1rem;
-  transition: border-color 0.3s ease, background-color 0.3s ease;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
+.checkout-page button:disabled {
+  background: #e5e7eb; color: #9aa1ad; box-shadow: none; cursor: not-allowed;
 }
+.sec-hint { text-align: center; color: var(--muted); font-size: .88rem; }
 
-.checkout-page .form-section input:focus,
-.checkout-page .form-section textarea:focus {
-  outline: none;
-  border-color: var(--merah, #e63946);
-  background-color: #fff;
-}
+/* Divider */
+.hr { height: 1px; background: linear-gradient(90deg, transparent, #eceef3, transparent); margin: 8px 0; }
 
-.checkout-page .form-section input::placeholder,
-.checkout-page .form-section textarea::placeholder {
-  color: #999;
-  font-style: italic;
-}
+/* =========================
+   MOBILE TWEAKS (<= 520px)
+   ========================= */
+@media (max-width: 520px) {
+  .checkout-page { padding: 22px 14px 48px; }
+  .checkout-page h1 { font-size: 1.22rem; font-weight: 600; margin-bottom: 8px; }
+  .page-sub { font-size: .9rem; margin-bottom: 14px; }
 
-.checkout-page .form-section textarea {
-  min-height: 120px;
-  resize: vertical;
-}
+  .card-section { padding: 16px; }
+  .card-title { font-size: .98rem; font-weight: 600; margin-bottom: 10px; }
 
-.checkout-page .form-section label {
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-  color: #333;
-}
+  .floating input,
+  .floating textarea { padding: 14px 12px 10px 12px; font-size: .94rem; }
+  .phone-input .country-code { padding: 9px 10px; font-weight: 600; }
+  .phone-input input[type="tel"] { padding: 12px 10px; font-size: .94rem; }
 
-/* ✅ Tambahan untuk styling input nomor HP */
-.phone-input {
-  display: flex;
-  align-items: center;
-  border: 2px solid #e0e0e0;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #fafafa;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
-}
+  .bank-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .bank-grid-item { height: 54px; }
+  .bank-grid-item img { max-height: 26px; max-width: 80px; }
 
-.phone-input .country-code {
-  background: #f0f0f0;
-  padding: 1rem;
-  font-size: 1rem;
-  color: #444;
-  border-right: 1px solid #ddd;
-  display: flex;
-  align-items: center;
-}
+  .summary-item { padding: 9px 10px; }
+  .summary-total { padding: 10px 12px; font-weight: 600; }
 
-.phone-input input[type="tel"] {
-  border: none;
-  padding: 1rem;
-  flex: 1;
-  outline: none;
-  font-size: 1rem;
-  background: transparent;
+  .checkout-page button { padding: 11px 14px; font-weight: 600; }
+  .input-hint, .input-error { font-size: .84rem; }
 }
