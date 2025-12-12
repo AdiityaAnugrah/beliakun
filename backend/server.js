@@ -1,7 +1,8 @@
 // server.js
 const express = require("express");
 const dotenv = require("dotenv");
-dotenv.config();
+dotenv.config({ path: require("path").join(__dirname, ".env") });
+
 
 // Pasang guard SEBELUM require routes (biar error path kelihatan jelas)
 require("./utils/routeGuard");
