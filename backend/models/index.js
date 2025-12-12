@@ -1,3 +1,4 @@
+// Import Sequelize instance
 const sequelize = require("../config/db.js");
 
 const Product = require("./productModel");

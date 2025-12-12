@@ -26,6 +26,7 @@ const categoryRoutes = require("./routes/categoryRoutes.js");
 const bennerHomeRoutes = require("./routes/bennerHomeRoutes.js");
 const newsletterRoutes = require("./routes/newsletterRoutes.js");
 const financeRoutes = require("./routes/financeRoutes.js");
+const telegramRoutes = require("./routes/telegramRoutes.js");
 
 // === routes persist auth (baru; tidak ganggu auth lama) ===
 const authPersistRoutes = require("./routes/authPersistRoutes.js");
@@ -87,6 +88,7 @@ app.use("/api", geminiRoutes);
 app.use("/bennerhome", bennerHomeRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/finance", financeRoutes);
+app.use("/telegram", telegramRoutes);
 
 // Redirect Tripay
 app.get("/thank-you", (req, res) => {
