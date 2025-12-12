@@ -1,8 +1,10 @@
-// server.js
+// backend/server.js
 const express = require("express");
 const dotenv = require("dotenv");
-dotenv.config({ path: require("path").join(__dirname, ".env") });
+const path = require("path");
 
+// ✅ Paksa baca .env dari folder backend, dan override env lama (PM2 kadang nyangkut)
+dotenv.config({ path: path.join(__dirname, ".env"), override: true });
 
 // Pasang guard SEBELUM require routes (biar error path kelihatan jelas)
 require("./utils/routeGuard");
@@ -10,7 +12,6 @@ require("./utils/routeGuard");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
-const path = require("path");
 
 // === routes eksisting ===
 const authRoutes = require("./routes/authRoutes.js");
@@ -108,7 +109,11 @@ initModels()
   .then(() => {
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`✅ SERVER BERJALAN DI PORT [${PORT}]`);
+      console.log("NODE_ENV:", process.env.NODE_ENV);
       console.log("CORS allowed origins:", allowedOrigins);
+      console.log("DB_HOST:", process.env.DB_HOST);
+      console.log("DB_USER:", process.env.DB_USER);
+      console.log("DB_NAME:", process.env.DB_NAME);
     });
   })
   .catch((err) => {
