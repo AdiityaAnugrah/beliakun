@@ -39,20 +39,23 @@ Product.hasMany(Wishlist, { foreignKey: "product_id", onDelete: "CASCADE" });
 
 
 const initModels = async () => {
-    try {
-        await sequelize.authenticate();
-        console.log("✅ DB connected with Sequelize");
+  try {
+    await sequelize.authenticate();
+    console.log("✅ DB connected with Sequelize");
 
-        if (process.env.NODE_ENV !== "production") {
-            await sequelize.sync({ alter: true });
-            } else {
-            await sequelize.sync();
-            }
-
-    } catch (error) {
-        console.error("❌ Sequelize error:", error);
+    // ✅ Dev saja yang boleh sync/alter
+    if (process.env.NODE_ENV !== "production") {
+      console.log("⚠️ Dev mode: sequelize.sync({ alter: true })");
+      await sequelize.sync({ alter: true });
+    } else {
+      // ✅ Production: jangan sync biar tidak ALTER TABLE
+      console.log("🛑 Production mode: SKIP sequelize.sync()");
     }
+  } catch (error) {
+    console.error("❌ Sequelize error:", error);
+  }
 };
+
 
 // Export semua model (biar mudah diimport di controller/router)
 module.exports = {
