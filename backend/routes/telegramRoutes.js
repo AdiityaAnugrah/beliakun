@@ -14,6 +14,7 @@ const PRICE = {
   "1 minggu": 25000,
   "1 bulan": 75000,
 };
+
 const PICK = { "1": "1 jam", "2": "1 minggu", "3": "1 bulan" };
 
 router.post("/webhook", async (req, res) => {
@@ -25,7 +26,10 @@ router.post("/webhook", async (req, res) => {
     if (!chatId) return res.sendStatus(200);
 
     if (text === "/start") {
-      await tgSendMessage(chatId, `Halo! 🤖\nKetik /buy untuk beli key.\n\nChat ID: ${chatId}`);
+      await tgSendMessage(
+        chatId,
+        `Halo! 🤖\nKetik /buy untuk beli key.\n\nChat ID: ${chatId}`
+      );
       return res.sendStatus(200);
     }
 
@@ -48,7 +52,6 @@ router.post("/webhook", async (req, res) => {
     const merchantRef = `TG-${chatId}-${Date.now()}`;
     const expiredTime = Math.floor(Date.now() / 1000) + 30 * 60; // 30 menit
 
-    // signature create: merchant_code + merchant_ref + amount :contentReference[oaicite:2]{index=2}
     const signature = crypto
       .createHmac("sha256", process.env.TRIPAY_PRIVATE_KEY)
       .update(process.env.TRIPAY_MERCHANT_CODE + merchantRef + amount)
@@ -83,11 +86,11 @@ router.post("/webhook", async (req, res) => {
       return res.sendStatus(200);
     }
 
-    // simpan order bot
     await Order.create({
       email: "buyer@telegram.local",
       status: "pending",
       total_harga: amount,
+
       tripay_merchant_ref: merchantRef,
       tripay_reference: result.data.reference,
       data_tripay: result.data,
@@ -96,7 +99,8 @@ router.post("/webhook", async (req, res) => {
       key_durasi: durasi,
     });
 
-    const qr = result.data.qr_url || result.data.qr_string; // tergantung response
+    const qrUrl = result.data.qr_url || result.data.qr_string;
+
     const caption =
       `✅ Invoice dibuat\n` +
       `Durasi: ${durasi}\n` +
@@ -104,7 +108,7 @@ router.post("/webhook", async (req, res) => {
       `Ref: ${result.data.reference}\n\n` +
       `Silakan bayar QRIS. Setelah sukses, key dikirim otomatis.`;
 
-    if (qr) await tgSendPhoto(chatId, qr, caption);
+    if (qrUrl) await tgSendPhoto(chatId, qrUrl, caption);
     else await tgSendMessage(chatId, caption + `\n\n(Info: QR tidak ada di response)`);
 
     return res.sendStatus(200);
