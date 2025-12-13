@@ -286,17 +286,22 @@ router.post("/webhook", async (req, res) => {
 
         // simpan order
         await Order.create({
-            data_mid: "{}",
-            midtrans_id: null,
-          email: "buyer@telegram.local",
-          status: "pending",
-          total_harga: amount,
-          tripay_merchant_ref: merchantRef,
-          tripay_reference: result.data.reference,
-          data_tripay: result.data,
-          telegram_chat_id: chatId,
-          key_durasi: durasi,
+        // isi legacy field biar DB yang strict gak rewel
+        data_mid: JSON.stringify({ source: "telegram", note: "no midtrans" }),
+        midtrans_id: "-", // WAJIB: jangan null kalau DB kamu NOT NULL
+
+        email: "buyer@telegram.local",
+        status: "pending",
+        total_harga: amount,
+
+        tripay_merchant_ref: merchantRef,
+        tripay_reference: result.data.reference,
+        data_tripay: result.data,
+
+        telegram_chat_id: chatId,
+        key_durasi: durasi,
         });
+
 
         const qrUrl = result.data.qr_url || result.data.qr_string;
         const checkoutUrl = result.data.checkout_url || result.data.pay_url;
@@ -375,17 +380,22 @@ router.post("/webhook", async (req, res) => {
       }
 
       await Order.create({
-        data_mid: "{}",
-        midtrans_id: null,
+        // isi legacy field biar DB yang strict gak rewel
+        data_mid: JSON.stringify({ source: "telegram", note: "no midtrans" }),
+        midtrans_id: "-", // WAJIB: jangan null kalau DB kamu NOT NULL
+
         email: "buyer@telegram.local",
         status: "pending",
         total_harga: amount,
+
         tripay_merchant_ref: merchantRef,
         tripay_reference: result.data.reference,
         data_tripay: result.data,
+
         telegram_chat_id: chatId,
         key_durasi: durasi,
-      });
+    });
+
 
       const qrUrl = result.data.qr_url || result.data.qr_string;
       const checkoutUrl = result.data.checkout_url || result.data.pay_url;
