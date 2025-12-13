@@ -286,6 +286,8 @@ router.post("/webhook", async (req, res) => {
 
         // simpan order
         await Order.create({
+            data_mid: "{}",
+            midtrans_id: null,
           email: "buyer@telegram.local",
           status: "pending",
           total_harga: amount,
@@ -373,6 +375,8 @@ router.post("/webhook", async (req, res) => {
       }
 
       await Order.create({
+        data_mid: "{}",
+        midtrans_id: null,
         email: "buyer@telegram.local",
         status: "pending",
         total_harga: amount,
