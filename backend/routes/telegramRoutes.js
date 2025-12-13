@@ -8,7 +8,9 @@ const { Order } = require("../models");
 
 const TRIPAY_API = "https://tripay.co.id/api";
 
-// ====== Harga & Pilihan ======
+// ============================
+// CONFIG
+// ============================
 const PRICE = {
   "1 jam": 5000,
   "1 minggu": 25000,
@@ -21,173 +23,307 @@ const PICK_TEXT = {
   "3": "1 bulan",
 };
 
-// ====== Helper: format rupiah ======
 const rupiah = (n) => `Rp${Number(n || 0).toLocaleString("id-ID")}`;
 
-// ====== Helper: validasi secret header Telegram ======
+function nowUnix() {
+  return Math.floor(Date.now() / 1000);
+}
+
+function safeStr(v) {
+  return String(v ?? "").trim();
+}
+
+// ============================
+// SECURITY: Telegram secret header
+// ============================
 function verifyTelegramSecret(req) {
   const expected = process.env.TELEGRAM_WEBHOOK_SECRET;
-  if (!expected) return true;
+  if (!expected) return true; // kalau belum di-set di .env, skip
   const got = req.get("x-telegram-bot-api-secret-token");
   return got === expected;
 }
 
-// ====== Telegram API helper (biar bisa tombol / UI modern tanpa ubah utils lain) ======
+// ============================
+// TELEGRAM API
+// ============================
 const TG_API = () => `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
 
-async function tgSendMessageEx(chatId, text, opts = {}) {
-  const payload = {
+async function tgCall(method, payload) {
+  const res = await fetch(`${TG_API()}/${method}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const json = await res.json().catch(() => null);
+  if (!json?.ok) {
+    // jangan bikin Telegram retry; tapi log untuk debug
+    console.error("[TG_API_ERROR]", method, json);
+  }
+  return json;
+}
+
+async function tgSendMessage(chatId, text, opts = {}) {
+  return tgCall("sendMessage", {
     chat_id: chatId,
     text,
     parse_mode: "Markdown",
     disable_web_page_preview: true,
     ...opts,
-  };
-
-  await fetch(`${TG_API()}/sendMessage`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
   });
 }
 
-async function tgSendPhotoEx(chatId, photo, caption, opts = {}) {
-  const payload = {
+async function tgEditMessage(chatId, messageId, text, opts = {}) {
+  return tgCall("editMessageText", {
+    chat_id: chatId,
+    message_id: messageId,
+    text,
+    parse_mode: "Markdown",
+    disable_web_page_preview: true,
+    ...opts,
+  });
+}
+
+async function tgSendPhoto(chatId, photo, caption, opts = {}) {
+  return tgCall("sendPhoto", {
     chat_id: chatId,
     photo,
     caption,
     parse_mode: "Markdown",
     ...opts,
-  };
-
-  await fetch(`${TG_API()}/sendPhoto`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
   });
 }
 
-// ====== UI Blocks ======
+async function tgAnswerCallback(callbackQueryId, opts = {}) {
+  if (!callbackQueryId) return;
+  return tgCall("answerCallbackQuery", {
+    callback_query_id: callbackQueryId,
+    ...opts,
+  });
+}
+
+// ============================
+// UI (copywriting “WAH”)
+// ============================
+function brandHeader() {
+  return "✨ *BELIAKUN — Key Instan*";
+}
+
 function welcomeText() {
   return (
-    "👋 *Halo! Selamat datang di BELIAKUN*\n\n" +
-    "Di sini kamu bisa beli *Key* dengan cepat:\n" +
+    `${brandHeader()}\n\n` +
+    "Beli key cepat & aman:\n" +
     "✅ pilih durasi\n" +
-    "✅ bayar via QRIS\n" +
-    "✅ setelah sukses, key dikirim otomatis di chat ini\n\n" +
-    "Klik tombol di bawah ya 👇"
+    "✅ bayar QRIS\n" +
+    "✅ key dikirim otomatis\n\n" +
+    "👇 Klik tombol di bawah untuk mulai"
   );
 }
 
 function helpText() {
   return (
-    "🧠 *Bantuan (super gampang)*\n\n" +
-    "1) Klik *Beli Key*\n" +
+    "🧠 *Cara Beli (super gampang)*\n\n" +
+    "1) Klik *🛒 Beli Key*\n" +
     "2) Pilih durasi\n" +
-    "3) Bot kirim QRIS\n" +
-    "4) Selesaikan pembayaran\n" +
-    "5) *Key dikirim otomatis* ✅\n\n" +
-    "Kalau kamu lebih suka ketik manual:\n" +
-    "• /buy → lalu balas *1 / 2 / 3*"
+    "3) Bayar QRIS\n" +
+    "4) Sukses → key dikirim otomatis ✅\n\n" +
+    "Perintah:\n" +
+    "• /buy  → tampilkan menu\n" +
+    "• /status → cek pesanan terakhir\n" +
+    "• /cancel → batalkan menu"
   );
 }
 
 function buyMenuText() {
   return (
-    "🛒 *Beli Key*\n\n" +
-    "Pilih durasi yang kamu mau:\n\n" +
-    `⏱ 1 jam  — *${rupiah(PRICE["1 jam"])}*\n` +
-    `📅 1 minggu — *${rupiah(PRICE["1 minggu"])}*\n` +
-    `🗓 1 bulan — *${rupiah(PRICE["1 bulan"])}*\n\n` +
-    "Klik tombol durasi di bawah 👇"
+    "🛒 *Pilih Durasi Key*\n" +
+    "━━━━━━━━━━━━━━\n" +
+    `⏱ *1 Jam*     — ${rupiah(PRICE["1 jam"])}\n` +
+    `📅 *1 Minggu*  — ${rupiah(PRICE["1 minggu"])}\n` +
+    `🗓 *1 Bulan*   — ${rupiah(PRICE["1 bulan"])}\n` +
+    "━━━━━━━━━━━━━━\n\n" +
+    "Klik tombol paket di bawah 👇"
   );
 }
 
-function keyboardMain() {
+function loadingInvoiceText(durasi) {
+  return (
+    "⏳ *Menyiapkan invoice...*\n\n" +
+    `📦 Paket: *${durasi}*\n` +
+    "Mohon tunggu sebentar ya.\n" +
+    "(Tenang, ini cepat—bukan loading “Windows Update” 😄)"
+  );
+}
+
+function invoiceReadyCaption({ durasi, amount, reference }) {
+  return (
+    "✅ *Invoice Siap Dibayar*\n" +
+    "━━━━━━━━━━━━━━\n" +
+    `📦 Paket : *${durasi}*\n` +
+    `💳 Total : *${rupiah(amount)}*\n` +
+    `🧾 Ref   : *${reference}*\n` +
+    "⏰ Batas bayar: *30 menit*\n" +
+    "━━━━━━━━━━━━━━\n\n" +
+    "📌 *Cara bayar:*\n" +
+    "1) Scan QRIS (atau klik tombol *Bayar Sekarang*)\n" +
+    "2) Selesaikan pembayaran\n" +
+    "3) Sukses → *key dikirim otomatis di chat ini* ✅\n\n" +
+    "Kalau sudah bayar, tinggal tunggu… botnya bukan mantan 😎"
+  );
+}
+
+function unknownText() {
+  return (
+    "Aku belum paham 😅\n\n" +
+    "✅ Klik *🛒 Beli Key* untuk mulai.\n" +
+    "ℹ️ Kalau butuh panduan, klik *Bantuan*."
+  );
+}
+
+function statusText(order) {
+  if (!order) {
+    return (
+      "📭 *Belum ada pesanan*\n\n" +
+      "Klik *🛒 Beli Key* untuk bikin invoice pertama kamu."
+    );
+  }
+
+  const ref = order.tripay_reference || "-";
+  const dur = order.key_durasi || "-";
+  const st = order.status || "-";
+  const total = rupiah(order.total_harga || 0);
+
+  return (
+    "🧾 *Status Pesanan Terakhir*\n" +
+    "━━━━━━━━━━━━━━\n" +
+    `📦 Paket : *${dur}*\n` +
+    `💳 Total : *${total}*\n` +
+    `🔖 Status: *${st}*\n` +
+    `🧾 Ref   : *${ref}*\n` +
+    "━━━━━━━━━━━━━━"
+  );
+}
+
+// ============================
+// KEYBOARDS
+// ============================
+function kbMain() {
   return {
     inline_keyboard: [
       [{ text: "🛒 Beli Key", callback_data: "BUY" }],
-      [{ text: "ℹ️ Bantuan", callback_data: "HELP" }],
+      [
+        { text: "🧾 Status", callback_data: "STATUS" },
+        { text: "ℹ️ Bantuan", callback_data: "HELP" },
+      ],
     ],
   };
 }
 
-function keyboardBuy() {
+function kbBuy() {
   return {
     inline_keyboard: [
       [
-        { text: "⏱ 1 Jam", callback_data: "DUR:1 jam" },
-        { text: "📅 1 Minggu", callback_data: "DUR:1 minggu" },
+        { text: `⏱ 1 Jam (${rupiah(PRICE["1 jam"])})`, callback_data: "DUR:1 jam" },
       ],
-      [{ text: "🗓 1 Bulan", callback_data: "DUR:1 bulan" }],
-      [{ text: "⬅️ Kembali", callback_data: "BACK" }],
+      [
+        { text: `📅 1 Minggu (${rupiah(PRICE["1 minggu"])})`, callback_data: "DUR:1 minggu" },
+      ],
+      [
+        { text: `🗓 1 Bulan (${rupiah(PRICE["1 bulan"])})`, callback_data: "DUR:1 bulan" },
+      ],
+      [{ text: "⬅️ Menu Utama", callback_data: "BACK" }],
     ],
   };
 }
 
-function keyboardBackToMain() {
-  return {
-    inline_keyboard: [[{ text: "⬅️ Menu Utama", callback_data: "BACK" }]],
-  };
-}
-
-function keyboardPay(checkoutUrl) {
+function kbAfterInvoice(checkoutUrl) {
   const rows = [];
-  if (checkoutUrl) {
-    rows.push([{ text: "🔗 Buka Link Bayar", url: checkoutUrl }]);
-  }
-  rows.push([{ text: "🛒 Beli Lagi", callback_data: "BUY" }]);
+  if (checkoutUrl) rows.push([{ text: "💳 Bayar Sekarang", url: checkoutUrl }]);
+  rows.push([{ text: "🔁 Beli Lagi", callback_data: "BUY" }]);
+  rows.push([{ text: "🧾 Status", callback_data: "STATUS" }]);
   rows.push([{ text: "ℹ️ Bantuan", callback_data: "HELP" }]);
+  rows.push([{ text: "⬅️ Menu Utama", callback_data: "BACK" }]);
   return { inline_keyboard: rows };
 }
 
-// ====== parse update ======
-function getIncoming(reqBody) {
-  // message biasa
-  if (reqBody?.message) {
+// ============================
+// PARSER UPDATE
+// ============================
+function parseIncoming(body) {
+  // message text
+  if (body?.message) {
     return {
       type: "message",
-      chatId: reqBody.message?.chat?.id,
-      text: (reqBody.message?.text || "").trim(),
+      chatId: body.message?.chat?.id,
+      text: safeStr(body.message?.text),
+      messageId: body.message?.message_id,
     };
   }
 
-  // tombol (callback_query)
-  if (reqBody?.callback_query) {
+  // callback buttons
+  if (body?.callback_query) {
     return {
       type: "callback",
-      chatId: reqBody.callback_query?.message?.chat?.id,
-      data: (reqBody.callback_query?.data || "").trim(),
-      callbackQueryId: reqBody.callback_query?.id,
+      chatId: body.callback_query?.message?.chat?.id,
+      data: safeStr(body.callback_query?.data),
+      callbackQueryId: body.callback_query?.id,
+      messageId: body.callback_query?.message?.message_id,
     };
   }
 
   // edited message (opsional)
-  if (reqBody?.edited_message) {
+  if (body?.edited_message) {
     return {
       type: "message",
-      chatId: reqBody.edited_message?.chat?.id,
-      text: (reqBody.edited_message?.text || "").trim(),
+      chatId: body.edited_message?.chat?.id,
+      text: safeStr(body.edited_message?.text),
+      messageId: body.edited_message?.message_id,
     };
   }
 
   return { type: "unknown" };
 }
 
-async function answerCallback(callbackQueryId) {
-  if (!callbackQueryId) return;
-  await fetch(`${TG_API()}/answerCallbackQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ callback_query_id: callbackQueryId }),
+// ============================
+// DB Helpers
+// ============================
+async function getLastTelegramOrder(chatId) {
+  try {
+    return await Order.findOne({
+      where: { telegram_chat_id: chatId },
+      order: [["createdAt", "DESC"]],
+    });
+  } catch (e) {
+    console.error("[DB] getLastTelegramOrder error:", e);
+    return null;
+  }
+}
+
+async function saveOrderTelegram({ chatId, durasi, amount, merchantRef, tripayData }) {
+  // DB kamu strict: data_mid & midtrans_id harus selalu ada
+  return Order.create({
+    data_mid: JSON.stringify({ source: "telegram", note: "no midtrans" }),
+    midtrans_id: "-", // WAJIB (karena DB kamu NOT NULL)
+
+    email: "buyer@telegram.local",
+    status: "pending",
+    total_harga: amount,
+
+    tripay_merchant_ref: merchantRef,
+    tripay_reference: tripayData?.reference || null,
+    data_tripay: tripayData || null,
+
+    telegram_chat_id: chatId,
+    key_durasi: durasi,
   });
 }
 
-// ====== create tripay invoice ======
+// ============================
+// TRIPAY
+// ============================
 async function createTripayInvoice({ chatId, durasi }) {
   const amount = PRICE[durasi];
   const merchantRef = `TG-${chatId}-${Date.now()}`;
-  const expiredTime = Math.floor(Date.now() / 1000) + 30 * 60; // 30 menit
+  const expiredTime = nowUnix() + 30 * 60;
 
   const signature = crypto
     .createHmac("sha256", process.env.TRIPAY_PRIVATE_KEY)
@@ -217,220 +353,213 @@ async function createTripayInvoice({ chatId, durasi }) {
     body: JSON.stringify(payload),
   });
 
-  const result = await resp.json();
+  const result = await resp.json().catch(() => ({}));
   return { result, amount, merchantRef, expiredTime };
 }
 
-// ====== webhook ======
+// ============================
+// CORE HANDLER: Create invoice & send “WAH” UI
+// ============================
+async function handleCreateInvoice({ chatId, durasi, parentMessageId = null }) {
+  // 1) tampilkan loading (edit kalau bisa, kalau tidak kirim baru)
+  let loadingMsgId = parentMessageId;
+
+  if (loadingMsgId) {
+    await tgEditMessage(chatId, loadingMsgId, loadingInvoiceText(durasi), {
+      reply_markup: kbMain(),
+    });
+  } else {
+    const sent = await tgSendMessage(chatId, loadingInvoiceText(durasi), {
+      reply_markup: kbMain(),
+    });
+    loadingMsgId = sent?.result?.message_id || null;
+  }
+
+  // 2) create invoice Tripay
+  const { result, amount, merchantRef } = await createTripayInvoice({ chatId, durasi });
+
+  if (!result?.success) {
+    const reason = result?.message || "Unknown error";
+    const failText =
+      "❌ *Gagal membuat invoice*\n\n" +
+      `Alasan: _${reason}_\n\n` +
+      "Silakan coba lagi dengan klik *🛒 Beli Key*.";
+
+    if (loadingMsgId) {
+      await tgEditMessage(chatId, loadingMsgId, failText, { reply_markup: kbMain() });
+    } else {
+      await tgSendMessage(chatId, failText, { reply_markup: kbMain() });
+    }
+    return;
+  }
+
+  // 3) simpan order (DB strict safe)
+  try {
+    await saveOrderTelegram({
+      chatId,
+      durasi,
+      amount,
+      merchantRef,
+      tripayData: result.data,
+    });
+  } catch (e) {
+    console.error("[DB] saveOrderTelegram error:", e);
+    const errText =
+      "⚠️ *Invoice berhasil dibuat, tapi gagal simpan ke database.*\n" +
+      "Silakan hubungi admin.\n\n" +
+      `Ref: *${result?.data?.reference || "-"}*`;
+
+    if (loadingMsgId) {
+      await tgEditMessage(chatId, loadingMsgId, errText, { reply_markup: kbMain() });
+    } else {
+      await tgSendMessage(chatId, errText, { reply_markup: kbMain() });
+    }
+    return;
+  }
+
+  // 4) kirim invoice UI
+  const qrUrl = result.data.qr_url || result.data.qr_string;
+  const checkoutUrl = result.data.checkout_url || result.data.pay_url;
+
+  const caption = invoiceReadyCaption({
+    durasi,
+    amount,
+    reference: result.data.reference,
+  });
+
+  // Biar “WAH”: edit loading jadi “Invoice siap” (teks), lalu kirim QR photo terpisah
+  if (loadingMsgId) {
+    await tgEditMessage(
+      chatId,
+      loadingMsgId,
+      "✅ *Invoice berhasil dibuat!*\n\nSekarang tinggal scan QRIS di bawah ya 👇",
+      { reply_markup: kbAfterInvoice(checkoutUrl) }
+    );
+  }
+
+  if (qrUrl) {
+    await tgSendPhoto(chatId, qrUrl, caption, {
+      reply_markup: kbAfterInvoice(checkoutUrl),
+    });
+  } else {
+    // fallback kalau tidak ada QR
+    await tgSendMessage(
+      chatId,
+      caption + (checkoutUrl ? `\n\n🔗 Link bayar:\n${checkoutUrl}` : ""),
+      { reply_markup: kbAfterInvoice(checkoutUrl) }
+    );
+  }
+}
+
+// ============================
+// ROUTE: TELEGRAM WEBHOOK
+// ============================
 router.post("/webhook", async (req, res) => {
-  // balas cepat ke Telegram
+  // selalu cepat balas 200 biar Telegram tidak retry spam
   try {
     if (!verifyTelegramSecret(req)) return res.sendStatus(401);
 
-    const incoming = getIncoming(req.body);
+    const incoming = parseIncoming(req.body);
     const chatId = incoming.chatId;
-
     if (!chatId) return res.sendStatus(200);
 
-    // biar tombol ga loading muter
+    // callback: biar tombol nggak loading muter
     if (incoming.type === "callback") {
-      await answerCallback(incoming.callbackQueryId);
+      await tgAnswerCallback(incoming.callbackQueryId);
     }
 
-    // ====== HANDLE CALLBACK BUTTON ======
+    // ======================
+    // CALLBACK HANDLER
+    // ======================
     if (incoming.type === "callback") {
       const data = incoming.data;
 
       if (data === "BACK") {
-        await tgSendMessageEx(chatId, welcomeText(), { reply_markup: keyboardMain() });
+        await tgSendMessage(chatId, welcomeText(), { reply_markup: kbMain() });
         return res.sendStatus(200);
       }
 
       if (data === "HELP") {
-        await tgSendMessageEx(chatId, helpText(), { reply_markup: keyboardBackToMain() });
+        await tgSendMessage(chatId, helpText(), { reply_markup: kbMain() });
+        return res.sendStatus(200);
+      }
+
+      if (data === "STATUS") {
+        const last = await getLastTelegramOrder(chatId);
+        await tgSendMessage(chatId, statusText(last), { reply_markup: kbMain() });
         return res.sendStatus(200);
       }
 
       if (data === "BUY") {
-        await tgSendMessageEx(chatId, buyMenuText(), { reply_markup: keyboardBuy() });
+        await tgSendMessage(chatId, buyMenuText(), { reply_markup: kbBuy() });
         return res.sendStatus(200);
       }
 
       if (data.startsWith("DUR:")) {
         const durasi = data.replace("DUR:", "").trim();
         if (!PRICE[durasi]) {
-          await tgSendMessageEx(chatId, "❌ Durasi tidak valid. Klik *Beli Key* lagi ya.", {
-            reply_markup: keyboardMain(),
+          await tgSendMessage(chatId, "❌ Durasi tidak valid. Klik *🛒 Beli Key* lagi ya.", {
+            reply_markup: kbMain(),
           });
           return res.sendStatus(200);
         }
 
-        await tgSendMessageEx(
+        await handleCreateInvoice({
           chatId,
-          "⏳ *Sedang membuat invoice...*\n" +
-            "Biasanya cepat kok. Jangan kabur dulu ya 😄"
-        );
-
-        const { result, amount, merchantRef } = await createTripayInvoice({ chatId, durasi });
-
-        if (!result?.success) {
-          await tgSendMessageEx(
-            chatId,
-            "❌ *Gagal membuat invoice.*\n" +
-              `Alasan: ${result?.message || "Unknown error"}\n\n` +
-              "Klik *Beli Key* untuk coba lagi.",
-            { reply_markup: keyboardMain() }
-          );
-          return res.sendStatus(200);
-        }
-
-        // simpan order
-        await Order.create({
-        // isi legacy field biar DB yang strict gak rewel
-        data_mid: JSON.stringify({ source: "telegram", note: "no midtrans" }),
-        midtrans_id: "-", // WAJIB: jangan null kalau DB kamu NOT NULL
-
-        email: "buyer@telegram.local",
-        status: "pending",
-        total_harga: amount,
-
-        tripay_merchant_ref: merchantRef,
-        tripay_reference: result.data.reference,
-        data_tripay: result.data,
-
-        telegram_chat_id: chatId,
-        key_durasi: durasi,
+          durasi,
+          parentMessageId: incoming.messageId || null, // edit message yang sama biar elegan
         });
-
-
-        const qrUrl = result.data.qr_url || result.data.qr_string;
-        const checkoutUrl = result.data.checkout_url || result.data.pay_url;
-
-        const caption =
-          "✅ *Invoice Berhasil Dibuat!*\n\n" +
-          `📦 Durasi: *${durasi}*\n` +
-          `💳 Total: *${rupiah(amount)}*\n` +
-          `🧾 Ref: *${result.data.reference}*\n` +
-          "⏰ Batas bayar: *30 menit*\n\n" +
-          "*Cara bayar:*\n" +
-          "1) Scan QRIS (atau klik tombol link bayar)\n" +
-          "2) Selesaikan pembayaran\n" +
-          "3) Setelah sukses → *key dikirim otomatis di chat ini* ✅\n\n" +
-          "Kalau sudah bayar, tinggal tunggu… botnya bukan mantan, pasti balik 🫡";
-
-        if (qrUrl) {
-          await tgSendPhotoEx(chatId, qrUrl, caption, {
-            reply_markup: keyboardPay(checkoutUrl),
-          });
-        } else {
-          await tgSendMessageEx(chatId, caption + (checkoutUrl ? `\n\n🔗 ${checkoutUrl}` : ""), {
-            reply_markup: keyboardPay(checkoutUrl),
-          });
-        }
-
         return res.sendStatus(200);
       }
 
       // fallback callback
-      await tgSendMessageEx(chatId, "Aku bingung tombol yang kamu klik 😅 Balik ke menu ya.", {
-        reply_markup: keyboardMain(),
+      await tgSendMessage(chatId, "Tombol itu belum tersedia 😅 Balik ke menu ya.", {
+        reply_markup: kbMain(),
       });
       return res.sendStatus(200);
     }
 
-    // ====== HANDLE TEXT MESSAGE ======
-    const text = (incoming.text || "").trim();
+    // ======================
+    // MESSAGE TEXT HANDLER
+    // ======================
+    const text = safeStr(incoming.text);
 
-    // commands
+    // Commands
     if (text === "/start") {
-      await tgSendMessageEx(chatId, welcomeText(), { reply_markup: keyboardMain() });
+      await tgSendMessage(chatId, welcomeText(), { reply_markup: kbMain() });
       return res.sendStatus(200);
     }
 
     if (text === "/help") {
-      await tgSendMessageEx(chatId, helpText(), { reply_markup: keyboardBackToMain() });
+      await tgSendMessage(chatId, helpText(), { reply_markup: kbMain() });
       return res.sendStatus(200);
     }
 
     if (text === "/buy") {
-      await tgSendMessageEx(chatId, buyMenuText(), { reply_markup: keyboardBuy() });
+      await tgSendMessage(chatId, buyMenuText(), { reply_markup: kbBuy() });
       return res.sendStatus(200);
     }
 
-    // support manual angka 1/2/3
+    if (text === "/status") {
+      const last = await getLastTelegramOrder(chatId);
+      await tgSendMessage(chatId, statusText(last), { reply_markup: kbMain() });
+      return res.sendStatus(200);
+    }
+
+    if (text === "/cancel") {
+      await tgSendMessage(chatId, "✅ Oke. Kamu balik ke menu utama.", { reply_markup: kbMain() });
+      return res.sendStatus(200);
+    }
+
+    // Manual input 1/2/3
     const durasi = PICK_TEXT[text];
     if (durasi) {
-      await tgSendMessageEx(
-        chatId,
-        "⏳ *Sedang membuat invoice...*\n" +
-          "Bentar ya. Ini bukan loading ML, ini beneran sebentar 😄"
-      );
-
-      const { result, amount, merchantRef } = await createTripayInvoice({ chatId, durasi });
-
-      if (!result?.success) {
-        await tgSendMessageEx(
-          chatId,
-          "❌ *Gagal membuat invoice.*\n" +
-            `Alasan: ${result?.message || "Unknown error"}\n\n` +
-            "Klik *Beli Key* untuk coba lagi.",
-          { reply_markup: keyboardMain() }
-        );
-        return res.sendStatus(200);
-      }
-
-      await Order.create({
-        // isi legacy field biar DB yang strict gak rewel
-        data_mid: JSON.stringify({ source: "telegram", note: "no midtrans" }),
-        midtrans_id: "-", // WAJIB: jangan null kalau DB kamu NOT NULL
-
-        email: "buyer@telegram.local",
-        status: "pending",
-        total_harga: amount,
-
-        tripay_merchant_ref: merchantRef,
-        tripay_reference: result.data.reference,
-        data_tripay: result.data,
-
-        telegram_chat_id: chatId,
-        key_durasi: durasi,
-    });
-
-
-      const qrUrl = result.data.qr_url || result.data.qr_string;
-      const checkoutUrl = result.data.checkout_url || result.data.pay_url;
-
-      const caption =
-        "✅ *Invoice Berhasil Dibuat!*\n\n" +
-        `📦 Durasi: *${durasi}*\n` +
-        `💳 Total: *${rupiah(amount)}*\n` +
-        `🧾 Ref: *${result.data.reference}*\n` +
-        "⏰ Batas bayar: *30 menit*\n\n" +
-        "*Cara bayar:*\n" +
-        "1) Scan QRIS (atau klik tombol link bayar)\n" +
-        "2) Selesaikan pembayaran\n" +
-        "3) Setelah sukses → *key dikirim otomatis di chat ini* ✅";
-
-      if (qrUrl) {
-        await tgSendPhotoEx(chatId, qrUrl, caption, { reply_markup: keyboardPay(checkoutUrl) });
-      } else {
-        await tgSendMessageEx(chatId, caption + (checkoutUrl ? `\n\n🔗 ${checkoutUrl}` : ""), {
-          reply_markup: keyboardPay(checkoutUrl),
-        });
-      }
-
+      await handleCreateInvoice({ chatId, durasi });
       return res.sendStatus(200);
     }
 
-    // fallback message biar pembeli ga bingung
-    await tgSendMessageEx(
-      chatId,
-      "Aku belum paham 😅\n\n" +
-        "✅ Untuk beli key, klik tombol *Beli Key*.\n" +
-        "ℹ️ Kalau butuh panduan, klik *Bantuan*.",
-      { reply_markup: keyboardMain() }
-    );
-
+    // fallback agar buyer tidak bingung
+    await tgSendMessage(chatId, unknownText(), { reply_markup: kbMain() });
     return res.sendStatus(200);
   } catch (err) {
     console.error("TG webhook error:", err);
