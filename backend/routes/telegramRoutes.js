@@ -12,9 +12,9 @@ const TRIPAY_API = "https://tripay.co.id/api";
 // CONFIG
 // ============================
 const PRICE = {
-  "1 jam": 5000,
+  "1 jam": 2500,
   "1 minggu": 25000,
-  "1 bulan": 75000,
+  "1 bulan": 150000,
 };
 
 const PICK_TEXT = {
