@@ -6,6 +6,7 @@ const fetch = require("node-fetch");
 const { Order, OrderItem, Product, Cart, Category } = require("../models");
 const { takeKeyForDurasi } = require("../utils/keyService");
 const { tgSendMessage } = require("../utils/telegram");
+const { notifyOrderStatus } = require("../utils/discord");
 
 const TRIPAY_API = "https://tripay.co.id/api";
 
@@ -233,6 +234,17 @@ const handleTripayCallback = async (req, res) => {
           `Terima kasih 🙏`
       );
     }
+
+    // ✅ kirim Discord 1x ketika status berubah jadi success
+    if (oldStatus !== "success" && newStatus === "success") {
+      await notifyOrderStatus({
+        order,
+        reference,
+        status,
+        source: "Tripay",
+      });
+    }
+
 
     return res.status(200).json({ message: "Callback OK" });
   } catch (err) {
