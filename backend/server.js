@@ -30,6 +30,9 @@ const newsletterRoutes = require("./routes/newsletterRoutes.js");
 const financeRoutes = require("./routes/financeRoutes.js");
 const telegramRoutes = require("./routes/telegramRoutes.js");
 
+// === routes bot untuk robux ===
+const qrisBotRoutes = require("./routes/qrisBotRoutes.js");
+
 // === routes persist auth (baru; tidak ganggu auth lama) ===
 const authPersistRoutes = require("./routes/authPersistRoutes.js");
 
@@ -91,6 +94,9 @@ app.use("/bennerhome", bennerHomeRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/finance", financeRoutes);
 app.use("/telegram", telegramRoutes);
+
+/* ==== routes bot robux ==== */
+app.use("/qris-bot", qrisBotRoutes);
 
 // Redirect Tripay
 app.get("/thank-you", (req, res) => {
