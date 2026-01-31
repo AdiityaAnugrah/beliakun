@@ -33,6 +33,7 @@ const telegramRoutes = require("./routes/telegramRoutes.js");
 // === routes bot untuk robux ===
 const qrisBotRoutes = require("./routes/qrisBotRoutes.js");
 
+
 // === routes persist auth (baru; tidak ganggu auth lama) ===
 const authPersistRoutes = require("./routes/authPersistRoutes.js");
 
@@ -73,6 +74,9 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// route bot robux
+app.use("/qris-bot", qrisBotRoutes);
+
 app.get("/", (_req, res) => res.send("|| API UDAH JALAN TOT ||"));
 
 /* ==== persist auth DULUAN di /auth ==== */
@@ -94,9 +98,6 @@ app.use("/bennerhome", bennerHomeRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/finance", financeRoutes);
 app.use("/telegram", telegramRoutes);
-
-/* ==== routes bot robux ==== */
-app.use("/qris-bot", qrisBotRoutes);
 
 // Redirect Tripay
 app.get("/thank-you", (req, res) => {
