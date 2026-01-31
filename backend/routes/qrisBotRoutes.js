@@ -5,29 +5,27 @@ const router = express.Router();
 const { createQrisOrderBot } = require("../bots/qrisOrderBot");
 const bot = createQrisOrderBot();
 
-console.log("[qris-bot] typeof bot.webhookCallback =", typeof bot.webhookCallback);
-
 router.get("/health", (_req, res) => {
-  res.json({ ok: true, mode: "webhook" });
+  res.json({ ok: true, mode: "rbxcave-webhook" });
 });
 
-// ✅ log dulu, baru serahkan ke telegraf
-router.post(
-  "/webhook",
-  (req, _res, next) => {
-    const u = req.body || {};
-    const msg = u.message?.text || u.edited_message?.text || u.callback_query?.data || "";
-    const chatId = u.message?.chat?.id || u.callback_query?.message?.chat?.id || null;
-    console.log("[qris-bot] update IN:", {
-      update_id: u.update_id,
-      chatId,
-      msg,
-      hasMessage: !!u.message,
-      hasCallback: !!u.callback_query,
-    });
-    next();
-  },
-  bot.webhookCallback("/qris-bot/webhook")
-);
+// ✅ validasi secret token dari Telegram (opsional tapi bagus)
+router.use((req, res, next) => {
+  if (req.path !== "/webhook") return next();
+
+  const expected = process.env.TELEGRAM_WEBHOOK_SECRET || "";
+  const got = req.get("x-telegram-bot-api-secret-token") || "";
+
+  if (expected && got !== expected) {
+    console.log("[qris-bot] blocked webhook (bad secret):", got);
+    return res.status(401).send("unauthorized");
+  }
+
+  next();
+});
+
+// ✅ PENTING: karena router di-mount pada /qris-bot,
+// maka path untuk telegraf harus "/webhook"
+router.post("/webhook", bot.webhookCallback("/webhook"));
 
 module.exports = router;
