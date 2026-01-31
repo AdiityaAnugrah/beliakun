@@ -11,7 +11,9 @@ const bot = createQrisOrderBot();
  * - Maka path di router harus "/webhook"
  * - Dan string webhookCallback harus path publik full: "/qris-bot/webhook"
  */
-router.post("/webhook", bot.webhookCallback("/qris-bot/webhook"));
+router.post("/webhook", (req, res) => {
+  return res.json({ ok: true, hit: true, body: req.body || null });
+});
 
 router.get("/health", (_req, res) => {
   res.json({ ok: true, mode: "webhook", hasWebhook: true });
