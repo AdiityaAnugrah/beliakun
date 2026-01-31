@@ -19,4 +19,7 @@ router.get("/health", (_req, res) => {
   res.json({ ok: true, mode: "webhook", hasWebhook: true });
 });
 
+console.log("[qris-bot] typeof bot.webhookCallback =", typeof bot.webhookCallback);
+
+
 module.exports = router;
