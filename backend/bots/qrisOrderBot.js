@@ -56,9 +56,7 @@ function packagesKeyboard(page) {
   for (let i = 0; i < items.length; i += 2) {
     const a = items[i];
     const b = items[i + 1];
-    const row = [
-      Markup.button.callback(`${a.label}`, `PKG:${a.key}`),
-    ];
+    const row = [Markup.button.callback(`${a.label}`, `PKG:${a.key}`)];
     if (b) row.push(Markup.button.callback(`${b.label}`, `PKG:${b.key}`));
     rows.push(row);
   }
@@ -82,7 +80,6 @@ function usernamePromptKeyboard() {
 }
 
 function userPaymentKeyboard(token) {
-  // Tombol cancel untuk user (inline)
   return Markup.inlineKeyboard([
     [Markup.button.callback("✅ Saya sudah bayar (upload bukti foto di chat ini)", "NOOP")],
     [Markup.button.callback("❌ Batalkan Transaksi", `U_CANCEL:${token}`)],
@@ -195,14 +192,23 @@ function createQrisOrderBot() {
   const rbxcave = makeRBXCaveClient();
   const bot = new Telegraf(botToken);
 
+  // debug: pastikan webhookCallback ada
+  console.log("[qris-bot] typeof bot.webhookCallback =", typeof bot.webhookCallback);
+
   // cleanup expired pending
   setInterval(() => store.cleanupExpired(PENDING_TTL_MS), 60 * 1000).unref?.();
 
-  // simple session
-  bot.use((ctx, next) => {
-    ctx.session = ctx.session || {};
-    return next();
-  });
+  // helper: user flow persist (wajib pendingStore versi terbaru)
+  function getFlow(userId) {
+    if (typeof store.getUserFlow === "function") return store.getUserFlow(userId);
+    return null;
+  }
+  async function setFlow(userId, flow) {
+    if (typeof store.setUserFlow === "function") return store.setUserFlow(userId, flow);
+  }
+  async function clearFlow(userId) {
+    if (typeof store.clearUserFlow === "function") return store.clearUserFlow(userId);
+  }
 
   // ===== Commands =====
   bot.command("myid", (ctx) => {
@@ -220,6 +226,7 @@ function createQrisOrderBot() {
     const data = store.getByToken(tok);
     if (!data) {
       await store.clearUser(userId);
+      await clearFlow(userId);
       return ctx.reply("Tidak ada transaksi pending untuk dibatalkan.");
     }
 
@@ -231,6 +238,12 @@ function createQrisOrderBot() {
 
   // ===== Start =====
   bot.start(async (ctx) => {
+    const userId = ctx.from?.id;
+    if (userId) {
+      // biar alur bersih saat start ulang
+      await clearFlow(userId);
+    }
+
     await ctx.reply(msgWelcome(), {
       parse_mode: "Markdown",
       reply_markup: packagesKeyboard(0).reply_markup,
@@ -261,8 +274,10 @@ function createQrisOrderBot() {
   bot.action("RESET", async (ctx) => {
     await ctx.answerCbQuery("Reset");
     const userId = ctx.from?.id;
-    if (userId) await store.clearUser(userId);
-    ctx.session = {};
+    if (userId) {
+      await store.clearUser(userId);
+      await clearFlow(userId);
+    }
     try {
       await ctx.editMessageText("✅ Sudah di-reset. Ketik /start untuk mulai lagi.");
     } catch {
@@ -273,7 +288,9 @@ function createQrisOrderBot() {
   // ===== Back to packages (sebelum create pending) =====
   bot.action("BACK_TO_PACKAGES", async (ctx) => {
     await ctx.answerCbQuery();
-    ctx.session = {};
+    const userId = ctx.from?.id;
+    if (userId) await clearFlow(userId);
+
     await ctx.reply(msgWelcome(), {
       parse_mode: "Markdown",
       reply_markup: packagesKeyboard(0).reply_markup,
@@ -293,11 +310,18 @@ function createQrisOrderBot() {
     // limit 1 pending per user
     const existing = store.getTokenByUser(userId);
     if (existing) {
+      const exData = store.getByToken(existing);
+      if (exData?.status === "WAIT_PROOF") {
+        return ctx.reply(
+          "⚠️ Kamu masih punya transaksi pending.\nSilakan *upload foto bukti pembayaran* dulu, atau ketik /cancel untuk batalkan.",
+          { parse_mode: "Markdown" }
+        );
+      }
       return ctx.reply("⚠️ Kamu masih punya transaksi pending.\nKetik /cancel untuk batalkan dulu.", { parse_mode: "Markdown" });
     }
 
-    ctx.session.step = "WAIT_USERNAME";
-    ctx.session.pkgKey = pkgKey;
+    // ✅ simpan step di store (persist)
+    await setFlow(userId, { step: "WAIT_USERNAME", pkgKey });
 
     // Modern prompt
     try {
@@ -318,9 +342,22 @@ function createQrisOrderBot() {
     const fromId = ctx.from?.id;
     const chatId = String(ctx.chat?.id || "");
 
+    // log masuk (biar gampang debug)
+    try {
+      const txt = (ctx.message?.text || "").trim();
+      console.log("[qris-bot] update IN:", {
+        update_id: ctx.update?.update_id,
+        chatId: ctx.chat?.id,
+        msg: txt,
+        hasMessage: !!ctx.message,
+        hasCallback: !!ctx.callbackQuery,
+      });
+    } catch {}
+
     // ADMIN await flows (reject other / acc note)
     if (adminChatId && chatId === adminChatId && fromId) {
       const awaitObj = store.getAdminAwait(fromId);
+
       if (awaitObj?.step === "WAIT_CUSTOM_REASON" && awaitObj.token) {
         const reason = (ctx.message.text || "").trim();
         if (!reason) return;
@@ -328,6 +365,7 @@ function createQrisOrderBot() {
         await finalizeReject(bot, store, awaitObj.token, `Alasan admin: ${reason}`, adminChatId);
         return;
       }
+
       if (awaitObj?.step === "WAIT_ACC_NOTE" && awaitObj.token) {
         const note = (ctx.message.text || "").trim();
         if (!note) return;
@@ -337,15 +375,31 @@ function createQrisOrderBot() {
       }
     }
 
-    // USER username flow
-    if (ctx.session.step !== "WAIT_USERNAME") return next();
-
+    // USER FLOW: cek pending dulu (biar user gak “diam”)
     const userId = ctx.from?.id;
-    if (!userId) return;
+    if (!userId) return next();
 
-    const pkg = findPackage(ctx.session.pkgKey);
+    const tokExisting = store.getTokenByUser(userId);
+    if (tokExisting) {
+      const d = store.getByToken(tokExisting);
+      if (d?.status === "WAIT_PROOF") {
+        return ctx.reply(
+          "📸 Kamu masih di tahap *upload bukti pembayaran*.\nSilakan kirim *foto bukti* di chat ini, atau ketik /cancel untuk batalkan.",
+          { parse_mode: "Markdown" }
+        );
+      }
+      if (d?.status === "WAIT_ADMIN") {
+        return ctx.reply("⏳ Bukti sudah diterima. Admin sedang verifikasi ya.", { parse_mode: "Markdown" });
+      }
+    }
+
+    // USER username flow (WAJIB pakai store flow)
+    const flow = getFlow(userId);
+    if (!flow || flow.step !== "WAIT_USERNAME") return next();
+
+    const pkg = findPackage(flow.pkgKey);
     if (!pkg) {
-      ctx.session = {};
+      await clearFlow(userId);
       return ctx.reply("Paket invalid. Ketik /start untuk mulai lagi.");
     }
 
@@ -373,7 +427,9 @@ function createQrisOrderBot() {
     };
 
     await store.setPending(tok, data);
-    ctx.session.step = "WAIT_PROOF";
+
+    // ✅ update flow jadi WAIT_PROOF
+    await setFlow(userId, { step: "WAIT_PROOF", token: tok });
 
     // Send QRIS + inline cancel button
     const caption = msgQrisCaption(data);
@@ -387,12 +443,13 @@ function createQrisOrderBot() {
           reply_markup: userPaymentKeyboard(tok).reply_markup,
         }
       );
-    } catch {
+    } catch (e) {
       await ctx.reply(caption, {
         parse_mode: "Markdown",
         reply_markup: userPaymentKeyboard(tok).reply_markup,
       });
       await ctx.reply("⚠️ Gagal kirim foto QRIS. Pastikan file ada: " + qrisAbsPath);
+      console.log("[qris-bot] replyWithPhoto error:", e?.message || e);
     }
   });
 
@@ -464,6 +521,7 @@ function createQrisOrderBot() {
     const data = store.getByToken(tok);
     if (!data) {
       await store.clearUser(userId);
+      await clearFlow(userId);
       return ctx.reply("⚠️ Transaksi sudah tidak ada.");
     }
 
@@ -492,11 +550,12 @@ function createQrisOrderBot() {
     const data = store.getByToken(tok);
     if (!data) {
       await store.clearUser(userId);
+      await clearFlow(userId);
       return ctx.reply("⚠️ Transaksi sudah tidak ada.");
     }
 
     await store.removePending(tok);
-    ctx.session = {};
+    await clearFlow(userId);
 
     await ctx.reply(
       [

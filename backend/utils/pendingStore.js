@@ -12,7 +12,7 @@ function ensureDir() {
 function safeReadJson() {
   ensureDir();
   if (!fs.existsSync(STORE_PATH)) {
-    return { pendingByToken: {}, pendingByUser: {}, adminAwait: {} };
+    return { pendingByToken: {}, pendingByUser: {}, adminAwait: {}, userFlow: {} };
   }
   try {
     const raw = fs.readFileSync(STORE_PATH, "utf8");
@@ -21,9 +21,10 @@ function safeReadJson() {
       pendingByToken: obj.pendingByToken || {},
       pendingByUser: obj.pendingByUser || {},
       adminAwait: obj.adminAwait || {},
+      userFlow: obj.userFlow || {}, // ✅ NEW
     };
   } catch {
-    return { pendingByToken: {}, pendingByUser: {}, adminAwait: {} };
+    return { pendingByToken: {}, pendingByUser: {}, adminAwait: {}, userFlow: {} };
   }
 }
 
@@ -45,9 +46,11 @@ class PendingStore {
 
   _save() {
     const snapshot = JSON.parse(JSON.stringify(this.state));
-    writeQueue = writeQueue.then(() => {
-      atomicWriteJson(snapshot);
-    }).catch(() => {});
+    writeQueue = writeQueue
+      .then(() => {
+        atomicWriteJson(snapshot);
+      })
+      .catch(() => {});
     return writeQueue;
   }
 
@@ -62,6 +65,11 @@ class PendingStore {
 
   getAdminAwait(adminUserId) {
     return this.state.adminAwait[String(adminUserId)] || null;
+  }
+
+  // ✅ NEW: user flow (step/session)
+  getUserFlow(userId) {
+    return this.state.userFlow[String(userId)] || null;
   }
 
   // ===== setters =====
@@ -81,15 +89,23 @@ class PendingStore {
 
   async removePending(token) {
     const cur = this.state.pendingByToken[token];
-    if (cur?.userId) delete this.state.pendingByUser[String(cur.userId)];
+    if (cur?.userId) {
+      delete this.state.pendingByUser[String(cur.userId)];
+      // ✅ optional: bersihkan flow user juga
+      delete this.state.userFlow[String(cur.userId)];
+    }
     delete this.state.pendingByToken[token];
     await this._save();
   }
 
   async clearUser(userId) {
-    const tok = this.state.pendingByUser[String(userId)];
+    const uid = String(userId);
+
+    const tok = this.state.pendingByUser[uid];
     if (tok) delete this.state.pendingByToken[tok];
-    delete this.state.pendingByUser[String(userId)];
+
+    delete this.state.pendingByUser[uid];
+    delete this.state.userFlow[uid]; // ✅ NEW
     await this._save();
   }
 
@@ -104,6 +120,17 @@ class PendingStore {
     await this._save();
   }
 
+  // ✅ NEW: set/clear user flow
+  async setUserFlow(userId, flow) {
+    this.state.userFlow[String(userId)] = flow;
+    await this._save();
+  }
+
+  async clearUserFlow(userId) {
+    delete this.state.userFlow[String(userId)];
+    await this._save();
+  }
+
   // cleanup expired
   async cleanupExpired(ttlMs) {
     const now = Date.now();
@@ -111,7 +138,10 @@ class PendingStore {
     for (const tok of tokens) {
       const d = this.state.pendingByToken[tok];
       if (d?.createdAt && d.createdAt + ttlMs < now) {
-        if (d.userId) delete this.state.pendingByUser[String(d.userId)];
+        if (d.userId) {
+          delete this.state.pendingByUser[String(d.userId)];
+          delete this.state.userFlow[String(d.userId)]; // ✅ NEW
+        }
         delete this.state.pendingByToken[tok];
       }
     }
