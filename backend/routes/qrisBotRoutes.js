@@ -184,8 +184,8 @@ function msgCancelConfirm(data) {
 // BOT
 // =========================
 function createQrisOrderBot() {
-  const botToken = process.env.TELEGRAM_BOT_TOKEN;
-  if (!botToken) throw new Error("TELEGRAM_BOT_TOKEN missing in backend/.env");
+  const botToken = process.env.TELEGRAM_BOT_TOKEN_RBXCAVE;
+  if (!botToken) throw new Error("TELEGRAM_BOT_TOKEN_RBXCAVE missing in backend/.env");
 
   const adminChatId = String(process.env.TELEGRAM_ADMIN_CHAT_ID || "");
   const qrisRelPath = process.env.QRIS_IMAGE_PATH || "assets/qris.jpg";
