@@ -681,7 +681,7 @@ function createQrisOrderBot() {
       if (data.orderType === "vilog_manual") {
         const codes = Array.isArray(data.vilogBackupCodes) ? data.vilogBackupCodes : [];
         const vilogMsg = [
-          "📄 *DATA VILOG (Manual)*",
+          "📄 *DATA VILOG*",
           "────────────────────",
           `Order ID: \`${data.orderId}\``,
           `Token: \`${tok}\``,
