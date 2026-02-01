@@ -5,14 +5,54 @@ const path = require("path");
 const { makeRBXCaveClient } = require("../utils/rbxcaveClient");
 const { PendingStore } = require("../utils/pendingStore");
 
-// =========================
-// KONFIG PAKET (EDIT DI SINI)
-// =========================
+/**
+ * =========================
+ * KONFIG PAKET (EDIT DI SINI)
+ * =========================
+ *
+ * category:
+ * - "VILOG"  => manual, admin proses sendiri (VIA LOGIN)
+ * - "AUTO"   => RBXCave auto (gamepass/vip)
+ *
+ * inputMode:
+ * - "VILOG_FORM"    => user isi format Username/Password/Kode backup
+ * - "USERNAME_ONLY" => user kirim username saja (untuk paket auto yang fixed)
+ */
 const PACKAGES = [
-  { key: "gp_100", orderType: "gamepass_order", label: "🎮 Gamepass 100 Robux", robuxAmount: 100, placeId: 12345678, priceIdr: 20000 },
-  { key: "gp_250", orderType: "gamepass_order", label: "🎮 Gamepass 250 Robux", robuxAmount: 250, placeId: 12345678, priceIdr: 45000 },
-  { key: "vip_200", orderType: "vip_server", label: "👑 VIP Server 200 Robux", robuxAmount: 200, placeId: 12345678, priceIdr: 35000 },
-  // tambah paket sebanyak apapun...
+  // =========================
+  // VILOG (MANUAL) - list harga dari kamu
+  // =========================
+  { key: "vilog_100", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 100⏣", robuxAmount: 100, priceIdr: 10994 },
+  { key: "vilog_200", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 200⏣", robuxAmount: 200, priceIdr: 21987 },
+  { key: "vilog_300", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 300⏣", robuxAmount: 300, priceIdr: 32980 },
+  { key: "vilog_400", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 400⏣", robuxAmount: 400, priceIdr: 43973 },
+  { key: "vilog_500", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 500⏣", robuxAmount: 500, priceIdr: 54966 },
+  { key: "vilog_600", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 600⏣", robuxAmount: 600, priceIdr: 65959 },
+  { key: "vilog_700", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 700⏣", robuxAmount: 700, priceIdr: 76952 },
+  { key: "vilog_800", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 800⏣", robuxAmount: 800, priceIdr: 87869 },
+  { key: "vilog_900", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 900⏣", robuxAmount: 900, priceIdr: 98862 },
+  { key: "vilog_1000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 1000⏣", robuxAmount: 1000, priceIdr: 109855 },
+  { key: "vilog_2000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 2000⏣", robuxAmount: 2000, priceIdr: 219709 },
+  { key: "vilog_3000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 3000⏣", robuxAmount: 3000, priceIdr: 329487 },
+  { key: "vilog_4000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 4000⏣", robuxAmount: 4000, priceIdr: 439341 },
+  { key: "vilog_5000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 5000⏣", robuxAmount: 5000, priceIdr: 549119 },
+  { key: "vilog_6000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 6000⏣", robuxAmount: 6000, priceIdr: 658973 },
+  { key: "vilog_7000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 7000⏣", robuxAmount: 7000, priceIdr: 768750 },
+  { key: "vilog_8000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 8000⏣", robuxAmount: 8000, priceIdr: 878605 },
+  { key: "vilog_9000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 9000⏣", robuxAmount: 9000, priceIdr: 988459 },
+  { key: "vilog_10000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 10000⏣", robuxAmount: 10000, priceIdr: 1098237 },
+  { key: "vilog_15000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 15000⏣", robuxAmount: 15000, priceIdr: 1647355 },
+  { key: "vilog_20000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 20000⏣", robuxAmount: 20000, priceIdr: 2196473 },
+  { key: "vilog_25000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 25000⏣", robuxAmount: 25000, priceIdr: 2745591 },
+  { key: "vilog_40000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 40000⏣", robuxAmount: 40000, priceIdr: 4392869 },
+  { key: "vilog_50000", category: "VILOG", orderType: "vilog_manual", inputMode: "VILOG_FORM", label: "🔐 VILOG 50000⏣", robuxAmount: 50000, priceIdr: 5491105 },
+
+  // =========================
+  // AUTO (RBXCave) - contoh, optional
+  // Kalau kamu gak pakai, boleh hapus bagian ini.
+  // =========================
+  // { key: "gp_100", category: "AUTO", orderType: "gamepass_order", inputMode: "USERNAME_ONLY", label: "🎮 Gamepass 100 Robux (Auto)", robuxAmount: 100, placeId: 12345678, priceIdr: 20000 },
+  // { key: "vip_200", category: "AUTO", orderType: "vip_server", inputMode: "USERNAME_ONLY", label: "👑 VIP Server 200 Robux (Auto)", robuxAmount: 200, placeId: 12345678, priceIdr: 35000 },
 ];
 
 const PAGE_SIZE = 6;
@@ -34,21 +74,104 @@ function makeToken() {
 }
 
 function findPackage(key) {
-  return PACKAGES.find((p) => p.key === key);
+  return PACKAGES.find((p) => p.key === key) || null;
 }
 
-function pagesCount() {
-  return Math.max(1, Math.ceil(PACKAGES.length / PAGE_SIZE));
+function listByCategory(category) {
+  return PACKAGES.filter((p) => p.category === category);
+}
+
+function pagesCount(list) {
+  return Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+}
+
+function safeTrim(s) {
+  return String(s || "").trim();
+}
+
+function maskPasswordLine(text) {
+  // kalau user kirim "Password : xxx", kita masking di bagian buyer message (untuk keamanan)
+  const lines = String(text || "").split("\n");
+  return lines
+    .map((ln) => {
+      const low = ln.toLowerCase();
+      if (low.includes("password")) {
+        const idx = ln.indexOf(":");
+        if (idx >= 0) return ln.slice(0, idx + 1) + " ********";
+        return "Password: ********";
+      }
+      return ln;
+    })
+    .join("\n");
+}
+
+async function postJson(url, payload) {
+  if (!url) return { ok: false, status: 0, text: "empty url" };
+
+  let f = globalThis.fetch;
+  if (!f) {
+    // fallback kalau node belum ada fetch (harusnya Node 18+ sudah ada)
+    const mod = await import("node-fetch");
+    f = mod.default;
+  }
+
+  const res = await f(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const txt = await res.text().catch(() => "");
+  return { ok: res.ok, status: res.status, text: txt };
+}
+
+// =========================
+// DISCORD WEBHOOK (PAYMENT NOTIF)
+// =========================
+async function notifyDiscordPaymentReceived(data) {
+  const url = process.env.DISCORD_WEBHOOK_URL || "";
+  if (!url) return;
+
+  const nominal = formatRupiah(Number(data.priceIdr || 0));
+  const username = safeTrim(data.robloxUsername || data.username || "-");
+  const paket = safeTrim(data.label || "-");
+
+  const content = `Payment received: ${nominal} from ${username} [${paket}]`;
+
+  try {
+    const res = await postJson(url, { content });
+    if (!res.ok) {
+      console.log("[discord] webhook failed:", res.status, (res.text || "").slice(0, 200));
+    } else {
+      console.log("[discord] webhook sent:", content);
+    }
+  } catch (e) {
+    console.log("[discord] webhook error:", e?.message || e);
+  }
 }
 
 // =========================
 // UI KEYBOARDS (Modern)
 // =========================
-function packagesKeyboard(page) {
-  const totalPages = pagesCount();
+function categoryKeyboard(activeCategory) {
+  const isV = activeCategory === "VILOG";
+  const isA = activeCategory === "AUTO";
+
+  return Markup.inlineKeyboard([
+    [
+      Markup.button.callback(isV ? "✅ 🔐 VILOG (Login)" : "🔐 VILOG (Login)", "CAT:VILOG"),
+      Markup.button.callback(isA ? "✅ 🎮 AUTO (RBXCave)" : "🎮 AUTO (RBXCave)", "CAT:AUTO"),
+    ],
+  ]);
+}
+
+function packagesKeyboard(category, page) {
+  const list = listByCategory(category);
+  const totalPages = pagesCount(list);
   const p = Math.max(0, Math.min(page, totalPages - 1));
+
   const start = p * PAGE_SIZE;
-  const items = PACKAGES.slice(start, start + PAGE_SIZE);
+  const items = list.slice(start, start + PAGE_SIZE);
 
   const rows = [];
 
@@ -63,12 +186,14 @@ function packagesKeyboard(page) {
 
   // nav
   const nav = [];
-  if (p > 0) nav.push(Markup.button.callback("⬅️ Prev", `PAGE:${p - 1}`));
+  if (p > 0) nav.push(Markup.button.callback("⬅️ Prev", `PAGE:${category}:${p - 1}`));
   nav.push(Markup.button.callback(`📄 ${p + 1}/${totalPages}`, "NOOP"));
-  if (p < totalPages - 1) nav.push(Markup.button.callback("Next ➡️", `PAGE:${p + 1}`));
+  if (p < totalPages - 1) nav.push(Markup.button.callback("Next ➡️", `PAGE:${category}:${p + 1}`));
   rows.push(nav);
 
+  // extra actions
   rows.push([Markup.button.callback("🔄 Reset", "RESET")]);
+
   return Markup.inlineKeyboard(rows);
 }
 
@@ -121,30 +246,67 @@ function rejectReasonKeyboard(token) {
 // =========================
 // MESSAGES (Modern)
 // =========================
-function msgWelcome() {
+function msgWelcome(category) {
+  const catText =
+    category === "AUTO"
+      ? "🎮 Mode: *AUTO (RBXCave)*"
+      : "🔐 Mode: *VILOG (Via Login / Manual)*";
+
   return [
-    "✨ *RBX Order Bot*",
+    "✨ *Centra Game Order Bot*",
     "────────────────────",
+    catText,
+    "",
     "Pilih paket dulu ya 👇",
     "",
     "🧩 *Cara kerja:*",
     "1) Pilih paket",
-    "2) Isi username Roblox",
+    "2) Isi data sesuai format",
     "3) Bayar via QRIS (foto)",
     "4) Upload bukti pembayaran",
-    "5) Admin ACC / TOLAK",
+    "5) Admin ACC / TOLAK (jawaban pasti, tidak akan dighosting)",
     "",
     "🛑 Kamu bisa *batalkan kapan saja* sebelum admin ACC.",
   ].join("\n");
 }
 
 function msgPackagePicked(pkg) {
+  const price = formatRupiah(pkg.priceIdr);
+  const robux = pkg.robuxAmount ? `${pkg.robuxAmount}⏣` : "-";
+
+  if (pkg.inputMode === "VILOG_FORM") {
+    return [
+      "🧾 *Detail Paket*",
+      "────────────────────",
+      `📦 Paket: *${pkg.label}*`,
+      `💳 Harga: *${price}*`,
+      `🪙 Robux: *${robux}*`,
+      "",
+      "✍️ Sekarang kirim data dengan format ini (1 pesan):",
+      "",
+      "*FORMAT ORDER VILOG*",
+      "Username :",
+      "Password :",
+      "Jumlah order robux :",
+      "Code pemulihan / Kode Backup Min 3 :",
+      "1.",
+      "2.",
+      "3.",
+      "",
+      "~ Kode yang sudah dipakai tidak bisa dipakai lagi",
+      "~ Jika pakai kode email/verif acc, wajib stanby",
+      "~ Perhatikan besar kecil username & pw",
+      "~ Harap matikan paskey, faceid, finger, dll",
+    ].join("\n");
+  }
+
+  // USERNAME_ONLY (untuk paket AUTO fixed)
   return [
     "🧾 *Detail Paket*",
     "────────────────────",
     `📦 Paket: *${pkg.label}*`,
-    `💳 Harga: *${formatRupiah(pkg.priceIdr)}*`,
-    `🎟️ Robux: *${pkg.robuxAmount}*`,
+    `💳 Harga: *${price}*`,
+    `🪙 Robux: *${robux}*`,
     "",
     "✍️ Sekarang kirim *username Roblox* kamu (1 pesan).",
     "Contoh: `AdiityaAnugrah`",
@@ -158,11 +320,13 @@ function msgQrisCaption(data) {
     `📦 Paket: *${data.label}*`,
     `💳 Nominal: *${formatRupiah(data.priceIdr)}*`,
     `🧾 Order ID: \`${data.orderId}\``,
-    `👤 Username: \`${data.robloxUsername}\``,
+    data.robloxUsername ? `👤 Username: \`${data.robloxUsername}\`` : "",
     "",
     "✅ *Scan QRIS* lalu *upload foto bukti pembayaran* di chat ini.",
-    "🔎 Admin akan verifikasi nominal sebelum diproses.",
-  ].join("\n");
+    "🔎 Admin akan verifikasi sebelum diproses.",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function msgCancelConfirm(data) {
@@ -174,6 +338,43 @@ function msgCancelConfirm(data) {
     `💳 Nominal: *${formatRupiah(data.priceIdr)}*`,
     "",
     "Kamu yakin mau batalkan transaksi ini?",
+  ].join("\n");
+}
+
+function msgApprovedToUser(data, note) {
+  // jangan kirim password raw ke user lagi (buat keamanan)
+  const maybeMaskedForm = data?.formText ? `\n🧾 Data kamu tersimpan.\n${maskPasswordLine(data.formText)}` : "";
+  return [
+    "✅ *Pembayaran diterima!*",
+    "────────────────────",
+    `🧾 Order ID: \`${data.orderId}\``,
+    `📦 Paket: *${data.label}*`,
+    `💳 Nominal: *${formatRupiah(data.priceIdr)}*`,
+    "",
+    data.orderType === "vilog_manual"
+      ? "🧑‍💼 Admin sudah *ACC*. Pesanan akan diproses manual oleh admin."
+      : "⚙️ Admin sudah *ACC*. Order sedang diproses otomatis (RBXCave).",
+    note ? `\n📝 Catatan admin: ${note}` : "",
+    maybeMaskedForm,
+    "",
+    "✅ Status: *APPROVED*",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function msgRejectedToUser(data, reason) {
+  return [
+    "❌ *Pembayaran ditolak*",
+    "────────────────────",
+    `🧾 Order ID: \`${data.orderId}\``,
+    `📦 Paket: *${data.label}*`,
+    `💳 Nominal: *${formatRupiah(data.priceIdr)}*`,
+    "",
+    `📌 Alasan: ${reason}`,
+    "",
+    "✅ Status: *REJECTED*",
+    "Ketik /start untuk buat order baru.",
   ].join("\n");
 }
 
@@ -192,23 +393,8 @@ function createQrisOrderBot() {
   const rbxcave = makeRBXCaveClient();
   const bot = new Telegraf(botToken);
 
-  // debug: pastikan webhookCallback ada
-  console.log("[qris-bot] typeof bot.webhookCallback =", typeof bot.webhookCallback);
-
   // cleanup expired pending
   setInterval(() => store.cleanupExpired(PENDING_TTL_MS), 60 * 1000).unref?.();
-
-  // helper: user flow persist (wajib pendingStore versi terbaru)
-  function getFlow(userId) {
-    if (typeof store.getUserFlow === "function") return store.getUserFlow(userId);
-    return null;
-  }
-  async function setFlow(userId, flow) {
-    if (typeof store.setUserFlow === "function") return store.setUserFlow(userId, flow);
-  }
-  async function clearFlow(userId) {
-    if (typeof store.clearUserFlow === "function") return store.clearUserFlow(userId);
-  }
 
   // ===== Commands =====
   bot.command("myid", (ctx) => {
@@ -226,7 +412,6 @@ function createQrisOrderBot() {
     const data = store.getByToken(tok);
     if (!data) {
       await store.clearUser(userId);
-      await clearFlow(userId);
       return ctx.reply("Tidak ada transaksi pending untuk dibatalkan.");
     }
 
@@ -240,33 +425,64 @@ function createQrisOrderBot() {
   bot.start(async (ctx) => {
     const userId = ctx.from?.id;
     if (userId) {
-      // biar alur bersih saat start ulang
-      await clearFlow(userId);
+      await store.clearUserFlow(userId);
+      // default ke VILOG biar langsung sesuai kebutuhan kamu
+      await store.setUserFlow(userId, { step: "BROWSE_PACKAGES", category: "VILOG", page: 0 });
     }
 
-    await ctx.reply(msgWelcome(), {
+    const cat = "VILOG";
+    await ctx.reply(msgWelcome(cat), {
       parse_mode: "Markdown",
-      reply_markup: packagesKeyboard(0).reply_markup,
+      reply_markup: Markup.inlineKeyboard([
+        ...categoryKeyboard(cat).reply_markup.inline_keyboard,
+        ...packagesKeyboard(cat, 0).reply_markup.inline_keyboard,
+      ]).reply_markup,
     });
   });
 
   // ===== NOOP =====
   bot.action("NOOP", async (ctx) => ctx.answerCbQuery());
 
-  // ===== Pagination =====
-  bot.action(/PAGE:(\d+)/, async (ctx) => {
+  // ===== Category switch =====
+  bot.action(/CAT:(VILOG|AUTO)/, async (ctx) => {
     await ctx.answerCbQuery();
-    const page = Number(ctx.match[1] || 0);
+    const category = ctx.match[1];
+
+    const userId = ctx.from?.id;
+    if (userId) await store.setUserFlow(userId, { step: "BROWSE_PACKAGES", category, page: 0 });
+
+    const text = msgWelcome(category);
+    const kb = Markup.inlineKeyboard([
+      ...categoryKeyboard(category).reply_markup.inline_keyboard,
+      ...packagesKeyboard(category, 0).reply_markup.inline_keyboard,
+    ]);
+
     try {
-      await ctx.editMessageText(msgWelcome(), {
-        parse_mode: "Markdown",
-        reply_markup: packagesKeyboard(page).reply_markup,
-      });
+      await ctx.editMessageText(text, { parse_mode: "Markdown", reply_markup: kb.reply_markup });
     } catch {
-      await ctx.reply(msgWelcome(), {
-        parse_mode: "Markdown",
-        reply_markup: packagesKeyboard(page).reply_markup,
-      });
+      await ctx.reply(text, { parse_mode: "Markdown", reply_markup: kb.reply_markup });
+    }
+  });
+
+  // ===== Pagination =====
+  bot.action(/PAGE:(VILOG|AUTO):(\d+)/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const category = ctx.match[1];
+    const page = Number(ctx.match[2] || 0);
+
+    const userId = ctx.from?.id;
+    if (userId) await store.setUserFlow(userId, { step: "BROWSE_PACKAGES", category, page });
+
+    const text = msgWelcome(category);
+    const kb = Markup.inlineKeyboard([
+      ...categoryKeyboard(category).reply_markup.inline_keyboard,
+      ...packagesKeyboard(category, page).reply_markup.inline_keyboard,
+    ]);
+
+    try {
+      await ctx.editMessageText(text, { parse_mode: "Markdown", reply_markup: kb.reply_markup });
+    } catch {
+      await ctx.reply(text, { parse_mode: "Markdown", reply_markup: kb.reply_markup });
     }
   });
 
@@ -276,25 +492,45 @@ function createQrisOrderBot() {
     const userId = ctx.from?.id;
     if (userId) {
       await store.clearUser(userId);
-      await clearFlow(userId);
+      await store.clearUserFlow(userId);
+      await store.setUserFlow(userId, { step: "BROWSE_PACKAGES", category: "VILOG", page: 0 });
     }
+
+    const cat = "VILOG";
+    const text = "✅ Sudah di-reset. Pilih paket lagi ya.";
+    const kb = Markup.inlineKeyboard([
+      ...categoryKeyboard(cat).reply_markup.inline_keyboard,
+      ...packagesKeyboard(cat, 0).reply_markup.inline_keyboard,
+    ]);
+
     try {
-      await ctx.editMessageText("✅ Sudah di-reset. Ketik /start untuk mulai lagi.");
+      await ctx.editMessageText(text, { parse_mode: "Markdown", reply_markup: kb.reply_markup });
     } catch {
-      await ctx.reply("✅ Sudah di-reset. Ketik /start untuk mulai lagi.");
+      await ctx.reply(text, { parse_mode: "Markdown", reply_markup: kb.reply_markup });
     }
   });
 
-  // ===== Back to packages (sebelum create pending) =====
+  // ===== Back to packages =====
   bot.action("BACK_TO_PACKAGES", async (ctx) => {
     await ctx.answerCbQuery();
     const userId = ctx.from?.id;
-    if (userId) await clearFlow(userId);
 
-    await ctx.reply(msgWelcome(), {
-      parse_mode: "Markdown",
-      reply_markup: packagesKeyboard(0).reply_markup,
-    });
+    let category = "VILOG";
+    let page = 0;
+    if (userId) {
+      const flow = store.getUserFlow(userId);
+      if (flow?.category) category = flow.category;
+      if (typeof flow?.page === "number") page = flow.page;
+      await store.setUserFlow(userId, { step: "BROWSE_PACKAGES", category, page });
+    }
+
+    const text = msgWelcome(category);
+    const kb = Markup.inlineKeyboard([
+      ...categoryKeyboard(category).reply_markup.inline_keyboard,
+      ...packagesKeyboard(category, page).reply_markup.inline_keyboard,
+    ]);
+
+    await ctx.reply(text, { parse_mode: "Markdown", reply_markup: kb.reply_markup });
   });
 
   // ===== Pick package =====
@@ -310,56 +546,35 @@ function createQrisOrderBot() {
     // limit 1 pending per user
     const existing = store.getTokenByUser(userId);
     if (existing) {
-      const exData = store.getByToken(existing);
-      if (exData?.status === "WAIT_PROOF") {
-        return ctx.reply(
-          "⚠️ Kamu masih punya transaksi pending.\nSilakan *upload foto bukti pembayaran* dulu, atau ketik /cancel untuk batalkan.",
-          { parse_mode: "Markdown" }
-        );
-      }
       return ctx.reply("⚠️ Kamu masih punya transaksi pending.\nKetik /cancel untuk batalkan dulu.", { parse_mode: "Markdown" });
     }
 
-    // ✅ simpan step di store (persist)
-    await setFlow(userId, { step: "WAIT_USERNAME", pkgKey });
+    // simpan flow untuk webhook mode (persisten)
+    await store.setUserFlow(userId, { step: "WAIT_INPUT", pkgKey, category: pkg.category, page: 0 });
 
-    // Modern prompt
+    const text = msgPackagePicked(pkg);
     try {
-      await ctx.editMessageText(msgPackagePicked(pkg), {
+      await ctx.editMessageText(text, {
         parse_mode: "Markdown",
         reply_markup: usernamePromptKeyboard().reply_markup,
       });
     } catch {
-      await ctx.reply(msgPackagePicked(pkg), {
-        parse_mode: "Markdown",
-        reply_markup: usernamePromptKeyboard().reply_markup,
-      });
+      await ctx.reply(text, { parse_mode: "Markdown", reply_markup: usernamePromptKeyboard().reply_markup });
     }
   });
 
-  // ===== Text handler: admin awaiting OR user username =====
+  // ===== Text handler: admin awaiting OR user input =====
   bot.on("text", async (ctx, next) => {
     const fromId = ctx.from?.id;
     const chatId = String(ctx.chat?.id || "");
 
-    // log masuk (biar gampang debug)
-    try {
-      const txt = (ctx.message?.text || "").trim();
-      console.log("[qris-bot] update IN:", {
-        update_id: ctx.update?.update_id,
-        chatId: ctx.chat?.id,
-        msg: txt,
-        hasMessage: !!ctx.message,
-        hasCallback: !!ctx.callbackQuery,
-      });
-    } catch {}
-
     // ADMIN await flows (reject other / acc note)
-    if (adminChatId && chatId === adminChatId && fromId) {
-      const awaitObj = store.getAdminAwait(fromId);
+    const adminChat = adminChatId && chatId === adminChatId;
 
+    if (adminChat && fromId) {
+      const awaitObj = store.getAdminAwait(fromId);
       if (awaitObj?.step === "WAIT_CUSTOM_REASON" && awaitObj.token) {
-        const reason = (ctx.message.text || "").trim();
+        const reason = safeTrim(ctx.message.text);
         if (!reason) return;
         await store.clearAdminAwait(fromId);
         await finalizeReject(bot, store, awaitObj.token, `Alasan admin: ${reason}`, adminChatId);
@@ -367,7 +582,7 @@ function createQrisOrderBot() {
       }
 
       if (awaitObj?.step === "WAIT_ACC_NOTE" && awaitObj.token) {
-        const note = (ctx.message.text || "").trim();
+        const note = safeTrim(ctx.message.text);
         if (!note) return;
         await store.clearAdminAwait(fromId);
         await approveAndProcess(bot, store, rbxcave, awaitObj.token, adminChatId, note);
@@ -375,41 +590,41 @@ function createQrisOrderBot() {
       }
     }
 
-    // USER FLOW: cek pending dulu (biar user gak “diam”)
+    // USER input flow
     const userId = ctx.from?.id;
     if (!userId) return next();
 
-    const tokExisting = store.getTokenByUser(userId);
-    if (tokExisting) {
-      const d = store.getByToken(tokExisting);
-      if (d?.status === "WAIT_PROOF") {
-        return ctx.reply(
-          "📸 Kamu masih di tahap *upload bukti pembayaran*.\nSilakan kirim *foto bukti* di chat ini, atau ketik /cancel untuk batalkan.",
-          { parse_mode: "Markdown" }
-        );
-      }
-      if (d?.status === "WAIT_ADMIN") {
-        return ctx.reply("⏳ Bukti sudah diterima. Admin sedang verifikasi ya.", { parse_mode: "Markdown" });
-      }
-    }
-
-    // USER username flow (WAJIB pakai store flow)
-    const flow = getFlow(userId);
-    if (!flow || flow.step !== "WAIT_USERNAME") return next();
+    const flow = store.getUserFlow(userId);
+    if (!flow || flow.step !== "WAIT_INPUT") return next();
 
     const pkg = findPackage(flow.pkgKey);
     if (!pkg) {
-      await clearFlow(userId);
+      await store.clearUserFlow(userId);
       return ctx.reply("Paket invalid. Ketik /start untuk mulai lagi.");
     }
 
-    const username = (ctx.message.text || "").trim();
-    if (!username || username.length < 3) {
-      return ctx.reply("⚠️ Username tidak valid. Kirim username Roblox yang benar ya.");
+    const text = safeTrim(ctx.message.text);
+    if (!text || text.length < 3) {
+      return ctx.reply("⚠️ Input tidak valid. Coba kirim ulang ya.");
     }
 
+    // build order data
     const orderId = "TG-" + crypto.randomUUID();
     const tok = makeToken();
+
+    let robloxUsername = "";
+    let formText = "";
+
+    if (pkg.inputMode === "USERNAME_ONLY") {
+      robloxUsername = text;
+    } else {
+      // VILOG_FORM: simpan raw form
+      formText = text;
+      // username diambil dari baris "Username :"
+      const m = text.match(/username\s*:\s*(.+)/i);
+      if (m && m[1]) robloxUsername = safeTrim(m[1]);
+      if (!robloxUsername) robloxUsername = "-";
+    }
 
     const data = {
       token: tok,
@@ -418,38 +633,31 @@ function createQrisOrderBot() {
       chatId: ctx.chat.id,
       orderId,
       orderType: pkg.orderType,
-      robloxUsername: username,
-      robuxAmount: pkg.robuxAmount,
-      placeId: pkg.placeId,
-      priceIdr: pkg.priceIdr,
+      inputMode: pkg.inputMode,
+      robloxUsername,
+      formText, // untuk VILOG manual
+      robuxAmount: pkg.robuxAmount || 0,
+      placeId: pkg.placeId || null,
+      priceIdr: pkg.priceIdr || 0,
       label: pkg.label,
       status: "WAIT_PROOF",
     };
 
     await store.setPending(tok, data);
 
-    // ✅ update flow jadi WAIT_PROOF
-    await setFlow(userId, { step: "WAIT_PROOF", token: tok });
+    // update flow user
+    await store.setUserFlow(userId, { step: "WAIT_PROOF", pkgKey: flow.pkgKey, category: pkg.category, page: 0 });
 
-    // Send QRIS + inline cancel button
     const caption = msgQrisCaption(data);
 
     try {
       await ctx.replyWithPhoto(
         { source: qrisAbsPath },
-        {
-          caption,
-          parse_mode: "Markdown",
-          reply_markup: userPaymentKeyboard(tok).reply_markup,
-        }
+        { caption, parse_mode: "Markdown", reply_markup: userPaymentKeyboard(tok).reply_markup }
       );
-    } catch (e) {
-      await ctx.reply(caption, {
-        parse_mode: "Markdown",
-        reply_markup: userPaymentKeyboard(tok).reply_markup,
-      });
+    } catch {
+      await ctx.reply(caption, { parse_mode: "Markdown", reply_markup: userPaymentKeyboard(tok).reply_markup });
       await ctx.reply("⚠️ Gagal kirim foto QRIS. Pastikan file ada: " + qrisAbsPath);
-      console.log("[qris-bot] replyWithPhoto error:", e?.message || e);
     }
   });
 
@@ -474,11 +682,14 @@ function createQrisOrderBot() {
 
     await store.updatePending(tok, { proofFileId: fileId, status: "WAIT_ADMIN" });
 
+    // ✅ Jawaban jelas untuk user (tidak mengambang)
     await ctx.reply(
       [
         "✅ *Bukti diterima!*",
         "────────────────────",
-        "Admin akan verifikasi pembayaran kamu ya.",
+        "Admin akan verifikasi pembayaran kamu.",
+        "Hasilnya akan *pasti dibalas*: *APPROVED* atau *REJECTED*.",
+        "",
         "Kamu masih bisa batalkan sebelum admin ACC: ketik /cancel.",
       ].join("\n"),
       { parse_mode: "Markdown" }
@@ -490,17 +701,35 @@ function createQrisOrderBot() {
       `Token: \`${tok}\``,
       `Order ID: \`${data.orderId}\``,
       `Paket: *${data.label}*`,
-      `Harga seharusnya: *${formatRupiah(data.priceIdr)}*`,
-      `Username: \`${data.robloxUsername}\``,
+      `Nominal: *${formatRupiah(data.priceIdr)}*`,
+      `Username: \`${data.robloxUsername || "-"}\``,
+      `Type: \`${data.orderType}\``,
       "",
       "Klik tombol untuk ACC/TOLAK.",
     ].join("\n");
 
+    // kirim foto bukti ke admin + tombol
     await bot.telegram.sendPhoto(adminChatId, fileId, {
       caption: adminCaption,
       parse_mode: "Markdown",
       reply_markup: adminMainKeyboard(tok).reply_markup,
     });
+
+    // kalau ada formText (VILOG), kirim detail di pesan terpisah (biar gak kepotong caption limit)
+    if (data.formText) {
+      await bot.telegram.sendMessage(
+        adminChatId,
+        [
+          "📄 *DATA VILOG (Manual)*",
+          "────────────────────",
+          `Order ID: \`${data.orderId}\``,
+          `Token: \`${tok}\``,
+          "",
+          data.formText,
+        ].join("\n"),
+        { parse_mode: "Markdown" }
+      );
+    }
   });
 
   // =========================
@@ -512,7 +741,6 @@ function createQrisOrderBot() {
     const userId = ctx.from?.id;
     if (!userId) return;
 
-    // owner check
     const currentTok = store.getTokenByUser(userId);
     if (!currentTok || currentTok !== tok) {
       return ctx.reply("⚠️ Transaksi ini sudah tidak aktif / bukan milikmu.");
@@ -521,7 +749,7 @@ function createQrisOrderBot() {
     const data = store.getByToken(tok);
     if (!data) {
       await store.clearUser(userId);
-      await clearFlow(userId);
+      await store.clearUserFlow(userId);
       return ctx.reply("⚠️ Transaksi sudah tidak ada.");
     }
 
@@ -550,23 +778,24 @@ function createQrisOrderBot() {
     const data = store.getByToken(tok);
     if (!data) {
       await store.clearUser(userId);
-      await clearFlow(userId);
+      await store.clearUserFlow(userId);
       return ctx.reply("⚠️ Transaksi sudah tidak ada.");
     }
 
     await store.removePending(tok);
-    await clearFlow(userId);
+    await store.clearUserFlow(userId);
 
     await ctx.reply(
       [
         "✅ *Transaksi dibatalkan.*",
         "────────────────────",
         "Kamu bisa mulai order baru kapan saja dengan /start.",
+        "",
+        "✅ Status: *CANCELED*",
       ].join("\n"),
       { parse_mode: "Markdown" }
     );
 
-    // notif admin (kalau ada)
     if (adminChatId) {
       await bot.telegram.sendMessage(
         adminChatId,
@@ -762,13 +991,16 @@ async function approveAndProcess(bot, store, rbxcave, tok, adminChatId, note) {
   const data = store.getByToken(tok);
   if (!data) return;
 
-  // jika user sudah cancel sebelumnya, data akan null dan function ini tak jalan
   if (data.status !== "WAIT_ADMIN") return;
 
-  let result;
-  try {
-    if (data.orderType === "gamepass_order") {
-      result = await rbxcave.createGamepassOrder({
+  // ======================
+  // PROSES TERAKHIR:
+  // - VILOG manual: cukup ACC saja (admin proses sendiri)
+  // - AUTO: panggil RBXCave dan harus sukses
+  // ======================
+  if (data.orderType === "gamepass_order") {
+    try {
+      await rbxcave.createGamepassOrder({
         orderId: data.orderId,
         robloxUsername: data.robloxUsername,
         robuxAmount: data.robuxAmount,
@@ -776,42 +1008,73 @@ async function approveAndProcess(bot, store, rbxcave, tok, adminChatId, note) {
         isPreOrder: false,
         checkOwnership: false,
       });
-    } else {
-      result = await rbxcave.createVipServerOrder({
+    } catch (e) {
+      const msg = `❌ Gagal create Gamepass order ke RBXCave.\nOrder ID: ${data.orderId}\nError: ${e?.message || "unknown"}`;
+      if (adminChatId) await bot.telegram.sendMessage(adminChatId, msg);
+      await bot.telegram.sendMessage(data.chatId, "❌ Order gagal diproses otomatis. Admin akan cek dulu ya.");
+      await store.removePending(tok);
+      return;
+    }
+  } else if (data.orderType === "vip_server") {
+    try {
+      await rbxcave.createVipServerOrder({
         orderId: data.orderId,
         robloxUsername: data.robloxUsername,
         robuxAmount: data.robuxAmount,
         placeId: data.placeId,
         isPreOrder: false,
       });
+    } catch (e) {
+      const msg = `❌ Gagal create VIP server order ke RBXCave.\nOrder ID: ${data.orderId}\nError: ${e?.message || "unknown"}`;
+      if (adminChatId) await bot.telegram.sendMessage(adminChatId, msg);
+      await bot.telegram.sendMessage(data.chatId, "❌ Order gagal diproses otomatis. Admin akan cek dulu ya.");
+      await store.removePending(tok);
+      return;
     }
-  } catch (e) {
-    const msg = `❌ Gagal create order ke RBXCave.\nOrder ID: ${data.orderId}\nError: ${e?.message || "unknown"}`;
-    if (adminChatId) await bot.telegram.sendMessage(adminChatId, msg);
-    await bot.telegram.sendMessage(data.chatId, "❌ Order gagal diproses. Admin akan cek dulu ya.");
-    await store.removePending(tok);
-    return;
+  } else if (data.orderType === "vilog_manual") {
+    // ✅ manual: tidak panggil RBXCave
   }
 
-  const userMsg = [
-    "✅ *Pembayaran diterima!*",
-    "────────────────────",
-    `🧾 Order ID: \`${data.orderId}\``,
-    `📦 Paket: *${data.label}*`,
-    "⚙️ Order sedang diproses.",
-    note ? `\n📝 Catatan admin: ${note}` : "",
-  ].join("\n");
+  // ===== User message (jawaban jelas)
+  await bot.telegram.sendMessage(data.chatId, msgApprovedToUser(data, note), { parse_mode: "Markdown" });
 
-  await bot.telegram.sendMessage(data.chatId, userMsg, { parse_mode: "Markdown" });
-
+  // ===== Admin log
   if (adminChatId) {
     await bot.telegram.sendMessage(
       adminChatId,
-      `✅ APPROVED: ${data.orderId}\nToken: ${tok}${note ? `\nCatatan: ${note}` : ""}`
+      [
+        `✅ APPROVED: ${data.orderId}`,
+        `Token: ${tok}`,
+        `Paket: ${data.label}`,
+        `Nominal: ${formatRupiah(data.priceIdr)}`,
+        `Username: ${data.robloxUsername || "-"}`,
+        note ? `Catatan: ${note}` : "",
+        `Type: ${data.orderType}`,
+      ]
+        .filter(Boolean)
+        .join("\n")
     );
+
+    // kalau VILOG manual, ulangi kirim data juga supaya admin gampang copy
+    if (data.orderType === "vilog_manual" && data.formText) {
+      await bot.telegram.sendMessage(
+        adminChatId,
+        [
+          "✅ *VILOG DITERIMA — DATA UNTUK DIPROSES ADMIN*",
+          "────────────────────",
+          `Order ID: \`${data.orderId}\``,
+          `Token: \`${tok}\``,
+          "",
+          data.formText,
+        ].join("\n"),
+        { parse_mode: "Markdown" }
+      );
+    }
   }
 
-  // optional: result disimpan kalau mau, tapi sekarang cukup hapus pending
+  // ✅ DISCORD NOTIF: tanda pemasukan (hanya setelah proses terakhir sukses)
+  await notifyDiscordPaymentReceived(data);
+
   await store.removePending(tok);
 }
 
@@ -819,25 +1082,14 @@ async function finalizeReject(bot, store, tok, reason, adminChatId) {
   const data = store.getByToken(tok);
   if (!data) return;
 
-  await bot.telegram.sendMessage(
-    data.chatId,
-    [
-      "❌ *Pembayaran ditolak*",
-      "────────────────────",
-      `🧾 Order ID: \`${data.orderId}\``,
-      `📦 Paket: *${data.label}*`,
-      "",
-      `📌 Alasan: ${reason}`,
-      "",
-      "Ketik /start untuk buat order baru.",
-    ].join("\n"),
-    { parse_mode: "Markdown" }
-  );
+  // ===== User message (jawaban jelas)
+  await bot.telegram.sendMessage(data.chatId, msgRejectedToUser(data, reason), { parse_mode: "Markdown" });
 
+  // ===== Admin log
   if (adminChatId) {
     await bot.telegram.sendMessage(
       adminChatId,
-      `❌ REJECTED: ${data.orderId}\nToken: ${tok}\nAlasan: ${reason}`
+      `❌ REJECTED: ${data.orderId}\nToken: ${tok}\nPaket: ${data.label}\nNominal: ${formatRupiah(data.priceIdr)}\nAlasan: ${reason}`
     );
   }
 

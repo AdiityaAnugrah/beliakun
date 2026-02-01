@@ -21,7 +21,7 @@ function safeReadJson() {
       pendingByToken: obj.pendingByToken || {},
       pendingByUser: obj.pendingByUser || {},
       adminAwait: obj.adminAwait || {},
-      userFlow: obj.userFlow || {}, // ✅ NEW
+      userFlow: obj.userFlow || {},
     };
   } catch {
     return { pendingByToken: {}, pendingByUser: {}, adminAwait: {}, userFlow: {} };
@@ -67,7 +67,6 @@ class PendingStore {
     return this.state.adminAwait[String(adminUserId)] || null;
   }
 
-  // ✅ NEW: user flow (step/session)
   getUserFlow(userId) {
     return this.state.userFlow[String(userId)] || null;
   }
@@ -91,7 +90,6 @@ class PendingStore {
     const cur = this.state.pendingByToken[token];
     if (cur?.userId) {
       delete this.state.pendingByUser[String(cur.userId)];
-      // ✅ optional: bersihkan flow user juga
       delete this.state.userFlow[String(cur.userId)];
     }
     delete this.state.pendingByToken[token];
@@ -105,11 +103,11 @@ class PendingStore {
     if (tok) delete this.state.pendingByToken[tok];
 
     delete this.state.pendingByUser[uid];
-    delete this.state.userFlow[uid]; // ✅ NEW
+    delete this.state.userFlow[uid];
     await this._save();
   }
 
-  // admin awaiting custom reason
+  // admin awaiting custom reason / note
   async setAdminAwait(adminUserId, data) {
     this.state.adminAwait[String(adminUserId)] = data;
     await this._save();
@@ -120,7 +118,7 @@ class PendingStore {
     await this._save();
   }
 
-  // ✅ NEW: set/clear user flow
+  // user flow
   async setUserFlow(userId, flow) {
     this.state.userFlow[String(userId)] = flow;
     await this._save();
@@ -135,16 +133,18 @@ class PendingStore {
   async cleanupExpired(ttlMs) {
     const now = Date.now();
     const tokens = Object.keys(this.state.pendingByToken);
+
     for (const tok of tokens) {
       const d = this.state.pendingByToken[tok];
       if (d?.createdAt && d.createdAt + ttlMs < now) {
         if (d.userId) {
           delete this.state.pendingByUser[String(d.userId)];
-          delete this.state.userFlow[String(d.userId)]; // ✅ NEW
+          delete this.state.userFlow[String(d.userId)];
         }
         delete this.state.pendingByToken[tok];
       }
     }
+
     await this._save();
   }
 }
