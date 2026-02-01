@@ -28,7 +28,6 @@ function safeReadJson() {
   }
 }
 
-// simple write queue biar gak tabrakan
 let writeQueue = Promise.resolve();
 
 function atomicWriteJson(obj) {
@@ -40,8 +39,7 @@ function atomicWriteJson(obj) {
 
 class PendingStore {
   constructor() {
-    const initial = safeReadJson();
-    this.state = initial;
+    this.state = safeReadJson();
   }
 
   _save() {
