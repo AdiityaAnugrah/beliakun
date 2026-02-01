@@ -107,7 +107,7 @@ class PendingStore {
     await this._save();
   }
 
-  // admin awaiting custom reason / note
+  // admin awaiting custom reason / acc note
   async setAdminAwait(adminUserId, data) {
     this.state.adminAwait[String(adminUserId)] = data;
     await this._save();
@@ -133,7 +133,6 @@ class PendingStore {
   async cleanupExpired(ttlMs) {
     const now = Date.now();
     const tokens = Object.keys(this.state.pendingByToken);
-
     for (const tok of tokens) {
       const d = this.state.pendingByToken[tok];
       if (d?.createdAt && d.createdAt + ttlMs < now) {
@@ -144,7 +143,6 @@ class PendingStore {
         delete this.state.pendingByToken[tok];
       }
     }
-
     await this._save();
   }
 }
