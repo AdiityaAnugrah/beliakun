@@ -14,33 +14,33 @@ const { PendingStore } = require("../utils/pendingStore");
 
 // ====== GAMEPASS (AUTO) ======
 const PACKAGES_GAMEPASS = [
-  { key: "gp_100",   mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 100⏣",   robuxAmount: 100,   placeId: 0, priceIdr: 10994 },
-  { key: "gp_200",   mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 200⏣",   robuxAmount: 200,   placeId: 0, priceIdr: 21987 },
-  { key: "gp_300",   mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 300⏣",   robuxAmount: 300,   placeId: 0, priceIdr: 32980 },
-  { key: "gp_400",   mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 400⏣",   robuxAmount: 400,   placeId: 0, priceIdr: 43973 },
-  { key: "gp_500",   mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 500⏣",   robuxAmount: 500,   placeId: 0, priceIdr: 54966 },
-  { key: "gp_600",   mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 600⏣",   robuxAmount: 600,   placeId: 0, priceIdr: 65959 },
-  { key: "gp_700",   mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 700⏣",   robuxAmount: 700,   placeId: 0, priceIdr: 76952 },
-  { key: "gp_800",   mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 800⏣",   robuxAmount: 800,   placeId: 0, priceIdr: 87869 },
-  { key: "gp_900",   mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 900⏣",   robuxAmount: 900,   placeId: 0, priceIdr: 98862 },
-  { key: "gp_1000",  mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 1000⏣",  robuxAmount: 1000,  placeId: 0, priceIdr: 109855 },
+  { key: "gp_100", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 100⏣", robuxAmount: 143, placeId: 0, priceIdr: 10994 },
+  { key: "gp_200", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 200⏣", robuxAmount: 286, placeId: 0, priceIdr: 21987 },
+  { key: "gp_300", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 300⏣", robuxAmount: 429, placeId: 0, priceIdr: 32980 },
+  { key: "gp_400", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 400⏣", robuxAmount: 572, placeId: 0, priceIdr: 43973 },
+  { key: "gp_500", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 500⏣", robuxAmount: 715, placeId: 0, priceIdr: 54966 },
+  { key: "gp_600", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 600⏣", robuxAmount: 858, placeId: 0, priceIdr: 65959 },
+  { key: "gp_700", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 700⏣", robuxAmount: 1001, placeId: 0, priceIdr: 76952 },
+  { key: "gp_800", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 800⏣", robuxAmount: 1143, placeId: 0, priceIdr: 87869 },
+  { key: "gp_900", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 900⏣", robuxAmount: 1286, placeId: 0, priceIdr: 98862 },
+  { key: "gp_1000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 1000⏣", robuxAmount: 1429, placeId: 0, priceIdr: 109855 },
 
-  { key: "gp_2000",  mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 2000⏣",  robuxAmount: 2000,  placeId: 0, priceIdr: 219709 },
-  { key: "gp_3000",  mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 3000⏣",  robuxAmount: 3000,  placeId: 0, priceIdr: 329487 },
-  { key: "gp_4000",  mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 4000⏣",  robuxAmount: 4000,  placeId: 0, priceIdr: 439341 },
-  { key: "gp_5000",  mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 5000⏣",  robuxAmount: 5000,  placeId: 0, priceIdr: 549119 },
-  { key: "gp_6000",  mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 6000⏣",  robuxAmount: 6000,  placeId: 0, priceIdr: 658973 },
-  { key: "gp_7000",  mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 7000⏣",  robuxAmount: 7000,  placeId: 0, priceIdr: 768750 },
-  { key: "gp_8000",  mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 8000⏣",  robuxAmount: 8000,  placeId: 0, priceIdr: 878605 },
-  { key: "gp_9000",  mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 9000⏣",  robuxAmount: 9000,  placeId: 0, priceIdr: 988459 },
-  { key: "gp_10000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 10000⏣", robuxAmount: 10000, placeId: 0, priceIdr: 1098237 },
+  { key: "gp_2000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 2000⏣", robuxAmount: 2858, placeId: 0, priceIdr: 219709 },
+  { key: "gp_3000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 3000⏣", robuxAmount: 4286, placeId: 0, priceIdr: 329487 },
+  { key: "gp_4000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 4000⏣", robuxAmount: 5715, placeId: 0, priceIdr: 439341 },
+  { key: "gp_5000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 5000⏣", robuxAmount: 7143, placeId: 0, priceIdr: 549119 },
+  { key: "gp_6000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 6000⏣", robuxAmount: 8572, placeId: 0, priceIdr: 658973 },
+  { key: "gp_7000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 7000⏣", robuxAmount: 10000, placeId: 0, priceIdr: 768750 },
+  { key: "gp_8000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 8000⏣", robuxAmount: 11429, placeId: 0, priceIdr: 878605 },
+  { key: "gp_9000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 9000⏣", robuxAmount: 12858, placeId: 0, priceIdr: 988459 },
+  { key: "gp_10000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 10000⏣", robuxAmount: 14286, placeId: 0, priceIdr: 1098237 },
 
-  { key: "gp_15000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 15000⏣", robuxAmount: 15000, placeId: 0, priceIdr: 1647355 },
-  { key: "gp_20000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 20000⏣", robuxAmount: 20000, placeId: 0, priceIdr: 2196473 },
-  { key: "gp_25000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 25000⏣", robuxAmount: 25000, placeId: 0, priceIdr: 2745591 },
+  { key: "gp_15000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 15000⏣", robuxAmount: 21429, placeId: 0, priceIdr: 1647355 },
+  { key: "gp_20000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 20000⏣", robuxAmount: 28572, placeId: 0, priceIdr: 2196473 },
+  { key: "gp_25000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 25000⏣", robuxAmount: 35715, placeId: 0, priceIdr: 2745591 },
 
-  { key: "gp_40000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 40000⏣", robuxAmount: 40000, placeId: 0, priceIdr: 4392869 },
-  { key: "gp_50000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 50000⏣", robuxAmount: 50000, placeId: 0, priceIdr: 5491105 },
+  { key: "gp_40000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 40000⏣", robuxAmount: 57143, placeId: 0, priceIdr: 4392869 },
+  { key: "gp_50000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 50000⏣", robuxAmount: 71429, placeId: 0, priceIdr: 5491105 },
 
   // VIP (opsional)
   // { key: "vip_200", mode: "GAMEPASS", orderType: "vip_server", label: "⚡ VIP Server 200⏣", robuxAmount: 200, placeId: 0, priceIdr: 35000 },
@@ -235,7 +235,7 @@ async function notifyDiscordPaymentReceived(orderData) {
 function modeKeyboard() {
   return Markup.inlineKeyboard([
     [Markup.button.callback("🔐 VIA LOGIN (VILOG)", "MODE:VILOG")],
-    [Markup.button.callback("⚡ GAMEPASS Auto", "MODE:GAMEPASS")],
+    [Markup.button.callback("⚡ GAMEPASS (PENDING 4 - 5 HARI)", "MODE:GAMEPASS")],
     [Markup.button.callback("🔄 Reset", "RESET")],
   ]);
 }
@@ -380,18 +380,24 @@ function msgPickMode(mode) {
     "ℹ️ Setelah pilih paket:",
     "1) Kirim *username Roblox*",
     "2) Kirim *Place ID* (boleh angka / paste link game)",
+    "",
+    "⚠️ Penting:",
+    "- Place ID itu ID game (angka di link setelah /games/).",
+    "- Gamepass di dalam game harus tersedia & harganya harus sesuai paket yang dipilih.",
   ].join("\n");
 }
 
 function msgPackagePickedGAMEPASS(pkg) {
   return [
-    "🧾 *Detail Paket (GAMEPASS Auto)*",
+    "🧾 *Detail Paket GAMEPASS PENDING 4-5 DAY(BUKAN FAST)*",
     "────────────────────",
     `📦 Paket: *${pkg.robuxAmount}⏣*`,
     `💳 Harga: *${formatRupiah(pkg.priceIdr)}*`,
     "",
     "✍️ Kirim *username Roblox* kamu (1 pesan).",
-    "Contoh: `AdiityaAnugrah`",
+    "Contoh: `CoolPlayer123`",
+    "",
+    "⚠️ Pastikan di game kamu ada *Gamepass* yang sesuai paket ini.",
   ].join("\n");
 }
 
@@ -403,11 +409,12 @@ function msgAskGamepassPlaceId(pkg, username) {
     `📦 Paket: *${pkg.robuxAmount}⏣*`,
     `💳 Harga: *${formatRupiah(pkg.priceIdr)}*`,
     "",
-    "✍️ Sekarang kirim *Place ID* (boleh 3 cara):",
+    "✍️ Sekarang kirim *Place ID* (ID game) (boleh 3 cara):",
     "1) Angka saja: `1234567890`",
     "2) Paste link game: `https://www.roblox.com/games/1234567890/Nama-Game`",
     "3) Link dengan placeId: `...placeId=1234567890`",
     "",
+    "⚠️ Pastikan *Gamepass* di game tersebut sudah dibuat & harganya sesuai paket yang dipilih.",
     "Kalau bingung, klik tombol: *📌 Cara cari Place ID*",
   ].join("\n");
 }
@@ -503,7 +510,10 @@ function pickAfterColon(line) {
 
 function parseVilogForm(text, forcedRobuxAmount) {
   const raw = String(text || "").trim();
-  const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0);
+  const lines = raw
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
 
   let username = "";
   let password = "";
@@ -1043,7 +1053,7 @@ function createQrisOrderBot() {
           } catch {}
         }
 
-        await notifyDiscordPaymentReceived(data);
+        // ✅ jangan kirim "Payment received" lagi di tahap selesai (hindari dobel notif)
         await store.removePending(tok);
         return ctx.reply("✅ Foto bukti sudah dikirim ke user & order ditandai selesai.");
       }
@@ -1303,7 +1313,7 @@ function createQrisOrderBot() {
       } catch {}
     }
 
-    await notifyDiscordPaymentReceived(data);
+    // ✅ jangan kirim "Payment received" lagi di tahap selesai (hindari dobel notif)
     await store.removePending(tok);
     return ctx.reply("✅ Order ditandai selesai & user sudah diberi notifikasi.");
   });
@@ -1522,18 +1532,17 @@ async function approveAndProcess(bot, store, rbxcave, tok, adminChatIds, note) {
     } catch (e) {
       const status = e?.status || "";
       const detail = e?.data ? safeStringify(e.data) : "";
-      const msg =
-        [
-          "❌ Gagal create order GAMEPASS.",
-          `Order ID: ${data.orderId}`,
-          status ? `Status: HTTP ${status}` : "",
-          `Error: ${e?.message || "unknown"}`,
-          detail ? `Detail:\n${detail}` : "",
-          "",
-          "✅ Cek biasanya: field payload salah / placeId salah / robuxAmount / endpoint RBXCave.",
-        ]
-          .filter(Boolean)
-          .join("\n");
+      const msg = [
+        "❌ Gagal create order GAMEPASS.",
+        `Order ID: ${data.orderId}`,
+        status ? `Status: HTTP ${status}` : "",
+        `Error: ${e?.message || "unknown"}`,
+        detail ? `Detail:\n${detail}` : "",
+        "",
+        "✅ Cek biasanya: field payload salah / placeId salah / robuxAmount / endpoint RBXCave.",
+      ]
+        .filter(Boolean)
+        .join("\n");
 
       for (const adminChatId of adminChatIds) {
         try { await bot.telegram.sendMessage(adminChatId, msg); } catch {}
@@ -1576,6 +1585,7 @@ async function approveAndProcess(bot, store, rbxcave, tok, adminChatIds, note) {
       } catch {}
     }
 
+    // ✅ notif payment diterima hanya sekali saat ACC
     await notifyDiscordPaymentReceived(data);
     await store.removePending(tok);
     return;
@@ -1617,7 +1627,7 @@ async function approveAndProcess(bot, store, rbxcave, tok, adminChatIds, note) {
       } catch {}
     }
 
-    // discord notif tetap di approve (boleh)
+    // ✅ notif payment diterima hanya sekali saat ACC
     await notifyDiscordPaymentReceived(data);
     return;
   }
