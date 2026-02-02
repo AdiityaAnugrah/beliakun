@@ -11,10 +11,10 @@ const { PendingStore } = require("../utils/pendingStore");
 // =========================
 // KONFIG PAKET
 // =========================
-
-// CATATAN:
-// - displayRobux = yang ditampilkan ke user (misal 100)
-// - robuxAmount  = harga gamepass di Roblox (setelah tax, misal 143)
+// Catatan:
+// - displayRobux = yang user lihat (misal 100)
+// - robuxAmount  = harga Gamepass di Roblox (misal 143) -> yang dikirim ke RBXCave
+// - label        = teks label yang tampil di detail/QRIS
 
 // ====== GAMEPASS (AUTO) ======
 const PACKAGES_GAMEPASS = [
@@ -98,7 +98,7 @@ function makeToken() {
 
 function makeSafeOrderId() {
   const t = Date.now();
-  const r = crypto.randomBytes(3).toString("hex");
+  const r = crypto.randomBytes(4).toString("hex"); // 4 bytes hex -> lebih aman dari collision
   return `TG${t}${r}`;
 }
 
@@ -145,109 +145,80 @@ function parsePositiveInt(text) {
   return n;
 }
 
-function extractPlaceIdFromText(input) {
+/**
+ * Ekstrak input user:
+ * - Place ID (angka dari /games/xxxx)
+ * - Game Pass ID (angka dari /game-pass/xxxx atau gamePassId=xxxx)
+ * - kalau cuma angka, kita kembalikan sebagai "numberOnly"
+ */
+function extractRobloxIdsFromText(input) {
   const s = String(input || "").trim();
-  if (!s) return 0;
+  if (!s) return { placeId: 0, gamePassId: 0, numberOnly: 0 };
 
+  // Place URL: /games/{placeId}
   const mGames = s.match(/\/games\/(\d+)/i);
   if (mGames && mGames[1]) {
     const n = Number(mGames[1]);
-    if (Number.isFinite(n) && n > 0) return n;
+    if (Number.isFinite(n) && n > 0) return { placeId: n, gamePassId: 0, numberOnly: 0 };
   }
 
+  // Place query: placeId=123
   const mPlace = s.match(/[?&]placeId=(\d+)/i);
   if (mPlace && mPlace[1]) {
     const n = Number(mPlace[1]);
-    if (Number.isFinite(n) && n > 0) return n;
+    if (Number.isFinite(n) && n > 0) return { placeId: n, gamePassId: 0, numberOnly: 0 };
   }
 
-  const mLoose = s.match(/place\s*id\D*(\d+)/i);
-  if (mLoose && mLoose[1]) {
-    const n = Number(mLoose[1]);
-    if (Number.isFinite(n) && n > 0) return n;
+  // Gamepass link variants:
+  // https://www.roblox.com/game-pass/8210106190/...
+  const mGp1 = s.match(/\/game-pass\/(\d+)/i);
+  if (mGp1 && mGp1[1]) {
+    const n = Number(mGp1[1]);
+    if (Number.isFinite(n) && n > 0) return { placeId: 0, gamePassId: n, numberOnly: 0 };
   }
 
+  // legacy query: gamePassId=821...
+  const mGp2 = s.match(/[?&]gamePassId=(\d+)/i);
+  if (mGp2 && mGp2[1]) {
+    const n = Number(mGp2[1]);
+    if (Number.isFinite(n) && n > 0) return { placeId: 0, gamePassId: n, numberOnly: 0 };
+  }
+
+  // loose "pass id 8210..."
+  const mLooseGp = s.match(/pass\s*id\D*(\d+)/i);
+  if (mLooseGp && mLooseGp[1]) {
+    const n = Number(mLooseGp[1]);
+    if (Number.isFinite(n) && n > 0) return { placeId: 0, gamePassId: n, numberOnly: 0 };
+  }
+
+  // any big number
   const allNums = s.match(/\d{6,}/g);
   if (allNums && allNums.length) {
     const n = Number(allNums[0]);
-    if (Number.isFinite(n) && n > 0) return n;
+    if (Number.isFinite(n) && n > 0) return { placeId: 0, gamePassId: 0, numberOnly: n };
   }
 
-  return parsePositiveInt(s);
+  return { placeId: 0, gamePassId: 0, numberOnly: parsePositiveInt(s) };
 }
 
-function extractPassIdFromText(input) {
-  const s = String(input || "").trim();
-  if (!s) return 0;
-
-  // link model: https://www.roblox.com/game-pass/8210106190/...
-  const m1 = s.match(/\/game-pass\/(\d+)/i);
-  if (m1 && m1[1]) {
-    const n = Number(m1[1]);
-    if (Number.isFinite(n) && n > 0) return n;
-  }
-
-  // sometimes user type: "pass id 8210106190"
-  const m2 = s.match(/pass\s*id\D*(\d+)/i);
-  if (m2 && m2[1]) {
-    const n = Number(m2[1]);
-    if (Number.isFinite(n) && n > 0) return n;
-  }
-
-  // fallback: if it's just digits, treat as possible passId (will be validated by API)
-  const onlyDigits = s.replace(/[^\d]/g, "");
-  if (onlyDigits && onlyDigits.length >= 6) {
-    const n = Number(onlyDigits);
-    if (Number.isFinite(n) && n > 0) return n;
-  }
-
-  return 0;
-}
-
-function deepFindNumber(obj, keysLower) {
-  try {
-    if (!obj || typeof obj !== "object") return 0;
-
-    // direct key match
-    for (const k of Object.keys(obj)) {
-      const kl = String(k).toLowerCase();
-      if (keysLower.includes(kl)) {
-        const v = obj[k];
-        const n = Number(v);
-        if (Number.isFinite(n) && n > 0) return n;
-      }
-    }
-
-    // recurse
-    for (const k of Object.keys(obj)) {
-      const v = obj[k];
-      if (v && typeof v === "object") {
-        const found = deepFindNumber(v, keysLower);
-        if (found > 0) return found;
-      }
-    }
-  } catch {}
-  return 0;
-}
-
-async function fetchJson(url, { method = "GET", headers = {}, body, timeoutMs = 15000 } = {}) {
+// =========================
+// ROBLOX LOOKUP (PlaceId <-> GamePassId)
+// =========================
+async function fetchJsonPublic(url, { method = "GET", headers = {}, body, timeoutMs = 15000 } = {}) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
 
   try {
-    const res = await fetch(url, {
-      method,
-      headers,
-      body,
-      signal: ctrl.signal,
-    });
+    const res = await fetch(url, { method, headers, body, signal: ctrl.signal });
     const text = await res.text();
-    let data = null;
+
+    let data;
     try {
       data = text ? JSON.parse(text) : null;
     } catch {
       data = text;
     }
+
     if (!res.ok) {
       const err = new Error(`HTTP ${res.status}`);
       err.status = res.status;
@@ -260,147 +231,91 @@ async function fetchJson(url, { method = "GET", headers = {}, body, timeoutMs = 
   }
 }
 
-async function resolvePlaceIdFromPassId(passId) {
-  const pid = Number(passId || 0);
-  if (!(pid > 0)) return { ok: false, placeId: 0, universeId: 0, error: "invalid_pass_id" };
+/**
+ * Resolve GamePassId -> (universeId/placeId) -> rootPlaceId
+ * - pakai endpoint baru apis.roblox.com (recommended)
+ * - fallback endpoint lama api.roblox.com/marketplace/... (kadang masih jalan)
+ *
+ * Sumber endpoint baru & migrasi dibahas oleh komunitas karena endpoint lama deprecated. :contentReference[oaicite:2]{index=2}
+ * rootPlaceId dari universe bisa diambil dari games.roblox.com/v1/games?universeIds=... :contentReference[oaicite:3]{index=3}
+ */
+async function resolvePlaceIdFromGamePassId(gamePassId) {
+  const id = Number(gamePassId || 0);
+  if (!(id > 0)) return { ok: false, placeId: 0, universeId: 0, via: "invalid" };
 
-  // Try Roblox Game Pass Product Info (new endpoint)
-  // (Some environments may block this; we keep fallbacks.)
-  let gpInfo = null;
-
+  // 1) endpoint baru
   try {
-    gpInfo = await fetchJson(`https://apis.roblox.com/game-passes/v1/game-passes/${pid}/product-info`, {
-      headers: { Accept: "application/json" },
-      timeoutMs: 15000,
-    });
-  } catch (e) {
-    // ignore, fallback below
-    gpInfo = null;
-  }
+    const url = `https://apis.roblox.com/game-passes/v1/game-passes/${id}/product-info`;
+    const info = await fetchJsonPublic(url);
 
-  // Extract universeId/placeId from gpInfo if present
-  let universeId = 0;
-  let placeId = 0;
-
-  if (gpInfo && typeof gpInfo === "object") {
-    universeId =
-      deepFindNumber(gpInfo, ["universeid", "universe_id"]) ||
+    const universeId =
+      Number(info?.universeId || info?.UniverseId || info?.universeID || 0) ||
       0;
 
-    placeId =
-      deepFindNumber(gpInfo, ["placeid", "place_id", "rootplaceid", "root_place_id"]) ||
+    const placeIdDirect =
+      Number(info?.placeId || info?.PlaceId || info?.placeID || 0) ||
       0;
-  }
 
-  // If we already got placeId directly, return
-  if (placeId > 0) return { ok: true, placeId, universeId, source: "pass_product_info" };
-
-  // If we have universeId, we can query rootPlaceId from games endpoint
-  if (universeId > 0) {
-    try {
-      const gameData = await fetchJson(`https://games.roblox.com/v1/games?universeIds=${universeId}`, {
-        headers: { Accept: "application/json" },
-        timeoutMs: 15000,
-      });
-
-      // expected: { data: [ { rootPlaceId: 123, ... } ] }
-      const arr = Array.isArray(gameData?.data) ? gameData.data : [];
-      const first = arr[0] || null;
-      const rp =
-        (first && (Number(first.rootPlaceId) || Number(first.rootPlaceID))) ||
-        deepFindNumber(first, ["rootplaceid", "rootplaceid".toLowerCase()]) ||
-        0;
-
-      if (Number.isFinite(rp) && rp > 0) {
-        return { ok: true, placeId: rp, universeId, source: "universe_to_rootplace" };
-      }
-    } catch (e) {
-      // ignore
+    if (placeIdDirect > 0) {
+      return { ok: true, placeId: placeIdDirect, universeId: universeId || 0, via: "apis.placeId" };
     }
-  }
-
-  // Fallback try older economy endpoint (may not return universeId, but we try anyway)
-  try {
-    const eco = await fetchJson(`https://economy.roblox.com/v1/game-pass/${pid}/game-pass-product-info`, {
-      headers: { Accept: "application/json" },
-      timeoutMs: 15000,
-    });
-
-    // Some versions may include universeId; attempt deep find
-    universeId =
-      universeId ||
-      deepFindNumber(eco, ["universeid", "universe_id"]) ||
-      0;
-
-    placeId =
-      placeId ||
-      deepFindNumber(eco, ["placeid", "place_id", "rootplaceid", "root_place_id"]) ||
-      0;
-
-    if (placeId > 0) return { ok: true, placeId, universeId, source: "economy_fallback" };
 
     if (universeId > 0) {
-      try {
-        const gameData = await fetchJson(`https://games.roblox.com/v1/games?universeIds=${universeId}`, {
-          headers: { Accept: "application/json" },
-          timeoutMs: 15000,
-        });
-        const arr = Array.isArray(gameData?.data) ? gameData.data : [];
-        const first = arr[0] || null;
-        const rp = first ? Number(first.rootPlaceId || 0) : 0;
-        if (Number.isFinite(rp) && rp > 0) {
-          return { ok: true, placeId: rp, universeId, source: "economy_universe_to_rootplace" };
-        }
-      } catch (e) {}
+      const g = await fetchJsonPublic(`https://games.roblox.com/v1/games?universeIds=${universeId}`);
+      const rootPlaceId = Number(g?.data?.[0]?.rootPlaceId || 0);
+      if (rootPlaceId > 0) return { ok: true, placeId: rootPlaceId, universeId, via: "apis.universe->rootPlaceId" };
     }
-  } catch (e) {
+  } catch (_) {
+    // ignore, fallback
+  }
+
+  // 2) fallback endpoint lama (kadang masih jalan)
+  try {
+    const url = `https://api.roblox.com/marketplace/game-pass-product-info?gamePassId=${id}`;
+    const info = await fetchJsonPublic(url);
+
+    const placeId = Number(info?.PlaceId || info?.placeId || 0);
+    const universeId = Number(info?.UniverseId || info?.universeId || 0);
+
+    if (placeId > 0) return { ok: true, placeId, universeId: universeId || 0, via: "legacy.placeId" };
+
+    if (universeId > 0) {
+      const g = await fetchJsonPublic(`https://games.roblox.com/v1/games?universeIds=${universeId}`);
+      const rootPlaceId = Number(g?.data?.[0]?.rootPlaceId || 0);
+      if (rootPlaceId > 0) return { ok: true, placeId: rootPlaceId, universeId, via: "legacy.universe->rootPlaceId" };
+    }
+  } catch (_) {
     // ignore
   }
 
-  return { ok: false, placeId: 0, universeId: 0, error: "cannot_resolve_place_from_pass" };
+  return { ok: false, placeId: 0, universeId: 0, via: "not_found" };
 }
 
-async function resolvePlaceIdSmart(input) {
-  const raw = String(input || "").trim();
-  if (!raw) return { ok: false, placeId: 0, error: "empty_input" };
+/**
+ * Coba validasi "angka doang" itu placeId atau passId:
+ * - kalau universe API place berhasil -> berarti itu placeId
+ * - kalau gagal -> coba treat sebagai gamePassId
+ */
+async function resolvePlaceIdFromUnknownNumber(n) {
+  const id = Number(n || 0);
+  if (!(id > 0)) return { ok: false, placeId: 0, guessed: "invalid" };
 
-  // if input clearly contains /games/ or placeId= -> it's place id
-  const explicitPlace = extractPlaceIdFromText(raw);
-  if (explicitPlace > 0 && (/\/games\/\d+/i.test(raw) || /placeId=\d+/i.test(raw) || /place\s*id/i.test(raw))) {
-    return { ok: true, placeId: explicitPlace, source: "explicit_place" };
-  }
-
-  // if user gives /game-pass/ link -> treat as pass id
-  if (/\/game-pass\/\d+/i.test(raw) || /pass\s*id/i.test(raw)) {
-    const passId = extractPassIdFromText(raw);
-    if (passId > 0) {
-      const r = await resolvePlaceIdFromPassId(passId);
-      if (r.ok) return { ok: true, placeId: r.placeId, passId, universeId: r.universeId || 0, source: r.source || "pass" };
-      return { ok: false, placeId: 0, passId, error: r.error || "pass_resolve_failed" };
+  // coba placeId -> universe
+  try {
+    const u = await fetchJsonPublic(`https://api.roblox.com/universes/get-universe-containing-place?placeid=${id}`);
+    const universeId = Number(u?.UniverseId || u?.universeId || 0);
+    if (universeId > 0) {
+      return { ok: true, placeId: id, guessed: "placeId" };
     }
+  } catch (_) {
+    // ignore
   }
 
-  // if user only sends digits (ambiguous), we try:
-  // 1) attempt resolve as passId (if succeeds, use it)
-  // 2) else fallback to treat as placeId
-  const digits = raw.replace(/[^\d]/g, "");
-  if (digits && /^\d{6,}$/.test(digits)) {
-    const n = Number(digits);
-    if (Number.isFinite(n) && n > 0) {
-      // try pass resolve first
-      const r = await resolvePlaceIdFromPassId(n);
-      if (r.ok) return { ok: true, placeId: r.placeId, passId: n, universeId: r.universeId || 0, source: r.source || "pass_guess" };
+  // coba gamepass
+  const r = await resolvePlaceIdFromGamePassId(id);
+  if (r.ok) return { ok: true, placeId: r.placeId, guessed: "gamePassId" };
 
-      // fallback as place
-      return { ok: true, placeId: n, source: "place_fallback" };
-    }
-  }
-
-  // fallback parse place id from any link formats
-  const placeId = extractPlaceIdFromText(raw);
-  if (placeId > 0) return { ok: true, placeId, source: "place_parse_fallback" };
-
-  return { ok: false, placeId: 0, error: "invalid_input" };
+  return { ok: false, placeId: 0, guessed: "unknown" };
 }
 
 // =========================
@@ -485,14 +400,15 @@ function packagesKeyboard(mode, page) {
     const a = items[i];
     const b = items[i + 1];
 
-    const showA = mode === "GAMEPASS" ? Number(a.displayRobux || a.robuxAmount || 0) : Number(a.robuxAmount || 0);
-    const showB = b ? (mode === "GAMEPASS" ? Number(b.displayRobux || b.robuxAmount || 0) : Number(b.robuxAmount || 0)) : 0;
+    // ✅ tampilkan displayRobux untuk GAMEPASS (biar user lihat 100⏣ bukan 143⏣)
+    const aShow = mode === "GAMEPASS" ? Number(a.displayRobux || a.robuxAmount || 0) : Number(a.robuxAmount || 0);
+    const bShow = b ? (mode === "GAMEPASS" ? Number(b.displayRobux || b.robuxAmount || 0) : Number(b.robuxAmount || 0)) : 0;
 
-    const textA = `${showA}⏣ • ${formatRupiah(a.priceIdr)}`;
+    const textA = `${aShow}⏣ • ${formatRupiah(a.priceIdr)}`;
     const row = [Markup.button.callback(textA, `PKG:${mode}:${a.key}`)];
 
     if (b) {
-      const textB = `${showB}⏣ • ${formatRupiah(b.priceIdr)}`;
+      const textB = `${bShow}⏣ • ${formatRupiah(b.priceIdr)}`;
       row.push(Markup.button.callback(textB, `PKG:${mode}:${b.key}`));
     }
 
@@ -521,7 +437,7 @@ function backToPackagesKeyboard(mode) {
 
 function gamepassPlaceIdKeyboard() {
   return Markup.inlineKeyboard([
-    [Markup.button.callback("📌 Cara cari Place ID / Pass ID", "HELP_PLACEID")],
+    [Markup.button.callback("📌 Cara cari Place ID", "HELP_PLACEID")],
     [Markup.button.callback("⬅️ Ganti Paket", "BACK_TO_PACKAGES:GAMEPASS")],
     [Markup.button.callback("⬅️ Kembali (Pilih Mode)", "BACK_TO_MODE")],
     [Markup.button.callback("🔄 Reset", "RESET")],
@@ -613,76 +529,70 @@ function msgPickMode(mode) {
     "",
     "ℹ️ Setelah pilih paket:",
     "1) Kirim *username Roblox*",
-    "2) Kirim *Place ID* atau *Pass ID* (boleh angka / paste link game / paste link gamepass)",
+    "2) Kirim *Place ID / Link Game / Pass ID / Link Gamepass*",
     "",
     "⚠️ Penting:",
     "- Place ID itu ID game (angka di link setelah /games/).",
-    "- Pass ID itu ID gamepass (angka di link setelah /game-pass/).",
-    "- Bot akan otomatis coba ubah Pass ID -> Place ID.",
+    "- Kalau kamu cuma punya Pass ID, bot akan coba cari Place ID otomatis.",
+    "- Gamepass di dalam game harus tersedia & harganya harus sesuai paket yang dipilih.",
   ].join("\n");
 }
 
 function msgPackagePickedGAMEPASS(pkg) {
-  const shown = Number(pkg.displayRobux || pkg.robuxAmount || 0);
+  const show = Number(pkg.displayRobux || pkg.robuxAmount || 0);
   return [
     "🧾 *Detail Paket GAMEPASS PENDING 4-5 DAY (BUKAN FAST)*",
     "────────────────────",
-    `📦 Paket: *${shown}⏣*`,
+    `📦 Paket: *${show}⏣*`,
     `💳 Harga: *${formatRupiah(pkg.priceIdr)}*`,
     "",
     "✍️ Kirim *username Roblox* kamu (1 pesan).",
     "Contoh: `CoolPlayer123`",
     "",
     "⚠️ Pastikan di game kamu ada *Gamepass* yang sesuai paket ini.",
-    "Catatan: harga gamepass Roblox (setelah tax) sudah dihitung otomatis di sistem.",
   ].join("\n");
 }
 
 function msgAskGamepassPlaceId(pkg, username) {
-  const shown = Number(pkg.displayRobux || pkg.robuxAmount || 0);
+  const show = Number(pkg.displayRobux || pkg.robuxAmount || 0);
   return [
     "✅ Username diterima.",
     "────────────────────",
     `👤 Username: \`${String(username || "").trim()}\``,
-    `📦 Paket: *${shown}⏣*`,
+    `📦 Paket: *${show}⏣*`,
     `💳 Harga: *${formatRupiah(pkg.priceIdr)}*`,
     "",
-    "✍️ Sekarang kirim *Place ID* atau *Pass ID* (boleh 4 cara):",
-    "1) Place ID angka: `1234567890`",
-    "2) Link game: `https://www.roblox.com/games/1234567890/Nama-Game`",
-    "3) Link dengan placeId: `...placeId=1234567890`",
-    "4) Pass ID angka / link gamepass: `8210106190` atau `https://www.roblox.com/game-pass/8210106190/...`",
+    "✍️ Sekarang kirim salah satu:",
+    "1) *Place ID* (angka) / Link game",
+    "2) *Pass ID* (angka) / Link gamepass",
     "",
-    "⚠️ Bot akan otomatis coba ubah Pass ID -> Place ID.",
-    "Kalau bingung, klik tombol: *📌 Cara cari Place ID / Pass ID*",
+    "Contoh Place ID:",
+    "- `1234567890`",
+    "- `https://www.roblox.com/games/1234567890/Nama-Game`",
+    "",
+    "Contoh Pass ID:",
+    "- `8210106190`",
+    "- `https://www.roblox.com/game-pass/8210106190/NamaPass`",
+    "",
+    "⚠️ Bot akan *otomatis resolve* Pass ID → Place ID jika perlu.",
   ].join("\n");
 }
 
 function msgPlaceIdHelp() {
   return [
-    "📌 *Cara cari Place ID / Pass ID Roblox*",
+    "📌 *Cara cari Place ID Roblox*",
     "────────────────────",
     "",
-    "*A) Place ID (ID game):*",
+    "*Cara paling gampang:*",
     "1) Buka game Roblox yang dipakai untuk pembelian Gamepass",
     "2) Lihat link game nya",
     "3) Angka setelah `/games/` itulah *Place ID*",
     "",
-    "*Contoh link game:*",
+    "*Contoh link:*",
     "`https://www.roblox.com/games/1234567890/Nama-Game`",
     "✅ Place ID = `1234567890`",
     "",
-    "*B) Pass ID (ID gamepass):*",
-    "1) Buka halaman gamepass",
-    "2) Lihat link gamepass nya",
-    "3) Angka setelah `/game-pass/` itulah *Pass ID*",
-    "",
-    "*Contoh link gamepass:*",
-    "`https://www.roblox.com/game-pass/8210106190/Nama-Gamepass`",
-    "✅ Pass ID = `8210106190`",
-    "",
-    "✅ Kamu boleh kirim ke bot sebagai angka / link.",
-    "⚠️ Bot akan otomatis coba ubah Pass ID -> Place ID.",
+    "⚠️ Kalau kamu cuma punya *Pass ID*, kirim Pass ID juga boleh (bot akan coba carikan Place ID otomatis).",
   ].join("\n");
 }
 
@@ -723,7 +633,7 @@ function msgQrisCaption(data) {
     `🧾 Order ID: \`${data.orderId}\``,
     data.mode === "VILOG" ? `👤 Username: \`${data.loginUsername}\`` : `👤 Username: \`${data.robloxUsername}\``,
     data.mode === "GAMEPASS" ? `🧱 Place ID: \`${data.placeId}\`` : "",
-    data.mode === "GAMEPASS" && data.passId ? `🎟️ Pass ID: \`${data.passId}\`` : "",
+    data.mode === "GAMEPASS" && data.gamePassId ? `🎫 Pass ID: \`${data.gamePassId}\`` : "",
     "",
     "✅ Scan QRIS lalu upload foto bukti pembayaran di chat ini.",
     "🔎 Admin akan verifikasi, lalu ACC/TOLAK (kamu akan dapat jawaban jelas).",
@@ -876,7 +786,7 @@ function createQrisOrderBot() {
   bot.action("NOOP", async (ctx) => ctx.answerCbQuery());
 
   bot.action("HELP_PLACEID", async (ctx) => {
-    await ctx.answerCbQuery("Cara cari Place ID / Pass ID");
+    await ctx.answerCbQuery("Cara cari Place ID");
     try {
       await ctx.reply(msgPlaceIdHelp(), { parse_mode: "Markdown", reply_markup: gamepassPlaceIdKeyboard().reply_markup });
     } catch {
@@ -1171,7 +1081,7 @@ function createQrisOrderBot() {
       });
     }
 
-    // GAMEPASS placeId / passId
+    // GAMEPASS placeId OR passId
     if (flow.step === "WAIT_GAMEPASS_PLACEID") {
       const pkg = findPackage("GAMEPASS", flow.pkgKey);
       if (!pkg) {
@@ -1185,39 +1095,76 @@ function createQrisOrderBot() {
         return ctx.reply("Flow invalid (username kosong). Ketik /start untuk mulai lagi.");
       }
 
-      // resolve either placeId or passId
-      let resolved;
-      try {
-        resolved = await resolvePlaceIdSmart(ctx.message.text || "");
-      } catch (e) {
-        resolved = { ok: false, placeId: 0, error: e?.message || "resolve_failed" };
+      const ids = extractRobloxIdsFromText(ctx.message.text || "");
+
+      let placeId = Number(ids.placeId || 0);
+      let gamePassId = Number(ids.gamePassId || 0);
+
+      // 1) kalau input jelas gamepass id -> resolve
+      if (!(placeId > 0) && gamePassId > 0) {
+        const r = await resolvePlaceIdFromGamePassId(gamePassId);
+        if (!r.ok) {
+          return ctx.reply(
+            [
+              "⚠️ Pass ID terdeteksi, tapi gagal menemukan Place ID otomatis.",
+              `Pass ID: \`${gamePassId}\``,
+              "",
+              "Coba kirim link game (Place ID) atau cek Pass ID benar.",
+              "",
+              "Contoh Place link:",
+              "`https://www.roblox.com/games/1234567890/Nama-Game`",
+            ].join("\n"),
+            { parse_mode: "Markdown", reply_markup: gamepassPlaceIdKeyboard().reply_markup }
+          );
+        }
+        placeId = r.placeId;
       }
 
-      if (!resolved?.ok || !(Number(resolved.placeId) > 0)) {
+      // 2) kalau hanya angka doang -> coba tebak placeId dulu, kalau gagal treat as gamepass
+      if (!(placeId > 0) && !(gamePassId > 0) && ids.numberOnly > 0) {
+        const r = await resolvePlaceIdFromUnknownNumber(ids.numberOnly);
+        if (!r.ok) {
+          return ctx.reply(
+            [
+              "⚠️ Angka terdeteksi tapi tidak bisa dipastikan itu Place ID / Pass ID.",
+              `Input: \`${ids.numberOnly}\``,
+              "",
+              "Kirim salah satu yang pasti ya:",
+              "- Link game: `https://www.roblox.com/games/123.../Nama`",
+              "- Link gamepass: `https://www.roblox.com/game-pass/821.../Nama`",
+            ].join("\n"),
+            { parse_mode: "Markdown", reply_markup: gamepassPlaceIdKeyboard().reply_markup }
+          );
+        }
+
+        placeId = r.placeId;
+        if (r.guessed === "gamePassId") gamePassId = ids.numberOnly;
+      }
+
+      if (!(placeId > 0)) {
         return ctx.reply(
           [
-            "⚠️ Tidak bisa membaca *Place ID / Pass ID*.",
+            "⚠️ Place ID / Pass ID tidak terbaca / tidak valid.",
             "",
-            "Kirim ulang pakai salah satu contoh ini:",
-            "1) Place ID angka: `1234567890`",
-            "2) Link game: `https://www.roblox.com/games/1234567890/Nama-Game`",
-            "3) Link dengan placeId: `...placeId=1234567890`",
-            "4) Pass ID angka / link gamepass: `8210106190` atau `https://www.roblox.com/game-pass/8210106190/...`",
+            "Kirim ulang pakai contoh ini:",
+            "Place:",
+            "- `1234567890`",
+            "- `https://www.roblox.com/games/1234567890/Nama-Game`",
             "",
-            "Kalau bingung, klik tombol: *📌 Cara cari Place ID / Pass ID*",
-            resolved?.error ? `\n(Debug: ${resolved.error})` : "",
+            "Pass:",
+            "- `8210106190`",
+            "- `https://www.roblox.com/game-pass/8210106190/NamaPass`",
+            "",
+            "Kalau bingung, klik tombol: *📌 Cara cari Place ID*",
           ].join("\n"),
           { parse_mode: "Markdown", reply_markup: gamepassPlaceIdKeyboard().reply_markup }
         );
       }
 
-      const placeId = Number(resolved.placeId || 0);
-      const passId = Number(resolved.passId || 0);
-
       const orderId = makeSafeOrderId();
       const tok = makeToken();
 
-      const shown = Number(pkg.displayRobux || pkg.robuxAmount || 0);
+      const show = Number(pkg.displayRobux || pkg.robuxAmount || 0);
 
       const data = {
         token: tok,
@@ -1230,12 +1177,12 @@ function createQrisOrderBot() {
         orderType: pkg.orderType,
 
         robloxUsername: username,
-        displayRobux: Number(pkg.displayRobux || 0),
-        robuxAmount: Number(pkg.robuxAmount || 0), // price in Roblox (after tax)
+        displayRobux: show,                 // untuk tampilan
+        robuxAmount: Number(pkg.robuxAmount || 0), // harga gamepass di Roblox (misal 143)
         placeId: Number(placeId),
-        passId: passId > 0 ? passId : 0,
+        gamePassId: gamePassId || 0,
 
-        label: `${shown}⏣`,
+        label: pkg.label || `${show}⏣`,
         priceIdr: Number(pkg.priceIdr || 0),
 
         status: "WAIT_PROOF",
@@ -1245,6 +1192,11 @@ function createQrisOrderBot() {
       await store.setUserFlow(userId, { step: "WAIT_PROOF", mode: "GAMEPASS", pkgKey: flow.pkgKey });
 
       const caption = msgQrisCaption(data);
+
+      // kalau resolve passId -> placeId, kasih info singkat biar user paham
+      if (gamePassId > 0) {
+        await ctx.reply(`✅ Pass ID \`${gamePassId}\` berhasil di-resolve ke Place ID \`${placeId}\`.`, { parse_mode: "Markdown" });
+      }
 
       try {
         await ctx.replyWithPhoto(
@@ -1314,12 +1266,9 @@ function createQrisOrderBot() {
           } catch {}
         }
 
-        // ✅ jangan kirim "Payment received" lagi di tahap selesai (hindari dobel notif)
         await store.removePending(tok);
         return ctx.reply("✅ Foto bukti sudah dikirim ke user & order ditandai selesai.");
       }
-
-      // kalau admin kirim foto biasa (bukan flow), biarkan lewat
     }
 
     // ✅ 2) USER upload bukti pembayaran
@@ -1366,7 +1315,7 @@ function createQrisOrderBot() {
       `Nominal seharusnya: *${formatRupiah(data.priceIdr)}*`,
       `User: \`${who}\``,
       data.mode === "GAMEPASS" ? `Place ID: \`${data.placeId}\`` : "",
-      data.mode === "GAMEPASS" && data.passId ? `Pass ID: \`${data.passId}\`` : "",
+      data.mode === "GAMEPASS" && data.gamePassId ? `Pass ID: \`${data.gamePassId}\`` : "",
       "",
       "Klik tombol untuk ACC/TOLAK.",
     ]
@@ -1428,7 +1377,6 @@ function createQrisOrderBot() {
       return ctx.reply("⚠️ Transaksi sudah tidak ada.");
     }
 
-    // ✅ setelah admin ACC, user tidak boleh cancel
     if (data.status !== "WAIT_PROOF" && data.status !== "WAIT_ADMIN") {
       return ctx.reply("⚠️ Transaksi sudah diproses admin, tidak bisa dibatalkan lagi.");
     }
@@ -1462,7 +1410,6 @@ function createQrisOrderBot() {
       return ctx.reply("⚠️ Transaksi sudah tidak ada.");
     }
 
-    // ✅ setelah admin ACC, user tidak boleh cancel
     if (data.status !== "WAIT_PROOF" && data.status !== "WAIT_ADMIN") {
       return ctx.reply("⚠️ Transaksi sudah diproses admin, tidak bisa dibatalkan lagi.");
     }
@@ -1575,7 +1522,6 @@ function createQrisOrderBot() {
       } catch {}
     }
 
-    // ✅ jangan kirim "Payment received" lagi di tahap selesai (hindari dobel notif)
     await store.removePending(tok);
     return ctx.reply("✅ Order ditandai selesai & user sudah diberi notifikasi.");
   });
@@ -1767,51 +1713,39 @@ async function approveAndProcess(bot, store, rbxcave, tok, adminChatIds, note) {
   const data = store.getByToken(tok);
   if (!data) return;
 
+  // ✅ lock biar gak double klik ACC (hindari 409 "already have an orderId")
+  if (data.status === "PROCESSING") {
+    for (const adminChatId of adminChatIds) {
+      try { await bot.telegram.sendMessage(adminChatId, `⏳ Masih PROCESSING: ${data.orderId} (Token: ${tok})`); } catch {}
+    }
+    return;
+  }
+
   if (data.status !== "WAIT_ADMIN") return;
+
+  await store.updatePending(tok, { status: "PROCESSING", processingAt: Date.now() });
 
   // GAMEPASS Auto -> hit RBXCave API
   if (data.mode === "GAMEPASS") {
-    const basePayload = {
+    const payloadBase = {
       orderId: String(data.orderId || "").trim(),
       robloxUsername: String(data.robloxUsername || "").trim(),
-      robuxAmount: Number(data.robuxAmount || 0),
+      robuxAmount: Number(data.robuxAmount || 0), // ✅ harga gamepass (misal 143), bukan display 100
       placeId: Number(data.placeId || 0),
       isPreOrder: false,
       checkOwnership: false,
     };
 
-    async function doCreate(payload) {
-      if (data.orderType === "gamepass_order") {
-        await rbxcave.createGamepassOrder(payload);
-      } else {
-        await rbxcave.createVipServerOrder(payload);
-      }
-    }
-
     try {
-      if (!basePayload.orderId || basePayload.orderId.length < 6) throw new Error("invalid orderId");
-      if (!basePayload.robloxUsername) throw new Error("robloxUsername empty");
-      if (!(basePayload.robuxAmount > 0)) throw new Error("robuxAmount invalid");
-      if (!(basePayload.placeId > 0)) throw new Error("placeId invalid");
+      if (!payloadBase.orderId || payloadBase.orderId.length < 6) throw new Error("invalid orderId");
+      if (!payloadBase.robloxUsername) throw new Error("robloxUsername empty");
+      if (!(payloadBase.robuxAmount > 0)) throw new Error("robuxAmount invalid");
+      if (!(payloadBase.placeId > 0)) throw new Error("placeId invalid");
 
-      try {
-        await doCreate(basePayload);
-      } catch (e) {
-        // AUTO RETRY if orderId already used (HTTP 409)
-        const status = Number(e?.status || 0);
-        const msg = String(e?.data?.message || e?.message || "");
-        const isDup = status === 409 || /orderid/i.test(msg) || /already have an order/i.test(msg);
-        if (isDup) {
-          const newOrderId = makeSafeOrderId();
-          basePayload.orderId = newOrderId;
-
-          // persist updated orderId so user/admin see correct one later
-          await store.updatePending(tok, { orderId: newOrderId });
-
-          await doCreate(basePayload);
-        } else {
-          throw e;
-        }
+      if (data.orderType === "gamepass_order") {
+        await rbxcave.createGamepassOrder(payloadBase);
+      } else {
+        await rbxcave.createVipServerOrder(payloadBase);
       }
     } catch (e) {
       const status = e?.status || "";
@@ -1823,7 +1757,7 @@ async function approveAndProcess(bot, store, rbxcave, tok, adminChatIds, note) {
         `Error: ${e?.message || "unknown"}`,
         detail ? `Detail:\n${detail}` : "",
         "",
-        "✅ Cek biasanya: field payload salah / placeId salah / robuxAmount / endpoint RBXCave.",
+        "✅ Cek biasanya: placeId salah / gamepass tidak ada di game itu / harga gamepass tidak sesuai / endpoint RBXCave.",
       ]
         .filter(Boolean)
         .join("\n");
@@ -1847,39 +1781,35 @@ async function approveAndProcess(bot, store, rbxcave, tok, adminChatIds, note) {
       return;
     }
 
-    const latest = store.getByToken(tok) || data;
-
     const userMsg = [
       "✅ *Pembayaran diterima*",
       "────────────────────",
-      `🧾 Order ID: \`${latest.orderId}\``,
-      `📦 Paket: *${latest.label}*`,
+      `🧾 Order ID: \`${data.orderId}\``,
+      `📦 Paket: *${data.label}*`,
       "⚙️ Order GAMEPASS sedang diproses otomatis.",
       note ? `\n📝 Catatan admin: ${note}` : "",
       "",
       "🙏 Jika ada kendala, admin akan menghubungi kamu di chat ini.",
     ].join("\n");
 
-    await bot.telegram.sendMessage(latest.chatId, userMsg, { parse_mode: "Markdown" });
+    await bot.telegram.sendMessage(data.chatId, userMsg, { parse_mode: "Markdown" });
 
     for (const adminChatId of adminChatIds) {
       try {
         await bot.telegram.sendMessage(
           adminChatId,
-          `✅ APPROVED : ${latest.orderId}\nToken: ${tok}${note ? `\nCatatan: ${note}` : ""}`
+          `✅ APPROVED : ${data.orderId}\nToken: ${tok}${note ? `\nCatatan: ${note}` : ""}`
         );
       } catch {}
     }
 
-    // ✅ notif payment diterima hanya sekali saat ACC
-    await notifyDiscordPaymentReceived(latest);
+    await notifyDiscordPaymentReceived(data);
     await store.removePending(tok);
     return;
   }
 
   // VILOG -> manual (✅ sekarang ada feedback admin)
   if (data.mode === "VILOG") {
-    // setelah ACC, jangan langsung removePending supaya admin bisa kirim feedback/foto selesai
     await store.updatePending(tok, { status: "VILOG_IN_PROGRESS", approvedAt: Date.now() });
 
     const userMsg = [
@@ -1913,7 +1843,6 @@ async function approveAndProcess(bot, store, rbxcave, tok, adminChatIds, note) {
       } catch {}
     }
 
-    // ✅ notif payment diterima hanya sekali saat ACC
     await notifyDiscordPaymentReceived(data);
     return;
   }
