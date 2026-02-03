@@ -4,11 +4,20 @@ const path = require("path");
 
 const STORE_PATH = path.join(__dirname, "..", "storage", "pending_orders.json");
 
+/**
+ * Memastikan direktori penyimpanan tersedia.
+ */
 function ensureDir() {
   const dir = path.dirname(STORE_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
 }
 
+/**
+ * Membaca data JSON dengan aman. Jika file tidak ada atau rusak, 
+ * mengembalikan struktur state default.
+ */
 function safeReadJson() {
   ensureDir();
   if (!fs.existsSync(STORE_PATH)) {
@@ -16,25 +25,36 @@ function safeReadJson() {
   }
   try {
     const raw = fs.readFileSync(STORE_PATH, "utf8");
-    const obj = raw ? JSON.parse(raw) : {};
+    if (!raw) return { pendingByToken: {}, pendingByUser: {}, adminAwait: {}, userFlow: {} };
+    
+    const obj = JSON.parse(raw);
     return {
       pendingByToken: obj.pendingByToken || {},
       pendingByUser: obj.pendingByUser || {},
       adminAwait: obj.adminAwait || {},
       userFlow: obj.userFlow || {},
     };
-  } catch {
+  } catch (err) {
+    console.error("[PendingStore] Gagal membaca JSON, menggunakan state kosong:", err.message);
     return { pendingByToken: {}, pendingByUser: {}, adminAwait: {}, userFlow: {} };
   }
 }
 
 let writeQueue = Promise.resolve();
 
+/**
+ * Menulis JSON secara atomik menggunakan file sementara (.tmp)
+ * untuk mencegah file menjadi kosong/rusak jika terjadi crash saat menulis.
+ */
 function atomicWriteJson(obj) {
   ensureDir();
   const tmp = STORE_PATH + ".tmp";
-  fs.writeFileSync(tmp, JSON.stringify(obj, null, 2));
-  fs.renameSync(tmp, STORE_PATH);
+  try {
+    fs.writeFileSync(tmp, JSON.stringify(obj, null, 2));
+    fs.renameSync(tmp, STORE_PATH);
+  } catch (err) {
+    console.error("[PendingStore] Gagal menulis JSON:", err.message);
+  }
 }
 
 class PendingStore {
@@ -42,17 +62,25 @@ class PendingStore {
     this.state = safeReadJson();
   }
 
+  /**
+   * Menyimpan state saat ini ke file secara antre (queue).
+   */
   _save() {
     const snapshot = JSON.parse(JSON.stringify(this.state));
     writeQueue = writeQueue
       .then(() => {
         atomicWriteJson(snapshot);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("[PendingStore] Error dalam antrean simpan:", err.message);
+      });
     return writeQueue;
   }
 
-  // ===== getters =====
+  // =========================
+  // GETTERS
+  // =========================
+  
   getByToken(token) {
     return this.state.pendingByToken[token] || null;
   }
@@ -69,16 +97,21 @@ class PendingStore {
     return this.state.userFlow[String(userId)] || null;
   }
 
-  // ===== setters =====
+  // =========================
+  // SETTERS & MUTATORS
+  // =========================
+
   async setPending(token, data) {
+    const uid = String(data.userId);
     this.state.pendingByToken[token] = data;
-    this.state.pendingByUser[String(data.userId)] = token;
+    this.state.pendingByUser[uid] = token;
     await this._save();
   }
 
   async updatePending(token, patch) {
     const cur = this.state.pendingByToken[token];
     if (!cur) return null;
+    
     this.state.pendingByToken[token] = { ...cur, ...patch };
     await this._save();
     return this.state.pendingByToken[token];
@@ -86,9 +119,10 @@ class PendingStore {
 
   async removePending(token) {
     const cur = this.state.pendingByToken[token];
-    if (cur?.userId) {
-      delete this.state.pendingByUser[String(cur.userId)];
-      delete this.state.userFlow[String(cur.userId)];
+    if (cur && cur.userId) {
+      const uid = String(cur.userId);
+      delete this.state.pendingByUser[uid];
+      delete this.state.userFlow[uid];
     }
     delete this.state.pendingByToken[token];
     await this._save();
@@ -96,16 +130,18 @@ class PendingStore {
 
   async clearUser(userId) {
     const uid = String(userId);
-
     const tok = this.state.pendingByUser[uid];
-    if (tok) delete this.state.pendingByToken[tok];
-
+    
+    if (tok) {
+      delete this.state.pendingByToken[tok];
+    }
+    
     delete this.state.pendingByUser[uid];
     delete this.state.userFlow[uid];
     await this._save();
   }
 
-  // admin awaiting custom reason / acc note
+  // Admin flow: menunggu input catatan atau alasan reject
   async setAdminAwait(adminUserId, data) {
     this.state.adminAwait[String(adminUserId)] = data;
     await this._save();
@@ -116,7 +152,7 @@ class PendingStore {
     await this._save();
   }
 
-  // user flow
+  // User flow: melacak langkah-langkah di bot (wizard)
   async setUserFlow(userId, flow) {
     this.state.userFlow[String(userId)] = flow;
     await this._save();
@@ -127,21 +163,35 @@ class PendingStore {
     await this._save();
   }
 
-  // cleanup expired
+  // =========================
+  // MAINTENANCE
+  // =========================
+
+  /**
+   * Menghapus transaksi yang sudah kadaluarsa (Expired).
+   * @param {number} ttlMs - Waktu kadaluarsa dalam milidetik.
+   */
   async cleanupExpired(ttlMs) {
     const now = Date.now();
     const tokens = Object.keys(this.state.pendingByToken);
+    let changed = false;
+
     for (const tok of tokens) {
       const d = this.state.pendingByToken[tok];
       if (d?.createdAt && d.createdAt + ttlMs < now) {
         if (d.userId) {
-          delete this.state.pendingByUser[String(d.userId)];
-          delete this.state.userFlow[String(d.userId)];
+          const uid = String(d.userId);
+          delete this.state.pendingByUser[uid];
+          delete this.state.userFlow[uid];
         }
         delete this.state.pendingByToken[tok];
+        changed = true;
       }
     }
-    await this._save();
+
+    if (changed) {
+      await this._save();
+    }
   }
 }
 
