@@ -547,11 +547,14 @@ function msgPickMode(mode) {
     "",
     "ℹ️ Setelah pilih paket:",
     "1) Kirim *username Roblox*",
-    "2) Kirim *Place ID / Link Game / Pass ID / Link Gamepass*",
+    "2) Kirim *Place ID / Link Game Roblox*",
     "",
     "⚠️ Penting:",
-    "- Place ID itu ID game (angka di link setelah /games/).",
-    "- Kalau kamu cuma punya Pass ID, bot akan coba cari Place ID otomatis.",
+    "",
+    "- Place ID itu contohnya seperti ini : (://www.roblox.com/id/games/109579642181751/nama-game) .",
+    "- [109579642181751] adalah Place ID nya.",
+    "",
+    "- Username itu username kamu di game Roblox.",
     "- Gamepass di dalam game harus tersedia & harganya harus sesuai paket yang dipilih.",
   ].join("\n");
 }
@@ -565,7 +568,7 @@ function msgPackagePickedGAMEPASS(pkg) {
     `💳 Harga: *${formatRupiah(pkg.priceIdr)}*`,
     "",
     "✍️ Kirim *username Roblox* kamu (1 pesan).",
-    "Contoh: `CoolPlayer123`",
+    "Contoh: `AwesomePlayer123`",
     "",
     "⚠️ Pastikan di game kamu ada *Gamepass* yang sesuai paket ini.",
   ].join("\n");
@@ -580,19 +583,14 @@ function msgAskGamepassPlaceId(pkg, username) {
     `📦 Paket: *${show}⏣*`,
     `💳 Harga: *${formatRupiah(pkg.priceIdr)}*`,
     "",
-    "✍️ Sekarang kirim salah satu:",
-    "1) *Place ID* (angka) / Link game",
-    "2) *Pass ID* (angka) / Link gamepass",
+    "✍️ Sekarang kirim :",
+    "*Place ID* (angka) / Link game",
     "",
     "Contoh Place ID:",
     "- `1234567890`",
     "- `https://www.roblox.com/games/1234567890/Nama-Game`",
     "",
-    "Contoh Pass ID:",
-    "- `8210106190`",
-    "- `https://www.roblox.com/game-pass/8210106190/NamaPass`",
-    "",
-    "⚠️ Bot akan *otomatis resolve* Pass ID → Place ID jika perlu.",
+    "⚠️ Wajib kirim Place ID atau link game nya ya.",
   ].join("\n");
 }
 
@@ -610,7 +608,7 @@ function msgPlaceIdHelp() {
     "`https://www.roblox.com/games/1234567890/Nama-Game`",
     "✅ Place ID = `1234567890`",
     "",
-    "⚠️ Kalau kamu cuma punya *Pass ID*, kirim Pass ID juga boleh (bot akan coba carikan Place ID otomatis).",
+    "⚠️ Pastikan kamu mengirim Place ID yang benar ya.",
   ].join("\n");
 }
 
