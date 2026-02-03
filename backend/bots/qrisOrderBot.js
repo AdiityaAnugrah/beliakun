@@ -149,49 +149,44 @@ function parsePositiveInt(text) {
  * - Game Pass ID (angka dari /game-pass/xxxx atau gamePassId=xxxx)
  * - kalau cuma angka, kita kembalikan sebagai "numberOnly"
  */
+/**
+ * Ekstrak ID dari teks secara lebih akurat (mendukung format regional /id/ atau /en/)
+ */
 function extractRobloxIdsFromText(input) {
   const s = String(input || "").trim();
   if (!s) return { placeId: 0, gamePassId: 0, numberOnly: 0 };
 
-  // Place URL: /games/{placeId}
+  // 1. Deteksi Gamepass (Termasuk format regional /id/ atau /en/)
+  // Format: roblox.com/game-pass/123456/... atau roblox.com/id/game-pass/123456/...
+  const mGpLink = s.match(/game-pass\/(\d+)/i);
+  if (mGpLink && mGpLink[1]) {
+    const n = Number(mGpLink[1]);
+    if (n > 0) return { placeId: 0, gamePassId: n, numberOnly: 0 };
+  }
+
+  // 2. Deteksi Games/Place (Termasuk format regional)
   const mGames = s.match(/\/games\/(\d+)/i);
   if (mGames && mGames[1]) {
     const n = Number(mGames[1]);
-    if (Number.isFinite(n) && n > 0) return { placeId: n, gamePassId: 0, numberOnly: 0 };
+    if (n > 0) return { placeId: n, gamePassId: 0, numberOnly: 0 };
   }
 
-  // Place query: placeId=123
-  const mPlace = s.match(/[?&]placeId=(\d+)/i);
-  if (mPlace && mPlace[1]) {
-    const n = Number(mPlace[1]);
-    if (Number.isFinite(n) && n > 0) return { placeId: n, gamePassId: 0, numberOnly: 0 };
-  }
+  // 3. Deteksi Query Parameter (placeId= atau gamePassId=)
+  const mGpQuery = s.match(/[?&]gamePassId=(\d+)/i);
+  if (mGpQuery && mGpQuery[1]) return { placeId: 0, gamePassId: Number(mGpQuery[1]), numberOnly: 0 };
 
-  // Gamepass link variants:
-  const mGp1 = s.match(/\/game-pass\/(\d+)/i);
-  if (mGp1 && mGp1[1]) {
-    const n = Number(mGp1[1]);
-    if (Number.isFinite(n) && n > 0) return { placeId: 0, gamePassId: n, numberOnly: 0 };
-  }
+  const mPlaceQuery = s.match(/[?&]placeId=(\d+)/i);
+  if (mPlaceQuery && mPlaceQuery[1]) return { placeId: Number(mPlaceQuery[1]), gamePassId: 0, numberOnly: 0 };
 
-  const mGp2 = s.match(/[?&]gamePassId=(\d+)/i);
-  if (mGp2 && mGp2[1]) {
-    const n = Number(mGp2[1]);
-    if (Number.isFinite(n) && n > 0) return { placeId: 0, gamePassId: n, numberOnly: 0 };
-  }
-
-  const mLooseGp = s.match(/pass\s*id\D*(\d+)/i);
-  if (mLooseGp && mLooseGp[1]) {
-    const n = Number(mLooseGp[1]);
-    if (Number.isFinite(n) && n > 0) return { placeId: 0, gamePassId: n, numberOnly: 0 };
-  }
-
+  // 4. Deteksi "Loose" ID (misal user cuma kirim angka)
+  // Ambil angka pertama yang panjangnya 6 digit atau lebih
   const allNums = s.match(/\d{6,}/g);
   if (allNums && allNums.length) {
     const n = Number(allNums[0]);
-    if (Number.isFinite(n) && n > 0) return { placeId: 0, gamePassId: 0, numberOnly: n };
+    if (n > 0) return { placeId: 0, gamePassId: 0, numberOnly: n };
   }
 
+  // Fallback ke angka biasa
   return { placeId: 0, gamePassId: 0, numberOnly: parsePositiveInt(s) };
 }
 
