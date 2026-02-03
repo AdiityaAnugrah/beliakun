@@ -11,12 +11,6 @@ const { PendingStore } = require("../utils/pendingStore");
 // =========================
 // KONFIG PAKET
 // =========================
-// Catatan:
-// - displayRobux = yang user lihat (misal 100)
-// - robuxAmount  = harga Gamepass di Roblox (misal 143) -> yang dikirim ke RBXCave
-// - label        = teks label yang tampil di detail/QRIS
-
-// ====== GAMEPASS (AUTO) ======
 const PACKAGES_GAMEPASS = [
   { key: "gp_100", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 100⏣", displayRobux: 100, robuxAmount: 143, placeId: 0, priceIdr: 10994 },
   { key: "gp_200", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 200⏣", displayRobux: 200, robuxAmount: 286, placeId: 0, priceIdr: 21987 },
@@ -28,7 +22,6 @@ const PACKAGES_GAMEPASS = [
   { key: "gp_800", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 800⏣", displayRobux: 800, robuxAmount: 1143, placeId: 0, priceIdr: 87869 },
   { key: "gp_900", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 900⏣", displayRobux: 900, robuxAmount: 1286, placeId: 0, priceIdr: 98862 },
   { key: "gp_1000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 1000⏣", displayRobux: 1000, robuxAmount: 1429, placeId: 0, priceIdr: 109855 },
-
   { key: "gp_2000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 2000⏣", displayRobux: 2000, robuxAmount: 2858, placeId: 0, priceIdr: 219709 },
   { key: "gp_3000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 3000⏣", displayRobux: 3000, robuxAmount: 4286, placeId: 0, priceIdr: 329487 },
   { key: "gp_4000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 4000⏣", displayRobux: 4000, robuxAmount: 5715, placeId: 0, priceIdr: 439341 },
@@ -38,16 +31,13 @@ const PACKAGES_GAMEPASS = [
   { key: "gp_8000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 8000⏣", displayRobux: 8000, robuxAmount: 11429, placeId: 0, priceIdr: 878605 },
   { key: "gp_9000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 9000⏣", displayRobux: 9000, robuxAmount: 12858, placeId: 0, priceIdr: 988459 },
   { key: "gp_10000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 10000⏣", displayRobux: 10000, robuxAmount: 14286, placeId: 0, priceIdr: 1098237 },
-
   { key: "gp_15000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 15000⏣", displayRobux: 15000, robuxAmount: 21429, placeId: 0, priceIdr: 1647355 },
   { key: "gp_20000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 20000⏣", displayRobux: 20000, robuxAmount: 28572, placeId: 0, priceIdr: 2196473 },
   { key: "gp_25000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 25000⏣", displayRobux: 25000, robuxAmount: 35715, priceIdr: 2745591 },
-
   { key: "gp_40000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 40000⏣", displayRobux: 40000, robuxAmount: 57143, placeId: 0, priceIdr: 4392869 },
   { key: "gp_50000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 50000⏣", displayRobux: 50000, robuxAmount: 71429, placeId: 0, priceIdr: 5491105 },
 ];
 
-// ====== VILOG (MANUAL VIA LOGIN) ======
 const PACKAGES_VILOG = [
   { key: "vilog_100", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 100⏣", robuxAmount: 100, priceIdr: 10994 },
   { key: "vilog_200", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 200⏣", robuxAmount: 200, priceIdr: 21987 },
@@ -144,12 +134,6 @@ function parsePositiveInt(text) {
 }
 
 /**
- * Ekstrak input user:
- * - Place ID (angka dari /games/xxxx)
- * - Game Pass ID (angka dari /game-pass/xxxx atau gamePassId=xxxx)
- * - kalau cuma angka, kita kembalikan sebagai "numberOnly"
- */
-/**
  * Ekstrak ID dari teks secara lebih akurat (mendukung format regional /id/ atau /en/)
  */
 function extractRobloxIdsFromText(input) {
@@ -157,7 +141,6 @@ function extractRobloxIdsFromText(input) {
   if (!s) return { placeId: 0, gamePassId: 0, numberOnly: 0 };
 
   // 1. Deteksi Gamepass (Termasuk format regional /id/ atau /en/)
-  // Format: roblox.com/game-pass/123456/... atau roblox.com/id/game-pass/123456/...
   const mGpLink = s.match(/game-pass\/(\d+)/i);
   if (mGpLink && mGpLink[1]) {
     const n = Number(mGpLink[1]);
@@ -179,7 +162,6 @@ function extractRobloxIdsFromText(input) {
   if (mPlaceQuery && mPlaceQuery[1]) return { placeId: Number(mPlaceQuery[1]), gamePassId: 0, numberOnly: 0 };
 
   // 4. Deteksi "Loose" ID (misal user cuma kirim angka)
-  // Ambil angka pertama yang panjangnya 6 digit atau lebih
   const allNums = s.match(/\d{6,}/g);
   if (allNums && allNums.length) {
     const n = Number(allNums[0]);
@@ -758,12 +740,12 @@ function createQrisOrderBot() {
     }
 
     if (flow.step === "WAIT_GAMEPASS_USERNAME") {
-      await store.setUserFlow(fromId, { ...flow, step: "WAIT_GAMEPASS_PLACEID", robloxUsername: ctx.message.text.trim() });
+      await store.setUserFlow(fromId, { ...flow, step: "WAIT_GAMEPASS_ID", robloxUsername: ctx.message.text.trim() });
       const pkg = findPackage("GAMEPASS", flow.pkgKey);
       return ctx.reply(msgAskGamepassPlaceId(pkg, ctx.message.text), { parse_mode: "Markdown", reply_markup: gamepassPlaceIdKeyboard().reply_markup });
     }
 
-    if (flow.step === "WAIT_GAMEPASS_PLACEID") {
+    if (flow.step === "WAIT_GAMEPASS_ID") {
       const ids = extractRobloxIdsFromText(ctx.message.text);
       let pId = ids.placeId, gpId = ids.gamePassId;
       if (!pId && !gpId && ids.numberOnly) {
@@ -871,14 +853,14 @@ async function approveAndProcess(bot, store, rbxcave, tok, adminChatIds, note) {
   await store.updatePending(tok, { status: "PROCESSING" });
 
   if (data.mode === "GAMEPASS") {
-    // Sesuai Dokumentasi RBXCave
     const payload = {
       orderId: data.orderId,
       robloxUsername: data.robloxUsername,
-      robuxAmount: data.robuxAmount, // 143
+      robuxAmount: data.robuxAmount, 
       gamePassId: data.orderType === "gamepass_order" ? Number(data.gamePassId) : undefined,
       placeId: data.orderType === "vip_server" ? Number(data.placeId) : undefined,
-      isPreOrder: false, checkOwnership: false
+      isPreOrder: false, 
+      checkOwnership: false
     };
 
     try {
