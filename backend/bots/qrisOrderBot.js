@@ -9,8 +9,23 @@ const { makeRBXCaveClient } = require("../utils/rbxcaveClient");
 const { PendingStore } = require("../utils/pendingStore");
 
 // =========================
+// GLOBAL STATE & CONFIG
+// =========================
+let IS_SHOP_OPEN = true; // Status Toko (Default: Buka)
+
+// Ambil ID Topic dari .env (Konversi ke Number jika ada)
+// Contoh .env: TELEGRAM_TOPIC_ORDER=123
+const TOPIC_ORDER = process.env.TELEGRAM_TOPIC_ORDER ? Number(process.env.TELEGRAM_TOPIC_ORDER) : null;
+const TOPIC_LOG = process.env.TELEGRAM_TOPIC_LOG ? Number(process.env.TELEGRAM_TOPIC_LOG) : null;
+
+// =========================
 // KONFIG PAKET
 // =========================
+// Catatan:
+// - displayRobux = yang user lihat (misal 100)
+// - robuxAmount  = harga Gamepass di Roblox (misal 143) -> yang dikirim ke RBXCave
+// - label        = teks label yang tampil di detail/QRIS
+
 // ====== GAMEPASS (AUTO) ======
 const PACKAGES_GAMEPASS = [
   { key: "gp_100", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 100⏣", displayRobux: 100, robuxAmount: 143, placeId: 0, priceIdr: 10994 },
@@ -23,7 +38,6 @@ const PACKAGES_GAMEPASS = [
   { key: "gp_800", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 800⏣", displayRobux: 800, robuxAmount: 1143, placeId: 0, priceIdr: 87869 },
   { key: "gp_900", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 900⏣", displayRobux: 900, robuxAmount: 1286, placeId: 0, priceIdr: 98862 },
   { key: "gp_1000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 1000⏣", displayRobux: 1000, robuxAmount: 1429, placeId: 0, priceIdr: 109855 },
-
   { key: "gp_2000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 2000⏣", displayRobux: 2000, robuxAmount: 2858, placeId: 0, priceIdr: 219709 },
   { key: "gp_3000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 3000⏣", displayRobux: 3000, robuxAmount: 4286, placeId: 0, priceIdr: 329487 },
   { key: "gp_4000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 4000⏣", displayRobux: 4000, robuxAmount: 5715, placeId: 0, priceIdr: 439341 },
@@ -33,13 +47,13 @@ const PACKAGES_GAMEPASS = [
   { key: "gp_8000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 8000⏣", displayRobux: 8000, robuxAmount: 11429, placeId: 0, priceIdr: 878605 },
   { key: "gp_9000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 9000⏣", displayRobux: 9000, robuxAmount: 12858, placeId: 0, priceIdr: 988459 },
   { key: "gp_10000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 10000⏣", displayRobux: 10000, robuxAmount: 14286, placeId: 0, priceIdr: 1098237 },
-
   { key: "gp_15000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 15000⏣", displayRobux: 15000, robuxAmount: 21429, placeId: 0, priceIdr: 1647355 },
   { key: "gp_20000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 20000⏣", displayRobux: 20000, robuxAmount: 28572, placeId: 0, priceIdr: 2196473 },
   { key: "gp_25000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 25000⏣", displayRobux: 25000, robuxAmount: 35715, placeId: 0, priceIdr: 2745591 },
-
   { key: "gp_40000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 40000⏣", displayRobux: 40000, robuxAmount: 57143, placeId: 0, priceIdr: 4392869 },
   { key: "gp_50000", mode: "GAMEPASS", orderType: "gamepass_order", label: "⚡ GAMEPASS 50000⏣", displayRobux: 50000, robuxAmount: 71429, placeId: 0, priceIdr: 5491105 },
+  // VIP (opsional)
+  // { key: "vip_200", mode: "GAMEPASS", orderType: "vip_server", label: "⚡ VIP Server 200⏣", displayRobux: 200, robuxAmount: 200, placeId: 0, priceIdr: 35000 },
 ];
 
 // ====== VILOG (MANUAL VIA LOGIN) ======
@@ -90,7 +104,7 @@ function makeToken() {
 
 function makeSafeOrderId() {
   const t = Date.now();
-  const r = crypto.randomBytes(4).toString("hex");
+  const r = crypto.randomBytes(4).toString("hex"); // 4 bytes hex -> lebih aman dari collision
   return `TG${t}${r}`;
 }
 
@@ -138,20 +152,24 @@ function parsePositiveInt(text) {
 }
 
 /**
- * Ekstrak input user (Update regex untuk support regional /id/, /en/, dll)
+ * Ekstrak input user:
+ * - Place ID (angka dari /games/xxxx)
+ * - Game Pass ID (angka dari /game-pass/xxxx atau gamePassId=xxxx)
+ * - kalau cuma angka, kita kembalikan sebagai "numberOnly"
  */
 function extractRobloxIdsFromText(input) {
   const s = String(input || "").trim();
   if (!s) return { placeId: 0, gamePassId: 0, numberOnly: 0 };
 
-  // Place URL: /games/{placeId} (ignore regional)
+  // Place URL: /games/{placeId} (Dukungan Regional /id/, /en/, dll)
   const mGames = s.match(/(?:\/games\/|placeId=)(\d+)/i);
   if (mGames && mGames[1]) {
     const n = Number(mGames[1]);
     if (Number.isFinite(n) && n > 0) return { placeId: n, gamePassId: 0, numberOnly: 0 };
   }
 
-  // Gamepass link variants (ignore regional)
+  // Gamepass link variants:
+  // https://www.roblox.com/game-pass/8210106190/...
   const mGp1 = s.match(/(?:\/game-pass\/|gamePassId=)(\d+)/i);
   if (mGp1 && mGp1[1]) {
     const n = Number(mGp1[1]);
@@ -176,7 +194,7 @@ function extractRobloxIdsFromText(input) {
 }
 
 // =========================
-// ROBLOX LOOKUP
+// ROBLOX LOOKUP (PlaceId <-> GamePassId)
 // =========================
 async function fetchJsonPublic(url, { method = "GET", headers = {}, body, timeoutMs = 15000 } = {}) {
   const ctrl = new AbortController();
@@ -185,8 +203,13 @@ async function fetchJsonPublic(url, { method = "GET", headers = {}, body, timeou
   try {
     const res = await fetch(url, { method, headers, body, signal: ctrl.signal });
     const text = await res.text();
+
     let data;
-    try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = text;
+    }
 
     if (!res.ok) {
       const err = new Error(`HTTP ${res.status}`);
@@ -200,41 +223,76 @@ async function fetchJsonPublic(url, { method = "GET", headers = {}, body, timeou
   }
 }
 
+/**
+ * Resolve GamePassId -> (universeId/placeId) -> rootPlaceId
+ */
 async function resolvePlaceIdFromGamePassId(gamePassId) {
   const id = Number(gamePassId || 0);
-  if (!(id > 0)) return { ok: false, placeId: 0, via: "invalid" };
+  if (!(id > 0)) return { ok: false, placeId: 0, universeId: 0, via: "invalid" };
 
+  // 1) endpoint baru
   try {
     const url = `https://apis.roblox.com/game-passes/v1/game-passes/${id}/product-info`;
     const info = await fetchJsonPublic(url);
 
-    const placeIdDirect = Number(info?.placeId || info?.PlaceId || 0) || 0;
+    const universeId = Number(info?.universeId || info?.UniverseId || info?.universeID || 0) || 0;
+    const placeIdDirect = Number(info?.placeId || info?.PlaceId || info?.placeID || 0) || 0;
     const price = Number(info?.PriceInRobux || info?.priceInRobux || 0);
-    
-    if (placeIdDirect > 0) {
-      return { ok: true, placeId: placeIdDirect, price: price, via: "apis.placeId" };
-    }
-  } catch (_) {}
 
+    if (placeIdDirect > 0) {
+      return { ok: true, placeId: placeIdDirect, universeId: universeId || 0, price: price, via: "apis.placeId" };
+    }
+
+    if (universeId > 0) {
+      const g = await fetchJsonPublic(`https://games.roblox.com/v1/games?universeIds=${universeId}`);
+      const rootPlaceId = Number(g?.data?.[0]?.rootPlaceId || 0);
+      if (rootPlaceId > 0) return { ok: true, placeId: rootPlaceId, universeId, via: "apis.universe->rootPlaceId" };
+    }
+  } catch (_) {
+    // ignore, fallback
+  }
+
+  // 2) fallback endpoint lama (kadang masih jalan)
   try {
     const url = `https://api.roblox.com/marketplace/game-pass-product-info?gamePassId=${id}`;
     const info = await fetchJsonPublic(url);
-    const placeId = Number(info?.PlaceId || info?.placeId || 0);
-    if (placeId > 0) return { ok: true, placeId, via: "legacy.placeId" };
-  } catch (_) {}
 
-  return { ok: false, placeId: 0, via: "not_found" };
+    const placeId = Number(info?.PlaceId || info?.placeId || 0);
+    const universeId = Number(info?.UniverseId || info?.universeId || 0);
+
+    if (placeId > 0) return { ok: true, placeId, universeId: universeId || 0, via: "legacy.placeId" };
+
+    if (universeId > 0) {
+      const g = await fetchJsonPublic(`https://games.roblox.com/v1/games?universeIds=${universeId}`);
+      const rootPlaceId = Number(g?.data?.[0]?.rootPlaceId || 0);
+      if (rootPlaceId > 0) return { ok: true, placeId: rootPlaceId, universeId, via: "legacy.universe->rootPlaceId" };
+    }
+  } catch (_) {
+    // ignore
+  }
+
+  return { ok: false, placeId: 0, universeId: 0, via: "not_found" };
 }
 
+/**
+ * Coba validasi "angka doang" itu placeId atau passId
+ */
 async function resolvePlaceIdFromUnknownNumber(n) {
   const id = Number(n || 0);
-  if (!(id > 0)) return { ok: false, placeId: 0 };
+  if (!(id > 0)) return { ok: false, placeId: 0, guessed: "invalid" };
 
+  // coba placeId -> universe
   try {
     const u = await fetchJsonPublic(`https://api.roblox.com/universes/get-universe-containing-place?placeid=${id}`);
-    if (u?.UniverseId) return { ok: true, placeId: id, guessed: "placeId" };
-  } catch (_) {}
+    const universeId = Number(u?.UniverseId || u?.universeId || 0);
+    if (universeId > 0) {
+      return { ok: true, placeId: id, guessed: "placeId" };
+    }
+  } catch (_) {
+    // ignore
+  }
 
+  // coba gamepass
   const r = await resolvePlaceIdFromGamePassId(id);
   if (r.ok) return { ok: true, placeId: r.placeId, guessed: "gamePassId" };
 
@@ -247,18 +305,35 @@ async function resolvePlaceIdFromUnknownNumber(n) {
 function postDiscordWebhook(webhookUrl, content) {
   return new Promise((resolve) => {
     try {
-      if (!webhookUrl) return resolve({ ok: false, status: 0 });
+      if (!webhookUrl) return resolve({ ok: false, status: 0, error: "empty_url" });
+
       const u = new URL(webhookUrl);
       const body = JSON.stringify({ content });
+
       const req = https.request(
-        { method: "POST", hostname: u.hostname, path: u.pathname + (u.search || ""), headers: { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) } },
-        (res) => resolve({ ok: res.statusCode >= 200 && res.statusCode < 300 })
+        {
+          method: "POST",
+          hostname: u.hostname,
+          path: u.pathname + (u.search || ""),
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(body),
+          },
+        },
+        (res) => {
+          let data = "";
+          res.on("data", (chunk) => (data += chunk));
+          res.on("end", () => {
+            resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, text: data });
+          });
+        }
       );
-      req.on("error", () => resolve({ ok: false }));
+
+      req.on("error", (e) => resolve({ ok: false, status: 0, error: e?.message || String(e) }));
       req.write(body);
       req.end();
     } catch (e) {
-      resolve({ ok: false });
+      resolve({ ok: false, status: 0, error: e?.message || String(e) });
     }
   });
 }
@@ -268,11 +343,17 @@ async function notifyDiscordPaymentReceived(orderData) {
   if (!url) return;
 
   const nominal = formatRupiah(orderData.priceIdr || 0);
-  const username = String(orderData.robloxUsername || orderData.loginUsername || "-").trim() || "-";
+  const username = String(orderData.robloxUsername || orderData.loginUsername || orderData.username || "-").trim() || "-";
   const paket = String(orderData.label || "-").trim() || "-";
   const content = `Payment received: ${nominal} from ${username} [${paket}]`;
 
-  await postDiscordWebhook(url, content);
+  const res = await postDiscordWebhook(url, content);
+  if (!res.ok) {
+    const preview = String(res.text || "").slice(0, 200);
+    console.log("[discord] webhook failed:", res.status, preview || res.error || "");
+  } else {
+    console.log("[discord] webhook sent:", content);
+  }
 }
 
 // =========================
@@ -290,22 +371,28 @@ function packagesKeyboard(mode, page) {
   const list = getPackagesByMode(mode);
   const totalPages = pagesCount(list);
   const p = Math.max(0, Math.min(Number(page || 0), totalPages - 1));
+
   const start = p * PAGE_SIZE;
   const items = list.slice(start, start + PAGE_SIZE);
+
   const rows = [];
 
   for (let i = 0; i < items.length; i += 2) {
     const a = items[i];
     const b = items[i + 1];
+
+    // ✅ tampilkan displayRobux untuk GAMEPASS (biar user lihat 100⏣ bukan 143⏣)
     const aShow = mode === "GAMEPASS" ? Number(a.displayRobux || a.robuxAmount || 0) : Number(a.robuxAmount || 0);
     const bShow = b ? (mode === "GAMEPASS" ? Number(b.displayRobux || b.robuxAmount || 0) : Number(b.robuxAmount || 0)) : 0;
-    
+
     const textA = `${aShow}⏣ • ${formatRupiah(a.priceIdr)}`;
     const row = [Markup.button.callback(textA, `PKG:${mode}:${a.key}`)];
+
     if (b) {
       const textB = `${bShow}⏣ • ${formatRupiah(b.priceIdr)}`;
       row.push(Markup.button.callback(textB, `PKG:${mode}:${b.key}`));
     }
+
     rows.push(row);
   }
 
@@ -314,8 +401,10 @@ function packagesKeyboard(mode, page) {
   nav.push(Markup.button.callback(`📄 ${p + 1}/${totalPages}`, "NOOP"));
   if (p < totalPages - 1) nav.push(Markup.button.callback("Next ➡️", `PAGE:${mode}:${p + 1}`));
   rows.push(nav);
+
   rows.push([Markup.button.callback("⬅️ Kembali (Pilih Mode)", "BACK_TO_MODE")]);
   rows.push([Markup.button.callback("🔄 Reset", "RESET")]);
+
   return Markup.inlineKeyboard(rows);
 }
 
@@ -375,11 +464,27 @@ function rejectReasonKeyboard(token) {
   ]);
 }
 
+// ✅ tombol admin untuk VILOG feedback setelah ACC
 function adminVilogFeedbackKeyboard(token) {
   return Markup.inlineKeyboard([
     [Markup.button.callback("📸 Kirim foto bukti selesai", `VFB_PHOTO:${token}`)],
     [Markup.button.callback("📝 Kirim pesan/progress", `VFB_TEXT:${token}`)],
-    [Markup.button.callback("✅ Tandai selesai", `VFB_DONE:${token}`)],
+    [Markup.button.callback("✅ Tandai selesai (tanpa foto)", `VFB_DONE:${token}`)],
+  ]);
+}
+
+// ✅ RATING KEYBOARD
+function userRatingKeyboard() {
+  return Markup.inlineKeyboard([
+    [Markup.button.callback("⭐ 1", "RATE:1"), Markup.button.callback("⭐ 2", "RATE:2"), Markup.button.callback("⭐ 3", "RATE:3")],
+    [Markup.button.callback("⭐ 4", "RATE:4"), Markup.button.callback("⭐ 5", "RATE:5")]
+  ]);
+}
+
+// ✅ BUY AGAIN KEYBOARD
+function buyAgainKeyboard() {
+  return Markup.inlineKeyboard([
+    [Markup.button.callback("🛍️ Beli Lagi (Menu Utama)", "RESET")]
   ]);
 }
 
@@ -387,6 +492,14 @@ function adminVilogFeedbackKeyboard(token) {
 // MESSAGES
 // =========================
 function msgWelcome() {
+  if (!IS_SHOP_OPEN) {
+    return [
+        "⛔ *TOKO SEDANG TUTUP*",
+        "────────────────────",
+        "Maaf, saat ini admin sedang istirahat atau maintenance.",
+        "Silakan kembali lagi nanti ya! 🙏"
+    ].join("\n");
+  }
   return [
     "✨ *Centra Game Bot*",
     "────────────────────",
@@ -425,19 +538,22 @@ function msgPickMode(mode) {
     "⚠️ Penting:",
     "- Place ID itu ID game (angka di link setelah /games/).",
     "- Kalau kamu cuma punya Pass ID, bot akan coba cari Place ID otomatis.",
+    "- Gamepass di dalam game harus tersedia & harganya harus sesuai paket yang dipilih.",
   ].join("\n");
 }
 
 function msgPackagePickedGAMEPASS(pkg) {
   const show = Number(pkg.displayRobux || pkg.robuxAmount || 0);
   return [
-    "🧾 *Detail Paket GAMEPASS*",
+    "🧾 *Detail Paket GAMEPASS PENDING 4-5 DAY (BUKAN FAST)*",
     "────────────────────",
     `📦 Paket: *${show}⏣*`,
     `💳 Harga: *${formatRupiah(pkg.priceIdr)}*`,
     "",
     "✍️ Kirim *username Roblox* kamu (1 pesan).",
     "Contoh: `CoolPlayer123`",
+    "",
+    "⚠️ Pastikan di game kamu ada *Gamepass* yang sesuai paket ini.",
   ].join("\n");
 }
 
@@ -450,12 +566,19 @@ function msgAskGamepassPlaceId(pkg, username) {
     `📦 Paket: *${show}⏣*`,
     `💳 Harga: *${formatRupiah(pkg.priceIdr)}*`,
     "",
-    "✍️ Sekarang kirim:",
-    "*Place ID* (angka) / Link game",
+    "✍️ Sekarang kirim salah satu:",
+    "1) *Place ID* (angka) / Link game",
+    "2) *Pass ID* (angka) / Link gamepass",
     "",
-    "Contoh:",
+    "Contoh Place ID:",
     "- `1234567890`",
-    "- `https://www.roblox.com/id/games/COPY-PASTE-ID-DI-SINI/Nama-Game`",
+    "- `https://www.roblox.com/games/1234567890/Nama-Game`",
+    "",
+    "Contoh Pass ID:",
+    "- `8210106190`",
+    "- `https://www.roblox.com/game-pass/8210106190/NamaPass`",
+    "",
+    "⚠️ Bot akan *otomatis resolve* Pass ID → Place ID jika perlu.",
   ].join("\n");
 }
 
@@ -463,8 +586,17 @@ function msgPlaceIdHelp() {
   return [
     "📌 *Cara cari Place ID Roblox*",
     "────────────────────",
-    "Angka setelah `/games/` di link game adalah Place ID.",
-    "Contoh: `roblox.com/games/123456/Nama` -> Place ID: `123456`",
+    "",
+    "*Cara paling gampang:*",
+    "1) Buka game Roblox yang dipakai untuk pembelian Gamepass",
+    "2) Lihat link game nya",
+    "3) Angka setelah `/games/` itulah *Place ID*",
+    "",
+    "*Contoh link:*",
+    "`https://www.roblox.com/games/1234567890/Nama-Game`",
+    "✅ Place ID = `1234567890`",
+    "",
+    "⚠️ Kalau kamu cuma punya *Pass ID*, kirim Pass ID juga boleh (bot akan coba carikan Place ID otomatis).",
   ].join("\n");
 }
 
@@ -474,6 +606,7 @@ function msgVilogTemplate(pkg) {
     "────────────────────",
     `📦 Paket: *${pkg.label}*`,
     `💳 Harga: *${formatRupiah(pkg.priceIdr)}*`,
+    `🎟️ Jumlah Robux: *${pkg.robuxAmount}*`,
     "",
     "✍️ Sekarang kirim data dengan format ini (copy-paste):",
     "",
@@ -485,6 +618,11 @@ function msgVilogTemplate(pkg) {
     "1.",
     "2.",
     "3.",
+    "",
+    "~ Kode yang sudah dipakai tidak bisa dipakai lagi",
+    "~ Jika pakai kode email/verif acc, wajib stanby",
+    "~ Perhatikan besar kecil username & pw",
+    "~ Harap matikan passkey / faceid / finger, dll",
   ].join("\n");
 }
 
@@ -502,7 +640,10 @@ function msgQrisCaption(data) {
     data.mode === "GAMEPASS" && data.gamePassId ? `🎫 Pass ID: \`${data.gamePassId}\`` : "",
     "",
     "✅ Scan QRIS lalu upload foto bukti pembayaran di chat ini.",
-  ].filter(Boolean).join("\n");
+    "🔎 Admin akan verifikasi, lalu ACC/TOLAK (kamu akan dapat jawaban jelas).",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function msgCancelConfirm(data) {
@@ -510,6 +651,9 @@ function msgCancelConfirm(data) {
     "⚠️ *Konfirmasi Pembatalan*",
     "────────────────────",
     `🧾 Order ID: \`${data.orderId}\``,
+    `📦 Paket: *${data.label}*`,
+    `💳 Nominal: *${formatRupiah(data.priceIdr)}*`,
+    "",
     "Kamu yakin mau batalkan transaksi ini?",
   ].join("\n");
 }
@@ -525,19 +669,44 @@ function pickAfterColon(line) {
 
 function parseVilogForm(text, forcedRobuxAmount) {
   const raw = String(text || "").trim();
-  const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0);
-  let username = "", password = "", jumlah = "", codes = [];
+  const lines = raw
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter((l) => l.length > 0);
+
+  let username = "";
+  let password = "";
+  let jumlah = "";
+  const codes = [];
 
   for (const l of lines) {
     const low = l.toLowerCase();
-    if (!username && (low.startsWith("username") || low.startsWith("user"))) { username = pickAfterColon(l) || ""; continue; }
-    if (!password && (low.startsWith("password") || low.startsWith("pass"))) { password = pickAfterColon(l) || ""; continue; }
-    if (!jumlah && (low.includes("jumlah") && low.includes("robux"))) { jumlah = pickAfterColon(l) || ""; continue; }
-    
+
+    if (!username && (low.startsWith("username") || low.startsWith("user"))) {
+      username = pickAfterColon(l) || "";
+      continue;
+    }
+    if (!password && (low.startsWith("password") || low.startsWith("pass"))) {
+      password = pickAfterColon(l) || "";
+      continue;
+    }
+    if (!jumlah && (low.includes("jumlah") && low.includes("robux"))) {
+      jumlah = pickAfterColon(l) || "";
+      continue;
+    }
+
     const m = l.match(/^(\d+)\.\s*(.+)$/);
-    if (m && m[2]) { codes.push(String(m[2]).trim()); continue; }
+    if (m && m[2]) {
+      const c = String(m[2]).trim();
+      if (c) codes.push(c);
+      continue;
+    }
     const m2 = l.match(/^-+\s*(.+)$/);
-    if (m2 && m2[1]) { codes.push(String(m2[1]).trim()); continue; }
+    if (m2 && m2[1]) {
+      const c = String(m2[1]).trim();
+      if (c) codes.push(c);
+      continue;
+    }
   }
 
   const jumlahNum = forcedRobuxAmount ? Number(forcedRobuxAmount) : Number(String(jumlah).replace(/[^\d]/g, ""));
@@ -545,8 +714,16 @@ function parseVilogForm(text, forcedRobuxAmount) {
 
   return {
     ok: Boolean(username && password && cleanJumlah > 0 && codes.length >= 3),
-    username, password, jumlahRobux: cleanJumlah, backupCodes: codes.slice(0, 10),
-    error: !username ? "Username kosong" : !password ? "Password kosong" : !(cleanJumlah > 0) ? "Jumlah order robux tidak valid" : (codes.length < 3) ? "Kode backup minimal 3" : "",
+    username,
+    password,
+    jumlahRobux: cleanJumlah,
+    backupCodes: codes.slice(0, 10),
+    error:
+      !username ? "Username kosong" :
+      !password ? "Password kosong" :
+      !(cleanJumlah > 0) ? "Jumlah order robux tidak valid" :
+      (codes.length < 3) ? "Kode backup minimal 3" :
+      "",
   };
 }
 
@@ -556,89 +733,210 @@ function parseVilogForm(text, forcedRobuxAmount) {
 function createQrisOrderBot() {
   const botToken = process.env.TELEGRAM_BOT_TOKEN_GAMEPASS;
   if (!botToken) throw new Error("TELEGRAM_BOT_TOKEN_GAMEPASS missing in backend/.env");
-  
+
   const adminChatIds = parseAdminChatIds(process.env.TELEGRAM_ADMIN_CHAT_ID || "");
-  const qrisAbsPath = path.join(__dirname, "..", process.env.QRIS_IMAGE_PATH || "assets/qris.jpg");
+  if (!adminChatIds.length) {
+    console.log("[qris-bot] WARNING: TELEGRAM_ADMIN_CHAT_ID kosong. Admin approval tidak akan jalan.");
+  }
+
+  const qrisRelPath = process.env.QRIS_IMAGE_PATH || "assets/qris.jpg";
+  const qrisAbsPath = path.join(__dirname, "..", qrisRelPath);
+
   const store = new PendingStore();
   const rbxcave = makeRBXCaveClient();
   const bot = new Telegraf(botToken);
 
   setInterval(() => store.cleanupExpired(PENDING_TTL_MS), 60 * 1000).unref?.();
 
-  bot.command("myid", (ctx) => ctx.reply(`chat_id: ${ctx.chat?.id}\nuser_id: ${ctx.from?.id}`));
+  // COMMANDS
+  bot.command("close", (ctx) => { if (isAdminChatId(adminChatIds, ctx.chat.id)) { IS_SHOP_OPEN = false; ctx.reply("⛔ Toko DITUTUP."); } });
+  bot.command("open", (ctx) => { if (isAdminChatId(adminChatIds, ctx.chat.id)) { IS_SHOP_OPEN = true; ctx.reply("✅ Toko DIBUKA."); } });
+  
+  bot.command("myid", (ctx) => {
+    ctx.reply(`chat_id: ${ctx.chat?.id}\nuser_id: ${ctx.from?.id}`);
+  });
 
   bot.start(async (ctx) => {
-    if (ctx.from?.id) await store.clearUserFlow(ctx.from.id);
-    await ctx.reply(msgWelcome(), { parse_mode: "Markdown", reply_markup: modeKeyboard().reply_markup });
+    const userId = ctx.from?.id;
+    if (userId) {
+      await store.clearUserFlow(userId);
+    }
+    await ctx.reply(msgWelcome(), {
+      parse_mode: "Markdown",
+      reply_markup: IS_SHOP_OPEN ? modeKeyboard().reply_markup : null,
+    });
   });
 
   bot.command("cancel", async (ctx) => {
     const userId = ctx.from?.id;
     if (!userId) return;
+
     const tok = store.getTokenByUser(userId);
-    if (!tok) return ctx.reply("Tidak ada transaksi pending.");
+    if (!tok) return ctx.reply("Tidak ada transaksi pending untuk dibatalkan.");
+
     const data = store.getByToken(tok);
-    if (!data) { await store.clearUser(userId); return ctx.reply("Tidak ada transaksi."); }
-    if (data.status !== "WAIT_PROOF" && data.status !== "WAIT_ADMIN") return ctx.reply("⚠️ Sudah diproses, tidak bisa cancel.");
-    await ctx.reply(msgCancelConfirm(data), { parse_mode: "Markdown", reply_markup: userCancelConfirmKeyboard(tok).reply_markup });
+    if (!data) {
+      await store.clearUser(userId);
+      return ctx.reply("Tidak ada transaksi pending untuk dibatalkan.");
+    }
+
+    // ✅ setelah admin ACC, user tidak boleh cancel
+    if (data.status !== "WAIT_PROOF" && data.status !== "WAIT_ADMIN") {
+      return ctx.reply("⚠️ Transaksi sudah diproses admin, tidak bisa dibatalkan lagi.");
+    }
+
+    await ctx.reply(msgCancelConfirm(data), {
+      parse_mode: "Markdown",
+      reply_markup: userCancelConfirmKeyboard(tok).reply_markup,
+    });
   });
 
   bot.action("NOOP", async (ctx) => ctx.answerCbQuery());
 
   bot.action("HELP_PLACEID", async (ctx) => {
-    await ctx.answerCbQuery();
-    await ctx.reply(msgPlaceIdHelp(), { parse_mode: "Markdown" });
+    await ctx.answerCbQuery("Cara cari Place ID");
+    try {
+      await ctx.reply(msgPlaceIdHelp(), { parse_mode: "Markdown", reply_markup: gamepassPlaceIdKeyboard().reply_markup });
+    } catch {
+      await ctx.reply(msgPlaceIdHelp(), { parse_mode: "Markdown" });
+    }
   });
 
   bot.action("RESET", async (ctx) => {
     await ctx.answerCbQuery("Reset");
-    if (ctx.from?.id) { await store.clearUser(ctx.from.id); await store.clearUserFlow(ctx.from.id); }
-    await ctx.editMessageText("✅ Sudah di-reset. Ketik /start untuk mulai lagi.");
+    const userId = ctx.from?.id;
+    if (userId) {
+      await store.clearUser(userId);
+      await store.clearUserFlow(userId);
+    }
+    try { await ctx.deleteMessage(); } catch {} 
+    try {
+      await ctx.reply("✅ Sudah di-reset. Ketik /start untuk mulai lagi.", { reply_markup: IS_SHOP_OPEN ? modeKeyboard().reply_markup : null });
+    } catch {
+        // ignore
+    }
   });
 
   bot.action("BACK_TO_MODE", async (ctx) => {
     await ctx.answerCbQuery();
-    if (ctx.from?.id) await store.clearUserFlow(ctx.from.id);
-    await ctx.editMessageText(msgWelcome(), { parse_mode: "Markdown", reply_markup: modeKeyboard().reply_markup });
+    const userId = ctx.from?.id;
+    if (userId) await store.clearUserFlow(userId);
+
+    try {
+      await ctx.editMessageText(msgWelcome(), {
+        parse_mode: "Markdown",
+        reply_markup: IS_SHOP_OPEN ? modeKeyboard().reply_markup : null,
+      });
+    } catch {
+      await ctx.reply(msgWelcome(), { parse_mode: "Markdown", reply_markup: IS_SHOP_OPEN ? modeKeyboard().reply_markup : null });
+    }
   });
 
   bot.action(/MODE:(VILOG|GAMEPASS)/, async (ctx) => {
+    if (!IS_SHOP_OPEN) return ctx.answerCbQuery("Toko sedang tutup!", { show_alert: true });
     await ctx.answerCbQuery();
     const mode = ctx.match[1];
-    if (ctx.from?.id) await store.setUserFlow(ctx.from.id, { step: "CHOOSE_PKG", mode, page: 0 });
-    await ctx.editMessageText(msgPickMode(mode), { parse_mode: "Markdown", reply_markup: packagesKeyboard(mode, 0).reply_markup });
+
+    const userId = ctx.from?.id;
+    if (userId) {
+      await store.setUserFlow(userId, { step: "CHOOSE_PKG", mode, page: 0 });
+    }
+
+    const text = msgPickMode(mode);
+
+    try {
+      await ctx.editMessageText(text, {
+        parse_mode: "Markdown",
+        reply_markup: packagesKeyboard(mode, 0).reply_markup,
+      });
+    } catch {
+      await ctx.reply(text, {
+        parse_mode: "Markdown",
+        reply_markup: packagesKeyboard(mode, 0).reply_markup,
+      });
+    }
   });
 
   bot.action(/PAGE:(VILOG|GAMEPASS):(\d+)/, async (ctx) => {
     await ctx.answerCbQuery();
-    const [_, mode, page] = ctx.match;
-    if (ctx.from?.id) await store.setUserFlow(ctx.from.id, { step: "CHOOSE_PKG", mode, page: Number(page) });
-    await ctx.editMessageText(msgPickMode(mode), { parse_mode: "Markdown", reply_markup: packagesKeyboard(mode, Number(page)).reply_markup });
+    const mode = ctx.match[1];
+    const page = Number(ctx.match[2] || 0);
+
+    const userId = ctx.from?.id;
+    if (userId) {
+      await store.setUserFlow(userId, { step: "CHOOSE_PKG", mode, page });
+    }
+
+    const text = msgPickMode(mode);
+    try {
+      await ctx.editMessageText(text, {
+        parse_mode: "Markdown",
+        reply_markup: packagesKeyboard(mode, page).reply_markup,
+      });
+    } catch {
+      await ctx.reply(text, {
+        parse_mode: "Markdown",
+        reply_markup: packagesKeyboard(mode, page).reply_markup,
+      });
+    }
   });
 
   bot.action(/BACK_TO_PACKAGES:(VILOG|GAMEPASS)/, async (ctx) => {
     await ctx.answerCbQuery();
     const mode = ctx.match[1];
-    if (ctx.from?.id) await store.setUserFlow(ctx.from.id, { step: "CHOOSE_PKG", mode, page: 0 });
-    await ctx.reply(msgPickMode(mode), { parse_mode: "Markdown", reply_markup: packagesKeyboard(mode, 0).reply_markup });
+    const userId = ctx.from?.id;
+    if (userId) {
+      await store.setUserFlow(userId, { step: "CHOOSE_PKG", mode, page: 0 });
+    }
+
+    const text = msgPickMode(mode);
+    await ctx.reply(text, {
+      parse_mode: "Markdown",
+      reply_markup: packagesKeyboard(mode, 0).reply_markup,
+    });
   });
 
   bot.action(/PKG:(VILOG|GAMEPASS):(.+)/, async (ctx) => {
+    if (!IS_SHOP_OPEN) return ctx.answerCbQuery("Toko sedang tutup!");
     await ctx.answerCbQuery();
-    const [_, mode, pkgKey] = ctx.match;
+    const mode = ctx.match[1];
+    const pkgKey = ctx.match[2];
+
     const pkg = findPackage(mode, pkgKey);
-    if (!pkg) return ctx.reply("Paket tidak ditemukan.");
-    
+    if (!pkg) return ctx.reply("Paket tidak ditemukan. Ketik /start untuk ulang.");
+
     const userId = ctx.from?.id;
     if (!userId) return;
-    if (store.getTokenByUser(userId)) return ctx.reply("⚠️ Ada transaksi pending. Ketik /cancel dulu.");
+
+    const existing = store.getTokenByUser(userId);
+    if (existing) {
+      return ctx.reply("⚠️ Kamu masih punya transaksi pending.\nKetik /cancel untuk batalkan dulu.", {
+        parse_mode: "Markdown",
+      });
+    }
 
     if (mode === "VILOG") {
       await store.setUserFlow(userId, { step: "WAIT_VILOG_FORM", mode, pkgKey });
-      await ctx.editMessageText(msgVilogTemplate(pkg), { parse_mode: "Markdown", reply_markup: backToPackagesKeyboard(mode).reply_markup });
+      const prompt = msgVilogTemplate(pkg);
+      try {
+        await ctx.editMessageText(prompt, {
+          parse_mode: "Markdown",
+          reply_markup: backToPackagesKeyboard(mode).reply_markup,
+        });
+      } catch {
+        await ctx.reply(prompt, { parse_mode: "Markdown", reply_markup: backToPackagesKeyboard(mode).reply_markup });
+      }
     } else {
       await store.setUserFlow(userId, { step: "WAIT_GAMEPASS_USERNAME", mode, pkgKey });
-      await ctx.editMessageText(msgPackagePickedGAMEPASS(pkg), { parse_mode: "Markdown", reply_markup: backToPackagesKeyboard(mode).reply_markup });
+      const prompt = msgPackagePickedGAMEPASS(pkg);
+      try {
+        await ctx.editMessageText(prompt, {
+          parse_mode: "Markdown",
+          reply_markup: backToPackagesKeyboard(mode).reply_markup,
+        });
+      } catch {
+        await ctx.reply(prompt, { parse_mode: "Markdown", reply_markup: backToPackagesKeyboard(mode).reply_markup });
+      }
     }
   });
 
@@ -649,113 +947,293 @@ function createQrisOrderBot() {
     const fromId = ctx.from?.id;
     const chatId = String(ctx.chat?.id || "");
 
-    // ADMIN FLOW
+    // ADMIN await flows
     if (fromId && isAdminChatId(adminChatIds, chatId)) {
       const awaitObj = store.getAdminAwait(fromId);
-      if (awaitObj?.step === "WAIT_CUSTOM_REASON") {
+
+      if (awaitObj?.step === "WAIT_CUSTOM_REASON" && awaitObj.token) {
+        const reason = (ctx.message.text || "").trim();
+        if (!reason) return;
         await store.clearAdminAwait(fromId);
-        await finalizeReject(bot, store, awaitObj.token, `Alasan admin: ${ctx.message.text}`, adminChatIds);
+        await finalizeReject(bot, store, awaitObj.token, `Alasan admin: ${reason}`, adminChatIds);
         return;
       }
-      if (awaitObj?.step === "WAIT_ACC_NOTE") {
+
+      if (awaitObj?.step === "WAIT_ACC_NOTE" && awaitObj.token) {
+        const note = (ctx.message.text || "").trim();
+        if (!note) return;
         await store.clearAdminAwait(fromId);
-        await approveAndProcess(bot, store, rbxcave, awaitObj.token, adminChatIds, ctx.message.text);
+        await approveAndProcess(bot, store, rbxcave, awaitObj.token, adminChatIds, note);
         return;
       }
-      if (awaitObj?.step === "WAIT_VILOG_FEEDBACK_TEXT") {
+
+      // ✅ admin kirim pesan/progress untuk VILOG
+      if (awaitObj?.step === "WAIT_VILOG_FEEDBACK_TEXT" && awaitObj.token) {
+        const text = (ctx.message.text || "").trim();
+        if (!text) return;
         await store.clearAdminAwait(fromId);
+
         const data = store.getByToken(awaitObj.token);
-        if (data) {
-          await bot.telegram.sendMessage(data.chatId, `📩 *Update dari Admin*\n\n${ctx.message.text}`, { parse_mode: "Markdown" });
-          ctx.reply("✅ Pesan progress terkirim.");
-        }
-        return;
+        if (!data) return ctx.reply("⚠️ Data token tidak ditemukan / sudah selesai.");
+
+        await bot.telegram.sendMessage(
+          data.chatId,
+          [
+            "📩 *Update dari Admin*",
+            "────────────────────",
+            `🧾 Order ID: \`${data.orderId}\``,
+            "",
+            text,
+          ].join("\n"),
+          { parse_mode: "Markdown" }
+        );
+
+        return ctx.reply("✅ Pesan progress sudah dikirim ke user.");
       }
     }
 
-    // USER FLOW
+    // USER flow
     const userId = ctx.from?.id;
     if (!userId) return next();
+
     const flow = store.getUserFlow(userId);
     if (!flow) return next();
 
     // VILOG
     if (flow.step === "WAIT_VILOG_FORM") {
       const pkg = findPackage("VILOG", flow.pkgKey);
-      const parsed = parseVilogForm(ctx.message.text || "", pkg?.robuxAmount);
-      if (!parsed.ok) return ctx.reply(`⚠️ Format salah: ${parsed.error}\n\nKirim ulang sesuai format.`, { reply_markup: backToPackagesKeyboard("VILOG").reply_markup });
+      if (!pkg) {
+        await store.clearUserFlow(userId);
+        return ctx.reply("Paket invalid. Ketik /start untuk mulai lagi.");
+      }
 
+      const parsed = parseVilogForm(ctx.message.text || "", pkg.robuxAmount);
+      if (!parsed.ok) {
+        return ctx.reply(
+          [
+            "⚠️ Format ORDER VIA LOGIN belum lengkap.",
+            `Alasan: *${parsed.error || "Tidak valid"}*`,
+            "",
+            "Silakan kirim ulang dengan format berikut:",
+            "",
+            msgVilogTemplate(pkg),
+          ].join("\n"),
+          { parse_mode: "Markdown", reply_markup: backToPackagesKeyboard("VILOG").reply_markup }
+        );
+      }
+
+      const orderId = makeSafeOrderId();
       const tok = makeToken();
+
       const data = {
-        token: tok, userId, chatId: ctx.chat.id, orderId: makeSafeOrderId(),
-        mode: "VILOG", orderType: "vilog_manual", label: pkg.label,
-        priceIdr: Number(pkg.priceIdr), robuxAmount: Number(pkg.robuxAmount),
-        loginUsername: parsed.username, loginPassword: parsed.password,
-        jumlahOrderRobux: parsed.jumlahRobux, backupCodes: parsed.backupCodes,
-        status: "WAIT_PROOF", createdAt: Date.now()
+        token: tok,
+        createdAt: Date.now(),
+        userId,
+        chatId: ctx.chat.id,
+        orderId,
+
+        mode: "VILOG",
+        orderType: "vilog_manual",
+
+        label: pkg.label,
+        priceIdr: Number(pkg.priceIdr || 0),
+        robuxAmount: Number(pkg.robuxAmount || 0),
+
+        loginUsername: String(parsed.username || "").trim(),
+        loginPassword: String(parsed.password || "").trim(),
+        jumlahOrderRobux: Number(parsed.jumlahRobux || 0),
+        backupCodes: parsed.backupCodes,
+
+        status: "WAIT_PROOF",
       };
+
       await store.setPending(tok, data);
-      await store.setUserFlow(userId, { step: "WAIT_PROOF", mode: "VILOG" });
-      await ctx.replyWithPhoto({ source: qrisAbsPath }, { caption: msgQrisCaption(data), parse_mode: "Markdown", reply_markup: userPaymentKeyboard(tok).reply_markup });
+      await store.setUserFlow(userId, { step: "WAIT_PROOF", mode: "VILOG", pkgKey: flow.pkgKey });
+
+      const caption = msgQrisCaption(data);
+
+      try {
+        await ctx.replyWithPhoto(
+          { source: qrisAbsPath },
+          { caption, parse_mode: "Markdown", reply_markup: userPaymentKeyboard(tok).reply_markup }
+        );
+      } catch {
+        await ctx.reply(caption, { parse_mode: "Markdown", reply_markup: userPaymentKeyboard(tok).reply_markup });
+        await ctx.reply("⚠️ Gagal kirim foto QRIS. Pastikan file ada: " + qrisAbsPath);
+      }
       return;
     }
 
-    // GAMEPASS USERNAME
+    // GAMEPASS username
     if (flow.step === "WAIT_GAMEPASS_USERNAME") {
-      const username = (ctx.message.text || "").trim();
-      if (username.length < 3) return ctx.reply("⚠️ Username tidak valid.");
-      await store.setUserFlow(userId, { step: "WAIT_GAMEPASS_PLACEID", pkgKey: flow.pkgKey, robloxUsername: username });
       const pkg = findPackage("GAMEPASS", flow.pkgKey);
-      return ctx.reply(msgAskGamepassPlaceId(pkg, username), { parse_mode: "Markdown", reply_markup: gamepassPlaceIdKeyboard().reply_markup });
+      if (!pkg) {
+        await store.clearUserFlow(userId);
+        return ctx.reply("Paket invalid. Ketik /start untuk mulai lagi.");
+      }
+
+      const username = (ctx.message.text || "").trim();
+      if (!username || username.length < 3) {
+        return ctx.reply("⚠️ Username tidak valid. Kirim username Roblox yang benar ya.");
+      }
+
+      await store.setUserFlow(userId, {
+        step: "WAIT_GAMEPASS_PLACEID",
+        mode: "GAMEPASS",
+        pkgKey: flow.pkgKey,
+        robloxUsername: String(username).trim(),
+      });
+
+      return ctx.reply(msgAskGamepassPlaceId(pkg, username), {
+        parse_mode: "Markdown",
+        reply_markup: gamepassPlaceIdKeyboard().reply_markup,
+      });
     }
 
-    // GAMEPASS ID
+    // GAMEPASS placeId OR passId
     if (flow.step === "WAIT_GAMEPASS_PLACEID") {
       const pkg = findPackage("GAMEPASS", flow.pkgKey);
-      const ids = extractRobloxIdsFromText(ctx.message.text);
-      let placeId = ids.placeId;
-      let gamePassId = ids.gamePassId;
+      if (!pkg) {
+        await store.clearUserFlow(userId);
+        return ctx.reply("Paket invalid. Ketik /start untuk mulai lagi.");
+      }
 
-      // Logic Resolving
-      if (!placeId && gamePassId) {
+      const username = String(flow.robloxUsername || "").trim();
+      if (!username) {
+        await store.clearUserFlow(userId);
+        return ctx.reply("Flow invalid (username kosong). Ketik /start untuk mulai lagi.");
+      }
+
+      const ids = extractRobloxIdsFromText(ctx.message.text || "");
+
+      let placeId = Number(ids.placeId || 0);
+      let gamePassId = Number(ids.gamePassId || 0);
+
+      // 1) kalau input jelas gamepass id -> resolve
+      if (!(placeId > 0) && gamePassId > 0) {
         const r = await resolvePlaceIdFromGamePassId(gamePassId);
-        if (r.ok) { placeId = r.placeId; }
+        if (!r.ok) {
+          return ctx.reply(
+            [
+              "⚠️ Pass ID terdeteksi, tapi gagal menemukan Place ID otomatis.",
+              `Pass ID: \`${gamePassId}\``,
+              "",
+              "Coba kirim link game (Place ID) atau cek Pass ID benar.",
+              "",
+              "Contoh Place link:",
+              "`https://www.roblox.com/games/1234567890/Nama-Game`",
+            ].join("\n"),
+            { parse_mode: "Markdown", reply_markup: gamepassPlaceIdKeyboard().reply_markup }
+          );
+        }
+        placeId = r.placeId;
       }
-      if (!placeId && !gamePassId && ids.numberOnly) {
+
+      // 2) kalau hanya angka doang -> coba tebak placeId dulu, kalau gagal treat as gamepass
+      if (!(placeId > 0) && !(gamePassId > 0) && ids.numberOnly > 0) {
         const r = await resolvePlaceIdFromUnknownNumber(ids.numberOnly);
-        if (r.ok) { placeId = r.placeId; if (r.guessed === "gamePassId") gamePassId = ids.numberOnly; }
+        if (!r.ok) {
+          return ctx.reply(
+            [
+              "⚠️ Angka terdeteksi tapi tidak bisa dipastikan itu Place ID / Pass ID.",
+              `Input: \`${ids.numberOnly}\``,
+              "",
+              "Kirim salah satu yang pasti ya:",
+              "- Link game: `https://www.roblox.com/games/123.../Nama`",
+              "- Link gamepass: `https://www.roblox.com/game-pass/821.../Nama`",
+            ].join("\n"),
+            { parse_mode: "Markdown", reply_markup: gamepassPlaceIdKeyboard().reply_markup }
+          );
+        }
+
+        placeId = r.placeId;
+        if (r.guessed === "gamePassId") gamePassId = ids.numberOnly;
       }
 
-      if (!placeId && !gamePassId) return ctx.reply("⚠️ Coba kirim saja linknya contoh(https://www.roblox.com/id/games/...) atau Palace ID-nya.", { reply_markup: backToPackagesKeyboard("GAMEPASS").reply_markup });
+      if (!(placeId > 0)) {
+        return ctx.reply(
+          [
+            "⚠️ Place ID / Pass ID tidak terbaca / tidak valid.",
+            "",
+            "Kirim ulang pakai contoh ini:",
+            "Place:",
+            "- `1234567890`",
+            "- `https://www.roblox.com/games/1234567890/Nama-Game`",
+            "",
+            "Pass:",
+            "- `8210106190`",
+            "- `https://www.roblox.com/game-pass/8210106190/NamaPass`",
+            "",
+            "Kalau bingung, klik tombol: *📌 Cara cari Place ID*",
+          ].join("\n"),
+          { parse_mode: "Markdown", reply_markup: gamepassPlaceIdKeyboard().reply_markup }
+        );
+      }
 
-      // Validasi Harga (Auto Check)
+      // 3) Validasi Harga (Auto Check Price)
       let priceMatch = true;
       let actualPrice = 0;
       if (gamePassId > 0) {
-        const r = await resolvePlaceIdFromGamePassId(gamePassId); // Cek harga
+        const r = await resolvePlaceIdFromGamePassId(gamePassId);
         if (r.ok && r.price) {
           actualPrice = r.price;
-          if (actualPrice !== pkg.robuxAmount) priceMatch = false;
+          // Bandingkan dengan pkg.robuxAmount
+          if (actualPrice !== pkg.robuxAmount) {
+            priceMatch = false;
+          }
         }
       }
 
       if (!priceMatch) {
-         return ctx.reply(`❌ *Harga Salah!*\nPaket ini butuh: ${pkg.robuxAmount} Robux\nGamepass kamu: ${actualPrice} Robux\n\nSilakan ubah harga dan kirim link ulang.`);
+         return ctx.reply(`❌ *Harga Tidak Sesuai!*\n\nPaket ini membutuhkan Gamepass seharga: *${pkg.robuxAmount} Robux*.\nGamepass kamu saat ini: *${actualPrice} Robux*.\n\nSilakan ubah harga Gamepass di Roblox lalu kirim ulang linknya.`, { parse_mode: "Markdown" });
       }
 
+      const orderId = makeSafeOrderId();
       const tok = makeToken();
+
+      const show = Number(pkg.displayRobux || pkg.robuxAmount || 0);
+
       const data = {
-        token: tok, userId, chatId: ctx.chat.id, orderId: makeSafeOrderId(),
-        mode: "GAMEPASS", orderType: pkg.orderType, robloxUsername: flow.robloxUsername,
-        displayRobux: pkg.displayRobux, robuxAmount: pkg.robuxAmount,
-        placeId: placeId, gamePassId: gamePassId,
-        label: pkg.label, priceIdr: pkg.priceIdr,
-        status: "WAIT_PROOF", createdAt: Date.now()
+        token: tok,
+        createdAt: Date.now(),
+        userId,
+        chatId: ctx.chat.id,
+        orderId,
+
+        mode: "GAMEPASS",
+        orderType: pkg.orderType,
+
+        robloxUsername: username,
+        displayRobux: show,                 // untuk tampilan
+        robuxAmount: Number(pkg.robuxAmount || 0), // harga gamepass di Roblox (misal 143)
+        placeId: Number(placeId),
+        gamePassId: gamePassId || 0,
+
+        label: pkg.label || `${show}⏣`,
+        priceIdr: Number(pkg.priceIdr || 0),
+
+        status: "WAIT_PROOF",
       };
-      
+
       await store.setPending(tok, data);
-      await store.setUserFlow(userId, { step: "WAIT_PROOF", mode: "GAMEPASS" });
-      await ctx.replyWithPhoto({ source: qrisAbsPath }, { caption: msgQrisCaption(data), parse_mode: "Markdown", reply_markup: userPaymentKeyboard(tok).reply_markup });
+      await store.setUserFlow(userId, { step: "WAIT_PROOF", mode: "GAMEPASS", pkgKey: flow.pkgKey });
+
+      const caption = msgQrisCaption(data);
+
+      // kalau resolve passId -> placeId, kasih info singkat biar user paham
+      if (gamePassId > 0) {
+        await ctx.reply(`✅ Pass ID \`${gamePassId}\` berhasil di-resolve ke Place ID \`${placeId}\`.`, { parse_mode: "Markdown" });
+      }
+
+      try {
+        await ctx.replyWithPhoto(
+          { source: qrisAbsPath },
+          { caption, parse_mode: "Markdown", reply_markup: userPaymentKeyboard(tok).reply_markup }
+        );
+      } catch {
+        await ctx.reply(caption, { parse_mode: "Markdown", reply_markup: userPaymentKeyboard(tok).reply_markup });
+        await ctx.reply("⚠️ Gagal kirim foto QRIS. Pastikan file ada: " + qrisAbsPath);
+      }
       return;
     }
 
@@ -763,57 +1241,122 @@ function createQrisOrderBot() {
   });
 
   // =========================
-  // PHOTO HANDLER (FIXED: VILOG NOTIFICATION + FEEDBACK)
+  // PHOTO HANDLER
   // =========================
   bot.on("photo", async (ctx) => {
     const fromId = ctx.from?.id;
     const chatId = String(ctx.chat?.id || "");
 
-    // ADMIN Feedback (VILOG & GAMEPASS)
+    // ✅ 1) ADMIN kirim foto feedback VILOG
     if (fromId && isAdminChatId(adminChatIds, chatId)) {
       const awaitObj = store.getAdminAwait(fromId);
-      if (awaitObj?.step === "WAIT_VILOG_FEEDBACK_PHOTO") {
-        const data = store.getByToken(awaitObj.token);
-        const fileId = ctx.message.photo.pop()?.file_id; // Safe access
-        if (data && fileId) {
-          await store.clearAdminAwait(fromId);
-          await bot.telegram.sendPhoto(data.chatId, fileId, { 
-            caption: `✅ *Pesanan Selesai*\n\nOrder ID: \`${data.orderId}\`\n\nTerima kasih sudah berbelanja!`, 
-            parse_mode: "Markdown" 
-          });
-          await store.removePending(awaitObj.token);
-          return ctx.reply("✅ Foto bukti terkirim dan order ditandai selesai.");
+      if (awaitObj?.step === "WAIT_VILOG_FEEDBACK_PHOTO" && awaitObj.token) {
+        const tok = awaitObj.token;
+        await store.clearAdminAwait(fromId);
+
+        const data = store.getByToken(tok);
+        if (!data) return ctx.reply("⚠️ Data token tidak ditemukan / sudah selesai.");
+        
+        const photos = ctx.message.photo || [];
+        const best = photos[photos.length - 1];
+        const fileId = best.file_id;
+
+        // forward ke user + auto tandai selesai
+        const captionUser = [
+          "✅ *Pesanan Selesai*",
+          "────────────────────",
+          `🧾 Order ID: \`${data.orderId}\``,
+          `📦 Paket: *${data.label}*`,
+          "",
+          "📸 Bukti dari admin:",
+          "",
+          "🙏 Terima kasih sudah berbelanja!",
+        ].join("\n");
+
+        try {
+          await bot.telegram.sendPhoto(data.chatId, fileId, { caption: captionUser, parse_mode: "Markdown" });
+          // ✨ Minta Rating setelah selesai
+          await bot.telegram.sendMessage(data.chatId, "🌟 Bagaimana pelayanan kami? Mohon beri nilai:", { reply_markup: userRatingKeyboard().reply_markup });
+        } catch {
+          await bot.telegram.sendMessage(
+            data.chatId,
+            [
+              "✅ Pesanan sudah diproses.",
+              `Order ID: ${data.orderId}`,
+              "⚠️ Namun foto bukti gagal dikirim (telegram error).",
+            ].join("\n")
+          );
         }
+
+        // Jangan remove pending dulu, tunggu rating atau cleanup nanti. 
+        // Tapi agar tidak menggantung, kita ubah status jadi COMPLETED
+        await store.updatePending(tok, { status: "WAITING_RATING" });
+
+        return ctx.reply("✅ Foto bukti sudah dikirim ke user & user diminta rating.");
       }
     }
 
-    // USER Payment Proof
+    // ✅ 2) USER upload bukti pembayaran
     const userId = ctx.from?.id;
     if (!userId) return;
-    const tok = store.getTokenByUser(userId);
-    if (!tok) return ctx.reply("Belum ada transaksi.");
-    const data = store.getByToken(tok);
-    if (!data || data.status !== "WAIT_PROOF") return;
 
-    const fileId = ctx.message.photo.pop()?.file_id;
-    if (!fileId) return ctx.reply("❌ Gagal membaca foto.");
+    const tok = store.getTokenByUser(userId);
+    if (!tok) return ctx.reply("Belum ada transaksi pending. Ketik /start untuk mulai.");
+
+    const data = store.getByToken(tok);
+    if (!data || data.status !== "WAIT_PROOF") {
+      return ctx.reply("Status transaksi tidak valid. Ketik /start untuk mulai ulang.");
+    }
+
+    if (!adminChatIds.length) return ctx.reply("Admin chat belum diset. Isi TELEGRAM_ADMIN_CHAT_ID dulu.");
+
+    const photos = ctx.message.photo || [];
+    const best = photos[photos.length - 1];
+    const fileId = best.file_id;
 
     await store.updatePending(tok, { proofFileId: fileId, status: "WAIT_ADMIN" });
-    await ctx.reply("✅ Bukti diterima! Menunggu admin.", { reply_markup: userCancelConfirmKeyboard(tok).reply_markup });
 
-    // Notifikasi ke Admin
-    for (const adminId of adminChatIds) {
+    await ctx.reply(
+      [
+        "✅ *Bukti diterima!*",
+        "────────────────────",
+        "Admin akan verifikasi pembayaran kamu.",
+        "Kamu akan dapat jawaban jelas: *ACC / TOLAK*.",
+        "Kamu masih bisa batalkan sebelum admin ACC: ketik /cancel.",
+      ].join("\n"),
+      { parse_mode: "Markdown" }
+    );
+
+    const who = data.mode === "VILOG" ? data.loginUsername : data.robloxUsername;
+    const modeText = data.mode === "VILOG" ? "🔐 VILOG (manual)" : "⚡ GAMEPASS (auto)";
+
+    const adminCaption = [
+      "🔔 *Konfirmasi Pembayaran Baru*",
+      "────────────────────",
+      `Token: \`${tok}\``,
+      `Mode: *${modeText}*`,
+      `Order ID: \`${data.orderId}\``,
+      `Paket: *${data.label}*`,
+      `Nominal seharusnya: *${formatRupiah(data.priceIdr)}*`,
+      `User: \`${who}\``,
+      data.mode === "GAMEPASS" ? `Place ID: \`${data.placeId}\`` : "",
+      data.mode === "GAMEPASS" && data.gamePassId ? `Pass ID: \`${data.gamePassId}\`` : "",
+      "",
+      "Klik tombol untuk ACC/TOLAK.",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    // SIAPKAN OPSI KIRIM (TOPIC SUPPORT)
+    const sendOptions = { parse_mode: "Markdown", reply_markup: adminMainKeyboard(tok).reply_markup };
+    if (TOPIC_ORDER) sendOptions.message_thread_id = TOPIC_ORDER;
+
+    for (const adminChatId of adminChatIds) {
       try {
-        // 1. Kirim Foto Bukti Pembayaran
-        await bot.telegram.sendPhoto(adminId, fileId, {
-          caption: `🔔 *PESANAN BARU*\nID: \`${data.orderId}\`\nUser: ${data.robloxUsername || data.loginUsername}\nTotal: ${formatRupiah(data.priceIdr)}${data.mode === "GAMEPASS" ? `\nPlace: ${data.placeId}` : ""}`,
-          parse_mode: "Markdown",
-          reply_markup: adminMainKeyboard(tok).reply_markup
-        });
+        await bot.telegram.sendPhoto(adminChatId, fileId, { caption: adminCaption, ...sendOptions });
 
-        // 2. Jika VILOG, kirim detail akun
         if (data.mode === "VILOG") {
-          const detailMsg = [
+          const detail = [
             "🔐 *DETAIL ORDER VIA LOGIN*",
             "────────────────────",
             `Token: \`${tok}\``,
@@ -827,167 +1370,610 @@ function createQrisOrderBot() {
             "*Backup Codes:*",
             ...(Array.isArray(data.backupCodes) ? data.backupCodes.map((c, i) => `${i + 1}. \`${c}\``) : []),
             "",
-            "⚠️ Pastikan kode belum pernah dipakai."
+            "⚠️ Pastikan kode belum pernah dipakai.",
           ].join("\n");
 
-          await bot.telegram.sendMessage(adminId, detailMsg, { parse_mode: "Markdown" });
+          const detailOpts = { parse_mode: "Markdown" };
+          if (TOPIC_ORDER) detailOpts.message_thread_id = TOPIC_ORDER;
+          
+          await bot.telegram.sendMessage(adminChatId, detail, detailOpts);
         }
-      } catch (e) { console.log(e); }
+      } catch (e) {
+        console.log("[qris-bot] failed send to admin:", adminChatId, e?.message || e);
+      }
     }
   });
 
   // =========================
-  // ADMIN ACTIONS
+  // USER INLINE CANCEL
   // =========================
-  bot.action(/ACC:(.+)/, async (ctx) => {
-    const [_, tok] = ctx.match;
-    await ctx.answerCbQuery("Pilih ACC");
-    try { await ctx.editMessageCaption(ctx.update.callback_query.message.caption + "\n\n✅ *Pilih Mode ACC:*", { parse_mode: "Markdown", reply_markup: adminAccKeyboard(tok).reply_markup }); } catch {}
-  });
+  bot.action(/U_CANCEL:(.+)/, async (ctx) => {
+    await ctx.answerCbQuery();
+    const tok = ctx.match[1];
+    const userId = ctx.from?.id;
+    if (!userId) return;
 
-  bot.action(/ACC_DO:(.+)/, async (ctx) => {
-    await ctx.answerCbQuery("Memproses...");
-    await approveAndProcess(bot, store, rbxcave, ctx.match[1], adminChatIds, "");
-  });
-
-  bot.action(/ACC_NOTE:(.+)/, async (ctx) => {
-    await ctx.answerCbQuery("Ketik catatan");
-    await store.setAdminAwait(ctx.from.id, { step: "WAIT_ACC_NOTE", token: ctx.match[1] });
-    ctx.reply("Ketik catatan ACC:");
-  });
-
-  bot.action(/REJ:(.+)/, async (ctx) => {
-    await ctx.answerCbQuery("Pilih alasan");
-    await ctx.editMessageReplyMarkup(rejectReasonKeyboard(ctx.match[1]).reply_markup);
-  });
-
-  bot.action(/REJR:(.+):(.+)/, async (ctx) => {
-    const [_, tok, code] = ctx.match;
-    if (code === "CANCEL") return ctx.editMessageReplyMarkup(adminMainKeyboard(tok).reply_markup);
-    if (code === "OTHER") {
-      await store.setAdminAwait(ctx.from.id, { step: "WAIT_CUSTOM_REASON", token: tok });
-      return ctx.reply("Ketik alasan reject:");
+    const currentTok = store.getTokenByUser(userId);
+    if (!currentTok || currentTok !== tok) {
+      return ctx.reply("⚠️ Transaksi ini sudah tidak aktif / bukan milikmu.");
     }
-    const reasons = { LESS: "Nominal kurang", MORE: "Nominal lebih", BLUR: "Bukti tidak jelas" };
-    await finalizeReject(bot, store, tok, reasons[code] || "Ditolak", adminChatIds);
-    await ctx.editMessageCaption("❌ REJECTED");
+
+    const data = store.getByToken(tok);
+    if (!data) {
+      await store.clearUser(userId);
+      await store.clearUserFlow(userId);
+      return ctx.reply("⚠️ Transaksi sudah tidak ada.");
+    }
+
+    if (data.status !== "WAIT_PROOF" && data.status !== "WAIT_ADMIN") {
+      return ctx.reply("⚠️ Transaksi sudah diproses admin, tidak bisa dibatalkan lagi.");
+    }
+
+    await ctx.reply(msgCancelConfirm(data), {
+      parse_mode: "Markdown",
+      reply_markup: userCancelConfirmKeyboard(tok).reply_markup,
+    });
   });
 
-  // ========== ADMIN FEEDBACK ACTIONS (ENABLED FOR GAMEPASS TOO) ==========
+  bot.action(/U_CANCEL_N:(.+)/, async (ctx) => {
+    await ctx.answerCbQuery("Oke");
+    await ctx.reply("👍 Oke, transaksi *tidak jadi dibatalkan*.", { parse_mode: "Markdown" });
+  });
+
+  bot.action(/U_CANCEL_Y:(.+)/, async (ctx) => {
+    await ctx.answerCbQuery("Dibatalkan");
+    const tok = ctx.match[1];
+    const userId = ctx.from?.id;
+    if (!userId) return;
+
+    const currentTok = store.getTokenByUser(userId);
+    if (!currentTok || currentTok !== tok) {
+      return ctx.reply("⚠️ Transaksi ini sudah tidak aktif / bukan milikmu.");
+    }
+
+    const data = store.getByToken(tok);
+    if (!data) {
+      await store.clearUser(userId);
+      await store.clearUserFlow(userId);
+      return ctx.reply("⚠️ Transaksi sudah tidak ada.");
+    }
+
+    if (data.status !== "WAIT_PROOF" && data.status !== "WAIT_ADMIN") {
+      return ctx.reply("⚠️ Transaksi sudah diproses admin, tidak bisa dibatalkan lagi.");
+    }
+
+    await store.removePending(tok);
+    await store.clearUserFlow(userId);
+
+    await ctx.reply(
+      [
+        "✅ *Transaksi dibatalkan.*",
+        "────────────────────",
+        "Kamu bisa mulai order baru kapan saja dengan /start.",
+      ].join("\n"),
+      { parse_mode: "Markdown" }
+    );
+
+    // Notif cancel ke admin topic log
+    const opts = { parse_mode: "Markdown" };
+    if (TOPIC_LOG) opts.message_thread_id = TOPIC_LOG;
+
+    for (const adminChatId of adminChatIds) {
+      try {
+        await bot.telegram.sendMessage(
+          adminChatId,
+          [
+            "⚠️ *User membatalkan transaksi*",
+            `Order ID: ${data.orderId}`,
+            `Paket: ${data.label}`,
+            `User: ${data.mode === "VILOG" ? data.loginUsername : data.robloxUsername}`,
+            `Token: ${tok}`,
+          ].join("\n"),
+          opts
+        );
+      } catch {}
+    }
+  });
+
+  // =========================
+  // ADMIN FEEDBACK BUTTONS (VILOG)
+  // =========================
   bot.action(/VFB_PHOTO:(.+)/, async (ctx) => {
-    await store.setAdminAwait(ctx.from.id, { step: "WAIT_VILOG_FEEDBACK_PHOTO", token: ctx.match[1] });
-    ctx.reply("📸 Silakan kirim foto bukti selesai:");
+    const chatId = String(ctx.chat?.id || "");
+    if (!isAdminChatId(adminChatIds, chatId)) {
+      await ctx.answerCbQuery("Bukan admin chat", { show_alert: true });
+      return;
+    }
+    await ctx.answerCbQuery("Kirim foto bukti");
+    const tok = ctx.match[1];
+
+    const data = store.getByToken(tok);
+    if (!data) return ctx.reply("⚠️ Token tidak ditemukan / sudah selesai.");
+    
+    // Allow GAMEPASS mode too for manual proof
+    // if (data.mode !== "VILOG") return ctx.reply("⚠️ Token ini bukan VILOG.");
+
+    const adminUserId = ctx.from?.id;
+    if (adminUserId) {
+      await store.setAdminAwait(adminUserId, { step: "WAIT_VILOG_FEEDBACK_PHOTO", token: tok });
+    }
+    return ctx.reply("📸 Silakan *kirim 1 foto* bukti proses di chat admin ini (foto akan diteruskan ke user & order selesai).", {
+      parse_mode: "Markdown",
+    });
   });
 
   bot.action(/VFB_TEXT:(.+)/, async (ctx) => {
-    await store.setAdminAwait(ctx.from.id, { step: "WAIT_VILOG_FEEDBACK_TEXT", token: ctx.match[1] });
-    ctx.reply("📝 Silakan ketik pesan progress:");
+    const chatId = String(ctx.chat?.id || "");
+    if (!isAdminChatId(adminChatIds, chatId)) {
+      await ctx.answerCbQuery("Bukan admin chat", { show_alert: true });
+      return;
+    }
+    await ctx.answerCbQuery("Kirim pesan");
+    const tok = ctx.match[1];
+
+    const data = store.getByToken(tok);
+    if (!data) return ctx.reply("⚠️ Token tidak ditemukan / sudah selesai.");
+
+    const adminUserId = ctx.from?.id;
+    if (adminUserId) {
+      await store.setAdminAwait(adminUserId, { step: "WAIT_VILOG_FEEDBACK_TEXT", token: tok });
+    }
+    return ctx.reply("📝 Silakan ketik *1 pesan* progress untuk user (misal: 'Sedang proses, mohon standby verifikasi').", {
+      parse_mode: "Markdown",
+    });
   });
 
   bot.action(/VFB_DONE:(.+)/, async (ctx) => {
-    const d = store.getByToken(ctx.match[1]);
-    if (d) {
-      await bot.telegram.sendMessage(d.chatId, "✅ *Pesanan Selesai!*\nTerima kasih sudah order.", { parse_mode: "Markdown" });
-      await store.removePending(ctx.match[1]); // Hapus data di sini
-      ctx.reply("✅ Order ditandai selesai.");
+    const chatId = String(ctx.chat?.id || "");
+    if (!isAdminChatId(adminChatIds, chatId)) {
+      await ctx.answerCbQuery("Bukan admin chat", { show_alert: true });
+      return;
+    }
+    await ctx.answerCbQuery("Ditandai selesai");
+    const tok = ctx.match[1];
+
+    const data = store.getByToken(tok);
+    if (!data) return ctx.reply("⚠️ Token tidak ditemukan / sudah selesai.");
+
+    await bot.telegram.sendMessage(
+      data.chatId,
+      [
+        "✅ *Pesanan sudah diproses*",
+        "────────────────────",
+        `🧾 Order ID: \`${data.orderId}\``,
+        `📦 Paket: *${data.label}*`,
+        "",
+        "🙏 Terima kasih!",
+      ].join("\n"),
+      { parse_mode: "Markdown" }
+    );
+    
+    // Minta Rating
+    await bot.telegram.sendMessage(data.chatId, "🌟 Bagaimana pelayanan kami? Mohon beri nilai:", { reply_markup: userRatingKeyboard().reply_markup });
+
+    await store.updatePending(tok, { status: "WAITING_RATING" });
+
+    // Log to Admin
+    const opts = {}; 
+    if (TOPIC_LOG) opts.message_thread_id = TOPIC_LOG;
+    for (const adminChatId of adminChatIds) {
+      try {
+        await bot.telegram.sendMessage(adminChatId, `✅ DONE: ${data.orderId}\nToken: ${tok}`, opts);
+      } catch {}
+    }
+
+    return ctx.reply("✅ Order ditandai selesai & user sudah diberi notifikasi.");
+  });
+
+  // =========================
+  // ADMIN ACC / REJECT
+  // =========================
+  bot.action(/ACC:(.+)/, async (ctx) => {
+    const chatId = String(ctx.chat?.id || "");
+    if (!isAdminChatId(adminChatIds, chatId)) {
+      await ctx.answerCbQuery("Bukan admin chat", { show_alert: true });
+      return;
+    }
+
+    const tok = ctx.match[1];
+    const data = store.getByToken(tok);
+    if (!data) {
+      await ctx.answerCbQuery("Data tidak ditemukan", { show_alert: true });
+      return;
+    }
+    if (data.status !== "WAIT_ADMIN") {
+      await ctx.answerCbQuery("Status bukan WAIT_ADMIN", { show_alert: true });
+      return;
+    }
+
+    await ctx.answerCbQuery("Pilih mode ACC");
+    const baseCaption = ctx.update.callback_query.message.caption || "";
+    const newCaption = baseCaption + "\n\n✅ *Pilih ACC:*";
+    try {
+      await ctx.editMessageCaption(newCaption, {
+        parse_mode: "Markdown",
+        reply_markup: adminAccKeyboard(tok).reply_markup,
+      });
+    } catch {}
+  });
+
+  bot.action(/ACC_BACK:(.+)/, async (ctx) => {
+    const chatId = String(ctx.chat?.id || "");
+    if (!isAdminChatId(adminChatIds, chatId)) {
+      await ctx.answerCbQuery("Bukan admin chat", { show_alert: true });
+      return;
+    }
+    await ctx.answerCbQuery("Kembali");
+
+    const tok = ctx.match[1];
+    const data = store.getByToken(tok);
+    if (!data) return;
+
+    await store.updatePending(tok, { status: "WAIT_ADMIN" });
+
+    const caption = (ctx.update.callback_query.message.caption || "").replace(/\n\n✅ \*Pilih ACC:\*[\s\S]*$/m, "");
+    try {
+      await ctx.editMessageCaption(caption, {
+        parse_mode: "Markdown",
+        reply_markup: adminMainKeyboard(tok).reply_markup,
+      });
+    } catch {}
+  });
+
+  bot.action(/ACC_DO:(.+)/, async (ctx) => {
+    const chatId = String(ctx.chat?.id || "");
+    if (!isAdminChatId(adminChatIds, chatId)) {
+      await ctx.answerCbQuery("Bukan admin chat", { show_alert: true });
+      return;
+    }
+    await ctx.answerCbQuery("Diproses...");
+    const tok = ctx.match[1];
+    await approveAndProcess(bot, store, rbxcave, tok, adminChatIds, "");
+  });
+
+  bot.action(/ACC_NOTE:(.+)/, async (ctx) => {
+    const chatId = String(ctx.chat?.id || "");
+    if (!isAdminChatId(adminChatIds, chatId)) {
+      await ctx.answerCbQuery("Bukan admin chat", { show_alert: true });
+      return;
+    }
+
+    const tok = ctx.match[1];
+    const data = store.getByToken(tok);
+    if (!data) {
+      await ctx.answerCbQuery("Data tidak ditemukan", { show_alert: true });
+      return;
+    }
+
+    await ctx.answerCbQuery("Ketik catatan");
+    const adminUserId = ctx.from?.id;
+    if (adminUserId) {
+      await store.setAdminAwait(adminUserId, { step: "WAIT_ACC_NOTE", token: tok });
+    }
+    await ctx.reply("📝 Silakan ketik catatan ACC (1 pesan) di chat admin ini.");
+  });
+
+  bot.action(/REJ:(.+)/, async (ctx) => {
+    const chatId = String(ctx.chat?.id || "");
+    if (!isAdminChatId(adminChatIds, chatId)) {
+      await ctx.answerCbQuery("Bukan admin chat", { show_alert: true });
+      return;
+    }
+
+    const tok = ctx.match[1];
+    const data = store.getByToken(tok);
+    if (!data) {
+      await ctx.answerCbQuery("Data tidak ditemukan", { show_alert: true });
+      return;
+    }
+
+    await ctx.answerCbQuery("Pilih alasan");
+    await store.updatePending(tok, { status: "WAIT_REJECT_REASON" });
+
+    const baseCaption = ctx.update.callback_query.message.caption || "";
+    const newCaption = baseCaption + "\n\n❌ *Pilih alasan penolakan:*";
+    try {
+      await ctx.editMessageCaption(newCaption, {
+        parse_mode: "Markdown",
+        reply_markup: rejectReasonKeyboard(tok).reply_markup,
+      });
+    } catch {
+      await ctx.reply("❌ Pilih alasan penolakan:", {
+        reply_markup: rejectReasonKeyboard(tok).reply_markup,
+      });
     }
   });
 
-  // User Cancel Actions
-  bot.action(/U_CANCEL_Y:(.+)/, async (ctx) => {
+  bot.action(/REJR:(.+):(.+)/, async (ctx) => {
+    const chatId = String(ctx.chat?.id || "");
+    if (!isAdminChatId(adminChatIds, chatId)) {
+      await ctx.answerCbQuery("Bukan admin chat", { show_alert: true });
+      return;
+    }
+
     const tok = ctx.match[1];
+    const code = ctx.match[2];
+
     const data = store.getByToken(tok);
-    if (data) {
-       await store.removePending(tok);
-       await ctx.editMessageText("✅ Transaksi dibatalkan.");
-       for (const aid of adminChatIds) bot.telegram.sendMessage(aid, `⚠️ User cancel: ${data.orderId}`);
+    if (!data) {
+      await ctx.answerCbQuery("Data tidak ditemukan", { show_alert: true });
+      return;
+    }
+
+    if (code === "CANCEL") {
+      await ctx.answerCbQuery("Batal");
+      await store.updatePending(tok, { status: "WAIT_ADMIN" });
+
+      const caption = (ctx.update.callback_query.message.caption || "").replace(/\n\n❌ \*Pilih alasan penolakan:\*[\s\S]*$/m, "");
+      try {
+        await ctx.editMessageCaption(caption, {
+          parse_mode: "Markdown",
+          reply_markup: adminMainKeyboard(tok).reply_markup,
+        });
+      } catch {}
+      return;
+    }
+
+    if (code === "OTHER") {
+      await ctx.answerCbQuery("Ketik alasan");
+      const adminUserId = ctx.from?.id;
+      if (adminUserId) {
+        await store.setAdminAwait(adminUserId, { step: "WAIT_CUSTOM_REASON", token: tok });
+      }
+      await ctx.reply("✍️ Silakan ketik alasan penolakan (1 pesan) di chat admin ini.");
+      return;
+    }
+
+    let reason = "Ditolak";
+    if (code === "LESS") reason = "Nominal kurang dari seharusnya.";
+    if (code === "MORE") reason = "Nominal lebih dari seharusnya (tidak sesuai).";
+    if (code === "BLUR") reason = "Bukti pembayaran blur / tidak jelas.";
+
+    await ctx.answerCbQuery("Ditolak");
+    await finalizeReject(bot, store, tok, reason, adminChatIds);
+
+    try {
+      const baseCaption = ctx.update.callback_query.message.caption || "";
+      await ctx.editMessageCaption(baseCaption + `\n\n❌ *REJECTED*\nAlasan: ${reason}`, { parse_mode: "Markdown" });
+    } catch {
+      try {
+        await bot.telegram.sendMessage(chatId, `❌ REJECTED\nToken: ${tok}\nAlasan: ${reason}`);
+      } catch {}
     }
   });
-  bot.action(/U_CANCEL_N:(.+)/, async (ctx) => ctx.editMessageText("👍 Transaksi dilanjutkan."));
+
+  // --- RATING & BELI LAGI ---
+  bot.action(/RATE:(\d)/, async (ctx) => {
+    const stars = ctx.match[1];
+    const uid = ctx.from.id;
+    const tok = store.getTokenByUser(uid); 
+    const starStr = "⭐".repeat(Number(stars));
+
+    // Notify Admin (Ke Topic LOG)
+    const opts = { parse_mode: "Markdown" };
+    if (TOPIC_LOG) opts.message_thread_id = TOPIC_LOG;
+
+    for(const aid of adminChatIds) {
+        try { await bot.telegram.sendMessage(aid, `🌟 *RATING BARU:* ${starStr} (${stars}/5)\nUser: ${ctx.from.first_name}\nID: ${ctx.from.id}`, opts); } catch {}
+    }
+
+    if (tok) await store.removePending(tok);
+    await store.clearUserFlow(uid);
+
+    // Clean Chat & Offer Buy Again
+    try { await ctx.deleteMessage(); } catch {} 
+    await ctx.reply(
+      `Terima kasih atas rating ${starStr}-nya! 🙏\nSenang bisa membantu.\n\nMau Top Up lagi?`,
+      { parse_mode: "Markdown", reply_markup: buyAgainKeyboard().reply_markup }
+    );
+  });
 
   return bot;
 }
 
 // =======================
-// HELPERS (FIXED: KEEP ORDER OPEN FOR FEEDBACK & RBXCAVE 402)
+// HELPERS
 // =======================
 async function approveAndProcess(bot, store, rbxcave, tok, adminChatIds, note) {
   const data = store.getByToken(tok);
-  if (!data || data.status === "PROCESSING") return;
+  if (!data) return;
 
-  await store.updatePending(tok, { status: "PROCESSING" });
+  // ✅ lock biar gak double klik ACC (hindari 409 "already have an orderId")
+  if (data.status === "PROCESSING") {
+    for (const adminChatId of adminChatIds) {
+      try { await bot.telegram.sendMessage(adminChatId, `⏳ Masih PROCESSING: ${data.orderId} (Token: ${tok})`); } catch {}
+    }
+    return;
+  }
 
+  if (data.status !== "WAIT_ADMIN") return;
+
+  await store.updatePending(tok, { status: "PROCESSING", processingAt: Date.now() });
+
+  // Topic Options
+  const logOpts = { parse_mode: "Markdown" };
+  if (TOPIC_LOG) logOpts.message_thread_id = TOPIC_LOG;
+
+  // GAMEPASS Auto -> hit RBXCave API
   if (data.mode === "GAMEPASS") {
+    const payloadBase = {
+      orderId: String(data.orderId || "").trim(),
+      robloxUsername: String(data.robloxUsername || "").trim(),
+      robuxAmount: Number(data.robuxAmount || 0), // ✅ harga gamepass (misal 143), bukan display 100
+      placeId: Number(data.placeId || 0),
+      isPreOrder: false,
+      checkOwnership: false,
+    };
+
+    // Auto-Recovery Place ID (Fix Place ID 0)
+    if (payloadBase.placeId <= 0 && data.gamePassId) {
+        const recover = await resolvePlaceIdFromGamePassId(data.gamePassId);
+        if (recover.ok && recover.placeId > 0) {
+            payloadBase.placeId = Number(recover.placeId);
+        }
+    }
+
     try {
-      let finalPlaceId = Number(data.placeId || 0);
+      if (!payloadBase.orderId || payloadBase.orderId.length < 6) throw new Error("invalid orderId");
+      if (!payloadBase.robloxUsername) throw new Error("robloxUsername empty");
+      if (!(payloadBase.robuxAmount > 0)) throw new Error("robuxAmount invalid");
+      if (!(payloadBase.placeId > 0)) throw new Error("placeId invalid (Gagal resolve placeId)");
 
-      // Auto-Recovery Place ID
-      if (finalPlaceId <= 0 && data.gamePassId) {
-        const r = await resolvePlaceIdFromGamePassId(data.gamePassId);
-        if (r.ok) finalPlaceId = r.placeId;
-      }
-
-      if (finalPlaceId <= 0) throw new Error("Gagal mendapatkan Place ID. Pastikan link benar.");
-
-      // API RBXCave
-      await rbxcave.createGamepassOrder({
-        orderId: String(data.orderId),
-        robloxUsername: String(data.robloxUsername),
-        robuxAmount: Number(data.robuxAmount), 
-        gamePassId: Number(data.gamePassId),
-        placeId: finalPlaceId 
-      });
-
-      // Sukses
-      await bot.telegram.sendMessage(data.chatId, `✅ *Pembayaran Diterima!*\nOrder ID: \`${data.orderId}\` berhasil diproses API.\nRobux masuk 4-5 hari.\n\n_Mohon tunggu sebentar untuk bukti proses..._`, { parse_mode: "Markdown" });
-      await notifyDiscordPaymentReceived(data);
-
-      // 🛑 JANGAN HAPUS DULU! Update status agar admin bisa kirim feedback
-      await store.updatePending(tok, { status: "COMPLETED_WAITING_FEEDBACK" });
-
-      // Beri notif ke Admin untuk kirim bukti/finish
-      for (const aid of adminChatIds) {
-        await bot.telegram.sendMessage(aid, `✅ *API SUCCESS: ${data.orderId}*\nSilakan kirim bukti jika perlu, atau klik Selesai.`, { 
-            parse_mode: "Markdown",
-            ...adminVilogFeedbackKeyboard(tok) // Munculkan tombol feedback
-        });
+      // Tambahkan gamePassId jika mode gamepass_order
+      if (data.orderType === "gamepass_order") {
+          payloadBase.gamePassId = Number(data.gamePassId); // Wajib kirim gamePassId
+          await rbxcave.createGamepassOrder(payloadBase);
+      } else {
+          await rbxcave.createVipServerOrder(payloadBase);
       }
 
     } catch (e) {
-      await store.updatePending(tok, { status: "WAIT_ADMIN" });
-      const statusCode = e.status || 500;
-      const detail = e.data ? JSON.stringify(e.data) : e.message;
-      let adminMsg = `❌ *API FAIL: ${data.orderId}*\n`;
+      await store.updatePending(tok, { status: "WAIT_ADMIN" }); // Rollback status biar bisa coba lagi manual
 
-      if (statusCode === 402 || detail.includes("do not have robux")) {
-         adminMsg += `⚠️ *STOK RBXCAVE HABIS!* ⚠️\nProvider tidak punya stok untuk nominal: ${data.robuxAmount}.\n👉 *Silakan proses manual.*`;
-         await bot.telegram.sendMessage(data.chatId, "⚠️ *Info:* Order sedang dalam antrean proses manual (stok pusat limit). Mohon ditunggu.");
+      const status = e?.status || 500;
+      const detail = e?.data ? safeStringify(e.data) : "";
+      
+      let msg = "";
+      
+      // ERROR 402: STOK HABIS
+      if (status === 402 || detail.includes("do not have robux")) {
+          msg = [
+            "⚠️ *STOK RBXCAVE HABIS / LIMIT*",
+            `Order ID: ${data.orderId}`,
+            `Nominal: ${data.robuxAmount}`,
+            "",
+            "👉 *Harap proses manual (login akun stok).* ",
+            "Bot tidak menghapus data ini, silakan klik 'Selesai' nanti jika sudah diproses manual."
+          ].join("\n");
+          
+          // Beritahu user halus
+          await bot.telegram.sendMessage(data.chatId, "⚠️ *Info:* Order sedang dalam antrean proses manual admin (karena keterlambatan server pusat). Mohon ditunggu ya.");
       } else {
-         adminMsg += `Err: ${e.message}\nDetail: \`${detail}\``;
+          // ERROR LAIN
+          msg = [
+            "❌ Gagal create order GAMEPASS.",
+            `Order ID: ${data.orderId}`,
+            status ? `Status: HTTP ${status}` : "",
+            `Error: ${e?.message || "unknown"}`,
+            detail ? `Detail:\n${detail}` : "",
+            "",
+            "✅ Cek: placeId / gamepass id / harga / endpoint.",
+          ].join("\n");
       }
 
-      for (const aid of adminChatIds) {
-        await bot.telegram.sendMessage(aid, adminMsg, { parse_mode: "Markdown" });
+      for (const adminChatId of adminChatIds) {
+        try { await bot.telegram.sendMessage(adminChatId, msg, logOpts); } catch {}
       }
+      return;
     }
-  } else {
-    // VILOG Logic
-    await bot.telegram.sendMessage(data.chatId, "✅ *Pembayaran Diterima!*\nAdmin sedang memproses manual.");
-    for (const aid of adminChatIds) {
-       await bot.telegram.sendMessage(aid, `✅ VILOG APPROVED: ${data.orderId}`, { ...adminVilogFeedbackKeyboard(tok) });
+
+    const userMsg = [
+      "✅ *Pembayaran diterima*",
+      "────────────────────",
+      `🧾 Order ID: \`${data.orderId}\``,
+      `📦 Paket: *${data.label}*`,
+      "⚙️ Order GAMEPASS sedang diproses otomatis.",
+      note ? `\n📝 Catatan admin: ${note}` : "",
+      "",
+      "🙏 Jika ada kendala, admin akan menghubungi kamu di chat ini.",
+    ].join("\n");
+
+    await bot.telegram.sendMessage(data.chatId, userMsg, { parse_mode: "Markdown" });
+
+    // Jangan remove pending, ganti status biar admin bisa feedback/selesai
+    await store.updatePending(tok, { status: "COMPLETED_WAITING_FEEDBACK" });
+
+    const fbOpts = { ...logOpts, reply_markup: adminVilogFeedbackKeyboard(tok).reply_markup };
+
+    for (const adminChatId of adminChatIds) {
+      try {
+        await bot.telegram.sendMessage(
+          adminChatId,
+          `✅ APPROVED (API SUCCESS) : ${data.orderId}\nToken: ${tok}${note ? `\nCatatan: ${note}` : ""}\n\nSilakan klik 'Selesai' untuk tutup order.`,
+          fbOpts
+        );
+      } catch {}
     }
-    await store.updatePending(tok, { status: "VILOG_IN_PROGRESS" });
+
     await notifyDiscordPaymentReceived(data);
+    return;
+  }
+
+  // VILOG -> manual (✅ sekarang ada feedback admin)
+  if (data.mode === "VILOG") {
+    await store.updatePending(tok, { status: "VILOG_IN_PROGRESS", approvedAt: Date.now() });
+
+    const userMsg = [
+      "✅ *Pembayaran diterima*",
+      "────────────────────",
+      `🧾 Order ID: \`${data.orderId}\``,
+      `📦 Paket: *${data.label}*`,
+      `🎟️ Jumlah Robux: *${data.robuxAmount}*`,
+      "",
+      "🧑‍💻 Admin sedang memproses order kamu *secara manual via login*.",
+      "⏳ Mohon standby jika diminta verifikasi.",
+      note ? `\n📝 Catatan admin: ${note}` : "",
+      "",
+      "📩 Nanti kamu akan dapat update dari admin jika proses selesai.",
+    ].join("\n");
+
+    await bot.telegram.sendMessage(data.chatId, userMsg, { parse_mode: "Markdown" });
+
+    const fbOpts = { ...logOpts, reply_markup: adminVilogFeedbackKeyboard(tok).reply_markup };
+
+    for (const adminChatId of adminChatIds) {
+      try {
+        await bot.telegram.sendMessage(
+          adminChatId,
+          [
+            `✅ APPROVED (VILOG): ${data.orderId}`,
+            `Token: ${tok}${note ? `\nCatatan: ${note}` : ""}`,
+            "",
+            "➡️ Setelah selesai, kirim feedback ke user:",
+          ].join("\n"),
+          fbOpts
+        );
+      } catch {}
+    }
+
+    await notifyDiscordPaymentReceived(data);
+    return;
   }
 }
 
 async function finalizeReject(bot, store, tok, reason, adminChatIds) {
   const data = store.getByToken(tok);
-  if (data) {
-    await bot.telegram.sendMessage(data.chatId, `❌ *Ditolak*\nAlasan: ${reason}`, { parse_mode: "Markdown" });
-    await store.removePending(tok);
-    for (const aid of adminChatIds) bot.telegram.sendMessage(aid, `❌ REJECTED: ${data.orderId}\nReason: ${reason}`);
+  if (!data) return;
+
+  await bot.telegram.sendMessage(
+    data.chatId,
+    [
+      "❌ *Pembayaran ditolak*",
+      "────────────────────",
+      `🧾 Order ID: \`${data.orderId}\``,
+      `📦 Paket: *${data.label}*`,
+      "",
+      `📌 Alasan: ${reason}`,
+      "",
+      "✅ Kamu bisa buat order baru dengan /start.",
+    ].join("\n"),
+    { parse_mode: "Markdown" }
+  );
+
+  const opts = {};
+  if (TOPIC_LOG) opts.message_thread_id = TOPIC_LOG;
+
+  for (const adminChatId of adminChatIds) {
+    try {
+      await bot.telegram.sendMessage(
+        adminChatId,
+        `❌ REJECTED: ${data.orderId}\nToken: ${tok}\nAlasan: ${reason}`,
+        opts
+      );
+    } catch {}
   }
+
+  await store.removePending(tok);
 }
 
 module.exports = { createQrisOrderBot };
