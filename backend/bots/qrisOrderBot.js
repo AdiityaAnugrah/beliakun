@@ -88,6 +88,20 @@ const PAGE_SIZE = 6;
 const PENDING_TTL_MS = 1000 * 60 * 60; // 1 jam
 
 // =========================
+// ANTI SPAM (RATE LIMITER)
+// =========================
+const userLastChat = new Map();
+const SPAM_DELAY = 1000; // Jeda 1 detik antar pesan
+
+function checkSpam(userId) {
+  const now = Date.now();
+  const last = userLastChat.get(userId) || 0;
+  if (now - last < SPAM_DELAY) return true; // Terdeteksi Spam
+  userLastChat.set(userId, now);
+  return false;
+}
+
+// =========================
 // UTIL
 // =========================
 function formatRupiah(n) {
@@ -944,8 +958,14 @@ function createQrisOrderBot() {
   // TEXT HANDLER
   // =========================
   bot.on("text", async (ctx, next) => {
+    const uid = ctx.from?.id;
     const fromId = ctx.from?.id;
     const chatId = String(ctx.chat?.id || "");
+
+    // Jika terdeteksi spam, kode di bawahnya tidak akan jalan
+    if (checkSpam(uid)) {
+      return ctx.reply("⚠️ Kamu mengirim pesan terlalu cepat. Harap tunggu sebentar sebelum mengirim lagi.");
+    }
 
     // ADMIN await flows
     if (fromId && isAdminChatId(adminChatIds, chatId)) {
@@ -1244,6 +1264,8 @@ function createQrisOrderBot() {
   // PHOTO HANDLER
   // =========================
   bot.on("photo", async (ctx) => {
+    const uid = ctx.from?.id;
+    if (checkSpam(uid)) return ctx.reply("⚠️ Terdeteksi Spam.");
     const fromId = ctx.from?.id;
     const chatId = String(ctx.chat?.id || "");
 
@@ -1768,6 +1790,10 @@ function createQrisOrderBot() {
     );
   });
 
+  // Opsional: Tolak jika user kirim File/Dokumen
+  bot.on("document", async (ctx) => {
+    await ctx.reply("❌ *Format Salah!*\n\nMohon kirim bukti sebagai **FOTO (Galeri)**, jangan dikirim sebagai File/Dokumen.", { parse_mode: "Markdown" });
+  });
   return bot;
 }
 
