@@ -200,9 +200,6 @@ async function fetchJsonPublic(url, { method = "GET", headers = {}, body, timeou
   }
 }
 
-/**
- * Resolve GamePassId -> PlaceId
- */
 async function resolvePlaceIdFromGamePassId(gamePassId) {
   const id = Number(gamePassId || 0);
   if (!(id > 0)) return { ok: false, placeId: 0, via: "invalid" };
@@ -219,7 +216,6 @@ async function resolvePlaceIdFromGamePassId(gamePassId) {
     }
   } catch (_) {}
 
-  // Fallback ke legacy jika perlu (seperti kode lama)
   try {
     const url = `https://api.roblox.com/marketplace/game-pass-product-info?gamePassId=${id}`;
     const info = await fetchJsonPublic(url);
@@ -234,13 +230,11 @@ async function resolvePlaceIdFromUnknownNumber(n) {
   const id = Number(n || 0);
   if (!(id > 0)) return { ok: false, placeId: 0 };
 
-  // coba anggap placeId
   try {
     const u = await fetchJsonPublic(`https://api.roblox.com/universes/get-universe-containing-place?placeid=${id}`);
     if (u?.UniverseId) return { ok: true, placeId: id, guessed: "placeId" };
   } catch (_) {}
 
-  // coba anggap gamePassId
   const r = await resolvePlaceIdFromGamePassId(id);
   if (r.ok) return { ok: true, placeId: r.placeId, guessed: "gamePassId" };
 
@@ -456,14 +450,12 @@ function msgAskGamepassPlaceId(pkg, username) {
     `📦 Paket: *${show}⏣*`,
     `💳 Harga: *${formatRupiah(pkg.priceIdr)}*`,
     "",
-    "✍️ Sekarang kirim salah satu:",
-    "1) *Place ID* (angka) / Link game",
-    "2) *Pass ID* (angka) / Link gamepass",
+    "✍️ Sekarang kirim:",
+    "*Place ID* (angka) / Link game",
     "",
     "Contoh:",
     "- `1234567890`",
-    "- `https://www.roblox.com/games/1234567890`",
-    "- `https://www.roblox.com/game-pass/8210106190`",
+    "- `https://www.roblox.com/id/games/COPY-PASTE-ID-DI-SINI/Nama-Game`",
   ].join("\n");
 }
 
@@ -734,7 +726,7 @@ function createQrisOrderBot() {
         if (r.ok) { placeId = r.placeId; if (r.guessed === "gamePassId") gamePassId = ids.numberOnly; }
       }
 
-      if (!placeId && !gamePassId) return ctx.reply("⚠️ Place ID / Pass ID tidak ditemukan. Pastikan link benar.");
+      if (!placeId && !gamePassId) return ctx.reply("⚠️ Coba kirim saja linknya contoh(https://www.roblox.com/id/games/...) atau Palace ID-nya.", { reply_markup: backToPackagesKeyboard("GAMEPASS").reply_markup });
 
       // Validasi Harga (Auto Check)
       let priceMatch = true;
@@ -771,13 +763,13 @@ function createQrisOrderBot() {
   });
 
   // =========================
-  // PHOTO HANDLER (FIXED 400 ERROR)
+  // PHOTO HANDLER (FIXED: VILOG NOTIFICATION + FEEDBACK)
   // =========================
   bot.on("photo", async (ctx) => {
     const fromId = ctx.from?.id;
     const chatId = String(ctx.chat?.id || "");
 
-    // ADMIN Feedback
+    // ADMIN Feedback (VILOG & GAMEPASS)
     if (fromId && isAdminChatId(adminChatIds, chatId)) {
       const awaitObj = store.getAdminAwait(fromId);
       if (awaitObj?.step === "WAIT_VILOG_FEEDBACK_PHOTO") {
@@ -785,9 +777,12 @@ function createQrisOrderBot() {
         const fileId = ctx.message.photo.pop()?.file_id; // Safe access
         if (data && fileId) {
           await store.clearAdminAwait(fromId);
-          await bot.telegram.sendPhoto(data.chatId, fileId, { caption: "✅ Bukti pesanan selesai dari admin." });
+          await bot.telegram.sendPhoto(data.chatId, fileId, { 
+            caption: `✅ *Pesanan Selesai*\n\nOrder ID: \`${data.orderId}\`\n\nTerima kasih sudah berbelanja!`, 
+            parse_mode: "Markdown" 
+          });
           await store.removePending(awaitObj.token);
-          return ctx.reply("✅ Foto bukti terkirim.");
+          return ctx.reply("✅ Foto bukti terkirim dan order ditandai selesai.");
         }
       }
     }
@@ -800,19 +795,43 @@ function createQrisOrderBot() {
     const data = store.getByToken(tok);
     if (!data || data.status !== "WAIT_PROOF") return;
 
-    const fileId = ctx.message.photo.pop()?.file_id; // FIX ERROR 400
+    const fileId = ctx.message.photo.pop()?.file_id;
     if (!fileId) return ctx.reply("❌ Gagal membaca foto.");
 
     await store.updatePending(tok, { proofFileId: fileId, status: "WAIT_ADMIN" });
     await ctx.reply("✅ Bukti diterima! Menunggu admin.", { reply_markup: userCancelConfirmKeyboard(tok).reply_markup });
 
+    // Notifikasi ke Admin
     for (const adminId of adminChatIds) {
       try {
+        // 1. Kirim Foto Bukti Pembayaran
         await bot.telegram.sendPhoto(adminId, fileId, {
-          caption: `🔔 *PESANAN BARU*\nID: \`${data.orderId}\`\nUser: ${data.robloxUsername || data.loginUsername}\nTotal: ${formatRupiah(data.priceIdr)}\nPlace: ${data.placeId}`,
+          caption: `🔔 *PESANAN BARU*\nID: \`${data.orderId}\`\nUser: ${data.robloxUsername || data.loginUsername}\nTotal: ${formatRupiah(data.priceIdr)}${data.mode === "GAMEPASS" ? `\nPlace: ${data.placeId}` : ""}`,
           parse_mode: "Markdown",
           reply_markup: adminMainKeyboard(tok).reply_markup
         });
+
+        // 2. Jika VILOG, kirim detail akun
+        if (data.mode === "VILOG") {
+          const detailMsg = [
+            "🔐 *DETAIL ORDER VIA LOGIN*",
+            "────────────────────",
+            `Token: \`${tok}\``,
+            `Order ID: \`${data.orderId}\``,
+            `Paket: *${data.label}*`,
+            "",
+            `Username: \`${data.loginUsername}\``,
+            `Password: \`${data.loginPassword}\``,
+            `Jumlah order robux: *${data.jumlahOrderRobux}*`,
+            "",
+            "*Backup Codes:*",
+            ...(Array.isArray(data.backupCodes) ? data.backupCodes.map((c, i) => `${i + 1}. \`${c}\``) : []),
+            "",
+            "⚠️ Pastikan kode belum pernah dipakai."
+          ].join("\n");
+
+          await bot.telegram.sendMessage(adminId, detailMsg, { parse_mode: "Markdown" });
+        }
       } catch (e) { console.log(e); }
     }
   });
@@ -854,6 +873,26 @@ function createQrisOrderBot() {
     await ctx.editMessageCaption("❌ REJECTED");
   });
 
+  // ========== ADMIN FEEDBACK ACTIONS (ENABLED FOR GAMEPASS TOO) ==========
+  bot.action(/VFB_PHOTO:(.+)/, async (ctx) => {
+    await store.setAdminAwait(ctx.from.id, { step: "WAIT_VILOG_FEEDBACK_PHOTO", token: ctx.match[1] });
+    ctx.reply("📸 Silakan kirim foto bukti selesai:");
+  });
+
+  bot.action(/VFB_TEXT:(.+)/, async (ctx) => {
+    await store.setAdminAwait(ctx.from.id, { step: "WAIT_VILOG_FEEDBACK_TEXT", token: ctx.match[1] });
+    ctx.reply("📝 Silakan ketik pesan progress:");
+  });
+
+  bot.action(/VFB_DONE:(.+)/, async (ctx) => {
+    const d = store.getByToken(ctx.match[1]);
+    if (d) {
+      await bot.telegram.sendMessage(d.chatId, "✅ *Pesanan Selesai!*\nTerima kasih sudah order.", { parse_mode: "Markdown" });
+      await store.removePending(ctx.match[1]); // Hapus data di sini
+      ctx.reply("✅ Order ditandai selesai.");
+    }
+  });
+
   // User Cancel Actions
   bot.action(/U_CANCEL_Y:(.+)/, async (ctx) => {
     const tok = ctx.match[1];
@@ -870,7 +909,7 @@ function createQrisOrderBot() {
 }
 
 // =======================
-// HELPERS (FIXED RBXCAVE 402 + AUTO RECOVER)
+// HELPERS (FIXED: KEEP ORDER OPEN FOR FEEDBACK & RBXCAVE 402)
 // =======================
 async function approveAndProcess(bot, store, rbxcave, tok, adminChatIds, note) {
   const data = store.getByToken(tok);
@@ -882,7 +921,7 @@ async function approveAndProcess(bot, store, rbxcave, tok, adminChatIds, note) {
     try {
       let finalPlaceId = Number(data.placeId || 0);
 
-      // 1. RE-RESOLVE jika PlaceID masih 0 (Fix Error RBXCave)
+      // Auto-Recovery Place ID
       if (finalPlaceId <= 0 && data.gamePassId) {
         const r = await resolvePlaceIdFromGamePassId(data.gamePassId);
         if (r.ok) finalPlaceId = r.placeId;
@@ -890,32 +929,39 @@ async function approveAndProcess(bot, store, rbxcave, tok, adminChatIds, note) {
 
       if (finalPlaceId <= 0) throw new Error("Gagal mendapatkan Place ID. Pastikan link benar.");
 
-      // 2. Kirim Payload ke RBXCave (PlaceId wajib ada)
+      // API RBXCave
       await rbxcave.createGamepassOrder({
         orderId: String(data.orderId),
         robloxUsername: String(data.robloxUsername),
         robuxAmount: Number(data.robuxAmount), 
         gamePassId: Number(data.gamePassId),
-        placeId: finalPlaceId // Wajib Number > 0
+        placeId: finalPlaceId 
       });
 
-      const msg = `✅ *Pembayaran Diterima!*\nOrder ID: \`${data.orderId}\` berhasil diproses API.\nRobux masuk 4-5 hari.`;
-      await bot.telegram.sendMessage(data.chatId, msg, { parse_mode: "Markdown" });
-      await store.removePending(tok);
+      // Sukses
+      await bot.telegram.sendMessage(data.chatId, `✅ *Pembayaran Diterima!*\nOrder ID: \`${data.orderId}\` berhasil diproses API.\nRobux masuk 4-5 hari.\n\n_Mohon tunggu sebentar untuk bukti proses..._`, { parse_mode: "Markdown" });
       await notifyDiscordPaymentReceived(data);
 
+      // 🛑 JANGAN HAPUS DULU! Update status agar admin bisa kirim feedback
+      await store.updatePending(tok, { status: "COMPLETED_WAITING_FEEDBACK" });
+
+      // Beri notif ke Admin untuk kirim bukti/finish
+      for (const aid of adminChatIds) {
+        await bot.telegram.sendMessage(aid, `✅ *API SUCCESS: ${data.orderId}*\nSilakan kirim bukti jika perlu, atau klik Selesai.`, { 
+            parse_mode: "Markdown",
+            ...adminVilogFeedbackKeyboard(tok) // Munculkan tombol feedback
+        });
+      }
+
     } catch (e) {
-      // 3. HANDLING ERROR PINTAR (TERMASUK STOK HABIS / 402)
       await store.updatePending(tok, { status: "WAIT_ADMIN" });
-      
       const statusCode = e.status || 500;
       const detail = e.data ? JSON.stringify(e.data) : e.message;
       let adminMsg = `❌ *API FAIL: ${data.orderId}*\n`;
 
       if (statusCode === 402 || detail.includes("do not have robux")) {
-         adminMsg += `⚠️ *STOK RBXCAVE HABIS!* ⚠️\nProvider tidak punya stok untuk nominal: ${data.robuxAmount}.\n👉 *Silakan proses manual via login akun stok kamu.*`;
-         // Beritahu user dengan bahasa halus
-         await bot.telegram.sendMessage(data.chatId, "⚠️ *Info:* Order sedang dalam antrean proses manual admin (karena keterlambatan server pusat). Mohon ditunggu ya.");
+         adminMsg += `⚠️ *STOK RBXCAVE HABIS!* ⚠️\nProvider tidak punya stok untuk nominal: ${data.robuxAmount}.\n👉 *Silakan proses manual.*`;
+         await bot.telegram.sendMessage(data.chatId, "⚠️ *Info:* Order sedang dalam antrean proses manual (stok pusat limit). Mohon ditunggu.");
       } else {
          adminMsg += `Err: ${e.message}\nDetail: \`${detail}\``;
       }
