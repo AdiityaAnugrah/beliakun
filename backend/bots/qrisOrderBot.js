@@ -870,7 +870,7 @@ function createQrisOrderBot() {
 }
 
 // =======================
-// HELPERS (FIXED RBXCAVE PAYLOAD)
+// HELPERS (FIXED RBXCAVE 402 + AUTO RECOVER)
 // =======================
 async function approveAndProcess(bot, store, rbxcave, tok, adminChatIds, note) {
   const data = store.getByToken(tok);
@@ -905,11 +905,23 @@ async function approveAndProcess(bot, store, rbxcave, tok, adminChatIds, note) {
       await notifyDiscordPaymentReceived(data);
 
     } catch (e) {
-      // Rollback jika gagal
+      // 3. HANDLING ERROR PINTAR (TERMASUK STOK HABIS / 402)
       await store.updatePending(tok, { status: "WAIT_ADMIN" });
+      
+      const statusCode = e.status || 500;
       const detail = e.data ? JSON.stringify(e.data) : e.message;
+      let adminMsg = `❌ *API FAIL: ${data.orderId}*\n`;
+
+      if (statusCode === 402 || detail.includes("do not have robux")) {
+         adminMsg += `⚠️ *STOK RBXCAVE HABIS!* ⚠️\nProvider tidak punya stok untuk nominal: ${data.robuxAmount}.\n👉 *Silakan proses manual via login akun stok kamu.*`;
+         // Beritahu user dengan bahasa halus
+         await bot.telegram.sendMessage(data.chatId, "⚠️ *Info:* Order sedang dalam antrean proses manual admin (karena keterlambatan server pusat). Mohon ditunggu ya.");
+      } else {
+         adminMsg += `Err: ${e.message}\nDetail: \`${detail}\``;
+      }
+
       for (const aid of adminChatIds) {
-        await bot.telegram.sendMessage(aid, `❌ *API FAIL: ${data.orderId}*\nErr: ${e.message}\nDetail: \`${detail}\``, { parse_mode: "Markdown" });
+        await bot.telegram.sendMessage(aid, adminMsg, { parse_mode: "Markdown" });
       }
     }
   } else {
