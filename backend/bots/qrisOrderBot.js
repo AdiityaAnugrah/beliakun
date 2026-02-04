@@ -410,14 +410,21 @@ function packagesKeyboard(mode, page) {
     const b = items[i + 1];
 
     // ✅ tampilkan displayRobux untuk GAMEPASS (biar user lihat 100⏣ bukan 143⏣)
+    // ... (kode sebelumnya tetap sama)
     const aShow = mode === "GAMEPASS" ? Number(a.displayRobux || a.robuxAmount || 0) : Number(a.robuxAmount || 0);
     const bShow = b ? (mode === "GAMEPASS" ? Number(b.displayRobux || b.robuxAmount || 0) : Number(b.robuxAmount || 0)) : 0;
 
-    const textA = `${aShow}⏣ • ${formatRupiah(a.priceIdr)}`;
+    // 👇 LOGIKA BARU: Cek isPremium
+    const labelA = a.isPremium ? `${aShow} + PREMIUM` : aShow;
+    const textA = `${labelA}⏣ • ${formatRupiah(a.priceIdr)}`;
+    
     const row = [Markup.button.callback(textA, `PKG:${mode}:${a.key}`)];
 
     if (b) {
-      const textB = `${bShow}⏣ • ${formatRupiah(b.priceIdr)}`;
+      // 👇 LOGIKA BARU UNTUK KOLOM KANAN
+      const labelB = b.isPremium ? `${bShow} + PREMIUM` : bShow;
+      const textB = `${labelB}⏣ • ${formatRupiah(b.priceIdr)}`;
+      
       row.push(Markup.button.callback(textB, `PKG:${mode}:${b.key}`));
     }
 
