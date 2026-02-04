@@ -89,11 +89,6 @@ const PACKAGES_VILOG = [
   { key: "vilog_25000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 25.000⏣", robuxAmount: 25000, priceIdr: 3650000 },
   { key: "vilog_40000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 40.000⏣", robuxAmount: 40000, priceIdr: 5840000 },
   { key: "vilog_50000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 50.000⏣", robuxAmount: 50000, priceIdr: 7300000 },
-  
-  // --- ROBUX PREMIUM (Opsional, hapus jika tidak diperlukan) ---
-  { key: "vilog_prem_450", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 450 + PREMIUM⏣", robuxAmount: 450, priceIdr: 73000 },
-  { key: "vilog_prem_1000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 1000 + PREMIUM⏣", robuxAmount: 1000, priceIdr: 146000 },
-  { key: "vilog_prem_2200", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 2200 + PREMIUM⏣", robuxAmount: 2200, priceIdr: 292000 },
 ];
 
 const PAGE_SIZE = 6;
