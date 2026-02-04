@@ -58,30 +58,42 @@ const PACKAGES_GAMEPASS = [
 
 // ====== VILOG (MANUAL VIA LOGIN) ======
 const PACKAGES_VILOG = [
-  { key: "vilog_100", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 100⏣", robuxAmount: 100, priceIdr: 10994 },
-  { key: "vilog_200", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 200⏣", robuxAmount: 200, priceIdr: 21987 },
-  { key: "vilog_300", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 300⏣", robuxAmount: 300, priceIdr: 32980 },
-  { key: "vilog_400", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 400⏣", robuxAmount: 400, priceIdr: 43973 },
-  { key: "vilog_500", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 500⏣", robuxAmount: 500, priceIdr: 54966 },
-  { key: "vilog_600", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 600⏣", robuxAmount: 600, priceIdr: 65959 },
-  { key: "vilog_700", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 700⏣", robuxAmount: 700, priceIdr: 76952 },
-  { key: "vilog_800", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 800⏣", robuxAmount: 800, priceIdr: 87869 },
-  { key: "vilog_900", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 900⏣", robuxAmount: 900, priceIdr: 98862 },
-  { key: "vilog_1000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 1000⏣", robuxAmount: 1000, priceIdr: 109855 },
-  { key: "vilog_2000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 2000⏣", robuxAmount: 2000, priceIdr: 219709 },
-  { key: "vilog_3000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 3000⏣", robuxAmount: 3000, priceIdr: 329487 },
-  { key: "vilog_4000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 4000⏣", robuxAmount: 4000, priceIdr: 439341 },
-  { key: "vilog_5000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 5000⏣", robuxAmount: 5000, priceIdr: 549119 },
-  { key: "vilog_6000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 6000⏣", robuxAmount: 6000, priceIdr: 658973 },
-  { key: "vilog_7000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 7000⏣", robuxAmount: 7000, priceIdr: 768750 },
-  { key: "vilog_8000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 8000⏣", robuxAmount: 8000, priceIdr: 878605 },
-  { key: "vilog_9000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 9000⏣", robuxAmount: 9000, priceIdr: 988459 },
-  { key: "vilog_10000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 10000⏣", robuxAmount: 10000, priceIdr: 1098237 },
-  { key: "vilog_15000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 15000⏣", robuxAmount: 15000, priceIdr: 1647355 },
-  { key: "vilog_20000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 20000⏣", robuxAmount: 20000, priceIdr: 2196473 },
-  { key: "vilog_25000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 25000⏣", robuxAmount: 25000, priceIdr: 2745591 },
-  { key: "vilog_40000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 40000⏣", robuxAmount: 40000, priceIdr: 4392869 },
-  { key: "vilog_50000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 50000⏣", robuxAmount: 50000, priceIdr: 5491105 },
+  // --- ROBUX FAST ---
+  { key: "vilog_80", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 80⏣", robuxAmount: 80, priceIdr: 15250 },
+  { key: "vilog_160", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 160⏣", robuxAmount: 160, priceIdr: 30500 },
+  { key: "vilog_240", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 240⏣", robuxAmount: 240, priceIdr: 45750 },
+  { key: "vilog_320", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 320⏣", robuxAmount: 320, priceIdr: 61000 },
+  { key: "vilog_500", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 500⏣", robuxAmount: 500, priceIdr: 73000 },
+
+  // --- ROBUX FAST INSTANT ---
+  { key: "vilog_1000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 1.000⏣", robuxAmount: 1000, priceIdr: 146000 },
+  { key: "vilog_1500", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 1.500⏣", robuxAmount: 1500, priceIdr: 219000 },
+  { key: "vilog_2000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 2.000⏣", robuxAmount: 2000, priceIdr: 292000 },
+  { key: "vilog_2500", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 2.500⏣", robuxAmount: 2500, priceIdr: 365000 },
+  { key: "vilog_3000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 3.000⏣", robuxAmount: 3000, priceIdr: 438000 },
+  { key: "vilog_3500", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 3.500⏣", robuxAmount: 3500, priceIdr: 511000 },
+  { key: "vilog_4000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 4.000⏣", robuxAmount: 4000, priceIdr: 584000 },
+  { key: "vilog_4500", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 4.500⏣", robuxAmount: 4500, priceIdr: 657000 },
+  { key: "vilog_5000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 5.000⏣", robuxAmount: 5000, priceIdr: 730000 },
+
+  // --- ROBUX SEMI SULTAN ---
+  { key: "vilog_6000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 6.000⏣", robuxAmount: 6000, priceIdr: 876000 },
+  { key: "vilog_7000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 7.000⏣", robuxAmount: 7000, priceIdr: 1022000 },
+  { key: "vilog_8000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 8.000⏣", robuxAmount: 8000, priceIdr: 1168000 },
+  { key: "vilog_9000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 9.000⏣", robuxAmount: 9000, priceIdr: 1314000 },
+  { key: "vilog_10000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 10.000⏣", robuxAmount: 10000, priceIdr: 1460000 },
+
+  // --- ROBUX SULTAN ---
+  { key: "vilog_15000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 15.000⏣", robuxAmount: 15000, priceIdr: 2190000 },
+  { key: "vilog_20000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 20.000⏣", robuxAmount: 20000, priceIdr: 2920000 },
+  { key: "vilog_25000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 25.000⏣", robuxAmount: 25000, priceIdr: 3650000 },
+  { key: "vilog_40000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 40.000⏣", robuxAmount: 40000, priceIdr: 5840000 },
+  { key: "vilog_50000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 50.000⏣", robuxAmount: 50000, priceIdr: 7300000 },
+  
+  // --- ROBUX PREMIUM (Opsional, hapus jika tidak diperlukan) ---
+  { key: "vilog_prem_450", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 450 + PREMIUM⏣", robuxAmount: 450, priceIdr: 73000 },
+  { key: "vilog_prem_1000", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 1000 + PREMIUM⏣", robuxAmount: 1000, priceIdr: 146000 },
+  { key: "vilog_prem_2200", mode: "VILOG", orderType: "vilog_manual", label: "🔐 VILOG 2200 + PREMIUM⏣", robuxAmount: 2200, priceIdr: 292000 },
 ];
 
 const PAGE_SIZE = 6;
