@@ -103,7 +103,22 @@ ${productListText}
 `;
 
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        
+        // Helper function to generate content with fallback
+        const generateWithFallback = async (modelName, contents) => {
+            try {
+                const model = genAI.getGenerativeModel({ model: modelName });
+                const result = await model.generateContent({ contents });
+                return await result.response;
+            } catch (error) {
+                // If 429 or 503, try fallback model
+                if ((error.status === 429 || error.status === 503) && modelName !== "gemini-1.5-flash") {
+                    console.warn(`⚠️ Gemini ${modelName} hit rate limit/error. Switching to fallback (gemini-1.5-flash)...`);
+                    return await generateWithFallback("gemini-1.5-flash", contents);
+                }
+                throw error;
+            }
+        };
 
         const contents = [
             { role: "user", parts: [{ text: initialContext }] },
@@ -117,13 +132,17 @@ ${productListText}
             { role: "user", parts: [{ text: message }] },
         ];
 
-        const result = await model.generateContent({ contents });
-        const response = await result.response;
+        // Try with primary model (gemini-2.0-flash), fallback to 1.5-flash if needed
+        const response = await generateWithFallback("gemini-2.0-flash", contents);
         const text = response.text();
 
         res.json({ reply: text });
     } catch (err) {
         console.error("Error Gemini:", err);
+        // User-friendly error message for rate limits
+        if (err.status === 429) {
+            return res.status(429).json({ reply: "Maaf, server AI sedang sibuk. Silakan coba lagi nanti." });
+        }
         res.status(500).json({ reply: "Error di server Gemini!" });
     }
 };
