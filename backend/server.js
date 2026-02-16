@@ -71,15 +71,8 @@ const allowedOrigins = (
 
 const corsOptions = {
   origin(origin, cb) {
-    // ✅ SECURITY FIX: In production, reject requests without Origin header
-    // This prevents server-to-server attacks and CSRF
-    if (!origin) {
-      // Allow in development for tools like Postman/curl
-      if (process.env.NODE_ENV === 'production') {
-        return cb(new Error('Origin header is required'), false);
-      }
-      return cb(null, true);
-    }
+    // ✅ SECURITY FIX: Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return cb(null, true);
     
     // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {

@@ -6,3 +6,7 @@
 {"level":"info","message":"📝 Environment: development","timestamp":"2026-02-16 09:19:08"}
 {"level":"info","message":"🔗 CORS allowed origins: http://localhost:5173","timestamp":"2026-02-16 09:19:08"}
 {"level":"info","message":"💾 Database: beliakun @ localhost","timestamp":"2026-02-16 09:19:08"}
+{"level":"info","message":"✅ SERVER BERJALAN DI PORT [4000]","timestamp":"2026-02-16 09:27:52"}
+{"level":"info","message":"📝 Environment: development","timestamp":"2026-02-16 09:27:52"}
+{"level":"info","message":"🔗 CORS allowed origins: http://localhost:5173","timestamp":"2026-02-16 09:27:52"}
+{"level":"info","message":"💾 Database: beliakun @ localhost","timestamp":"2026-02-16 09:27:52"}
