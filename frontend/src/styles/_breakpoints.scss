@@ -1,0 +1,91 @@
+// =====================================
+// Standardized Breakpoints System
+// Mobile-first approach
+// =====================================
+
+// Breakpoint tokens
+$breakpoint-sm: 480px;   // Small phones
+$breakpoint-md: 768px;   // Tablets & large phones
+$breakpoint-lg: 1024px;  // Small desktops
+$breakpoint-xl: 1280px;  // Large desktops
+$breakpoint-xxl: 1536px; // Extra large desktops
+
+// Utility mixins for mobile-first approach
+@mixin mobile-only {
+  @media (max-width: #{$breakpoint-md - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet-up {
+  @media (min-width: #{$breakpoint-md}) {
+    @content;
+  }
+}
+
+@mixin desktop-up {
+  @media (min-width: #{$breakpoint-lg}) {
+    @content;
+  }
+}
+
+@mixin large-desktop-up {
+  @media (min-width: #{$breakpoint-xl}) {
+    @content;
+  }
+}
+
+@mixin xl-desktop-up {
+  @media (min-width: #{$breakpoint-xxl}) {
+    @content;
+  }
+}
+
+// Range mixins
+@mixin mobile-to-tablet {
+  @media (min-width: #{$breakpoint-sm}) and (max-width: #{$breakpoint-md - 1px}) {
+    @content;
+  }
+}
+
+@mixin tablet-to-desktop {
+  @media (min-width: #{$breakpoint-md}) and (max-width: #{$breakpoint-lg - 1px}) {
+    @content;
+  }
+}
+
+// Custom breakpoints
+@mixin custom-min($width) {
+  @media (min-width: #{$width}) {
+    @content;
+  }
+}
+
+@mixin custom-max($width) {
+  @media (max-width: #{$width}) {
+    @content;
+  }
+}
+
+@mixin custom-range($min, $max) {
+  @media (min-width: #{$min}) and (max-width: #{$max}) {
+    @content;
+  }
+}
+
+// Usage examples:
+// .my-component {
+//   padding: 1rem;
+//   
+//   @include mobile-only {
+//     padding: 0.5rem;
+//   }
+//   
+//   @include tablet-up {
+//     padding: 2rem;
+//   }
+//   
+//   @include desktop-up {
+//     max-width: 1200px;
+//   }
+// }

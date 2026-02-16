@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 const { chatGptChat } = require("../controllers/chatgptController");
 
-router.post("/chatgpt-chat", chatGptChat);
+// ✅ SECURITY: Rate limit AI endpoints to prevent API abuse
+const { aiLimiter } = require("../middleware/rateLimiter");
+
+router.post("/chatgpt-chat", aiLimiter, chatGptChat);
 
 module.exports = router;

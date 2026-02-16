@@ -8,7 +8,15 @@ const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const User = require("../models/userModel.js");
 
-const SECRET_KEY = "0x4AAAAAABXrkULWnDa5SdueNc1uZEGBHhk"; // Bisa diletakkan juga di .env jika diinginkan
+// ✅ SECURITY: Import logger
+const logger = require("../config/logger");
+
+// ✅ SECURITY FIX: Use environment variable instead of hardcoded secret
+const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
+
+if (!TURNSTILE_SECRET_KEY) {
+    throw new Error("TURNSTILE_SECRET_KEY environment variable is required");
+}
 
 // REGISTER: tambah verifikasiCode + kirim email
 const registerUser = async (req, res) => {
@@ -26,7 +34,7 @@ const registerUser = async (req, res) => {
 
         // Susun form data untuk verifikasi Turnstile
         const formData = new URLSearchParams();
-        formData.append("secret", SECRET_KEY);
+        formData.append("secret", TURNSTILE_SECRET_KEY);
         formData.append("response", captchaToken);
         formData.append("remoteip", ip);
         const idempotencyKey = crypto.randomUUID();
@@ -65,8 +73,10 @@ const registerUser = async (req, res) => {
             return res.status(400).json({ message: "Username already taken" });
         }
 
-        // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // ✅ SECURITY: Hash password with 12 rounds (increased from 10)
+        // Higher rounds = more secure but slightly slower (acceptable trade-off)
+        const BCRYPT_ROUNDS = 12;
+        const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
         // Generate verification code (6 digit)
         const verificationCode = Math.floor(
@@ -301,7 +311,11 @@ const loginUser = async (req, res) => {
             { expiresIn: "1h" }
         );
 
-        await User.update({ token }, { where: { id: user.id } });
+        // ✅ SECURITY FIX: JWT should be stateless - don't store in database
+        // Removed database storage for better scalability and performance
+        // If you need token invalidation, use Redis blacklist instead
+        
+        logger.logAuth('login', email, true, { ip: req.ip, userAgent: req.get('user-agent') });
 
         return res.status(200).json({
             message: "Login successful",
@@ -319,19 +333,23 @@ const loginUser = async (req, res) => {
     }
 };
 
-// LOGOUT: tidak berubah
+// LOGOUT: simplified - no DB query needed since JWT is stateless
 const logout = async (req, res) => {
+    // ✅ SECURITY NOTE: Since JWT is now stateless, logout is client-side
+    // Client should delete the token from localStorage/cookies
+    
+    // For production with token blacklisting, uncomment below:
+    /*
     const token = req.header("Authorization")?.replace("Bearer ", "");
-    try {
-        const user = await User.findOne({ where: { token } });
-        if (!user) {
-            return res.status(400).json({ message: "User not found" });
-        }
-        await User.update({ token: null }, { where: { id: user.id } });
-        return res.status(200).json({ message: "Logout successful" });
-    } catch (error) {
-        return res.status(500).json({ message: "Server error" });
+    if (token) {
+        // Add to Redis blacklist with expiry = token's remaining TTL
+        await redisClient.setEx(`blacklist:${token}`, 3600, 'revoked');
     }
+    */
+    
+    return res.status(200).json({ 
+        message: "Logout successful. Please clear your token from client-side storage." 
+    });
 };
 
 // VERIFY CODE: endpoint baru

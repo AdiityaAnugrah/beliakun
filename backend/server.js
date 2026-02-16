@@ -13,6 +13,13 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 
+// ✅ SECURITY: Helmet.js for security headers
+const helmet = require("helmet");
+
+// ✅ SECURITY: Logging infrastructure
+const logger = require("./config/logger");
+const morganMiddleware = require("./middleware/morganLogger");
+
 // === routes eksisting ===
 const authRoutes = require("./routes/authRoutes.js");
 const productRoutes = require("./routes/productRoutes.js");
@@ -40,6 +47,19 @@ const authPersistRoutes = require("./routes/authPersistRoutes.js");
 const app = express();
 app.set("trust proxy", 1);
 
+// ✅ SECURITY: Apply Helmet.js security headers FIRST
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false, // Allow embedding
+}));
+
 /* ===================== CORS aman utk credentials ===================== */
 const allowedOrigins = (
   process.env.CORS_ORIGINS ||
@@ -51,9 +71,23 @@ const allowedOrigins = (
 
 const corsOptions = {
   origin(origin, cb) {
-    if (!origin) return cb(null, true); // curl/postman tanpa Origin
-    if (allowedOrigins.includes(origin)) return cb(null, true);
-    return cb(null, false);
+    // ✅ SECURITY FIX: In production, reject requests without Origin header
+    // This prevents server-to-server attacks and CSRF
+    if (!origin) {
+      // Allow in development for tools like Postman/curl
+      if (process.env.NODE_ENV === 'production') {
+        return cb(new Error('Origin header is required'), false);
+      }
+      return cb(null, true);
+    }
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      return cb(null, true);
+    }
+    
+    // ✅ SECURITY: Proper error response for unauthorized origins
+    return cb(new Error(`Origin ${origin} not allowed by CORS policy`), false);
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -68,6 +102,9 @@ app.use(cors(corsOptions));
 // Ganti ke RegExp agar lolos parser:
 app.options(/.*/, cors(corsOptions)); // preflight untuk semua route
 /* ==================================================================== */
+
+// ✅ SECURITY: HTTP request logging
+app.use(morganMiddleware);
 
 app.use(cookieParser()); // WAJIB sebelum routes (agar /auth/refresh bisa baca cookie)
 app.use(bodyParser.json());
@@ -115,14 +152,26 @@ const PORT = process.env.PORT || 4000;
 initModels()
   .then(() => {
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`✅ SERVER BERJALAN DI PORT [${PORT}]`);
-      console.log("NODE_ENV:", process.env.NODE_ENV);
-      console.log("CORS allowed origins:", allowedOrigins);
-      console.log("DB_HOST:", process.env.DB_HOST);
-      console.log("DB_USER:", process.env.DB_USER);
-      console.log("DB_NAME:", process.env.DB_NAME);
+      logger.info(`✅ SERVER BERJALAN DI PORT [${PORT}]`);
+      logger.info(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`🔗 CORS allowed origins: ${allowedOrigins.join(', ')}`);
+      logger.info(`💾 Database: ${process.env.DB_NAME} @ ${process.env.DB_HOST}`);
     });
   })
   .catch((err) => {
-    console.error("Error initializing models: ", err);
+    logger.error("❌ Error initializing models:", err);
+    logger.logError(err);
+    process.exit(1);
   });
+
+// Global error handlers
+process.on('uncaughtException', (err) => {
+  logger.error('💥 Uncaught Exception:', err);
+  logger.logError(err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
