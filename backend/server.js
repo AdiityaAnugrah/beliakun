@@ -68,7 +68,9 @@ const allowedOrigins = (
   "http://localhost:5173"
 )
   .split(",")
-  .map((s) => s.trim());
+  .map((s) => s.trim())
+  .concat(["https://adityaanugrah.me"])
+  .filter((v, i, a) => a.indexOf(v) === i); // dedupe
 
 const corsOptions = {
   origin(origin, cb) {
