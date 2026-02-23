@@ -38,6 +38,7 @@ const financeRoutes = require("./routes/financeRoutes.js");
 const telegramRoutes = require("./routes/telegramRoutes.js");
 const pubgRoutes = require("./routes/pubgRoutes.js");
 const spotifyRoutes = require("./routes/spotifyRoutes.js");
+const steamRoutes = require("./routes/steamRoutes.js");
 
 // === routes bot untuk robux ===
 const qrisBotRoutes = require("./routes/qrisBotRoutes.js");
@@ -134,6 +135,7 @@ app.use("/finance", financeRoutes);
 app.use("/telegram", telegramRoutes);
 app.use("/pubg", pubgRoutes);
 app.use("/spotify", spotifyRoutes);
+app.use("/steam", steamRoutes);
 
 // Redirect Tripay
 app.get("/thank-you", (req, res) => {
