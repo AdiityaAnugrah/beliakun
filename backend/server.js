@@ -36,6 +36,7 @@ const bennerHomeRoutes = require("./routes/bennerHomeRoutes.js");
 const newsletterRoutes = require("./routes/newsletterRoutes.js");
 const financeRoutes = require("./routes/financeRoutes.js");
 const telegramRoutes = require("./routes/telegramRoutes.js");
+const pubgRoutes = require("./routes/pubgRoutes.js");
 
 // === routes bot untuk robux ===
 const qrisBotRoutes = require("./routes/qrisBotRoutes.js");
@@ -84,7 +85,7 @@ const corsOptions = {
   },
   credentials: true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  allowedHeaders: ["Content-Type", "Authorization", "Accept", "X-PUBG-API-KEY", "Accept-Language", "Accept-Encoding", "Referer", "User-Agent", "Origin", "X-Requested-With", "X-CSRF-TOKEN", "X-Requested-With"],
 };
 
 // Pakai CORS utama
@@ -128,6 +129,7 @@ app.use("/bennerhome", bennerHomeRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/finance", financeRoutes);
 app.use("/telegram", telegramRoutes);
+app.use("/pubg", pubgRoutes);
 
 // Redirect Tripay
 app.get("/thank-you", (req, res) => {

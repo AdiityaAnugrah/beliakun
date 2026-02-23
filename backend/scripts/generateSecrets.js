@@ -12,7 +12,7 @@
 const crypto = require('crypto');
 
 console.log('\n🔐 JWT Secret Generator\n');
-console.log('='repeat(50));
+console.log('='.repeat(50));
 console.log('\nGenerating cryptographically secure 256-bit secrets...\n');
 
 // Generate 256-bit (32 bytes) random secrets
@@ -25,7 +25,7 @@ console.log(`   ${jwtSecret}\n`);
 console.log('✅ REFRESH_SECRET (for refresh tokens):');
 console.log(`   ${refreshSecret}\n`);
 
-console.log('='repeat(50));
+console.log('='.repeat(50));
 console.log('\n📝 Instructions:\n');
 console.log('1. Copy these secrets to your .env file');
 console.log('2. Replace the existing JWT_SECRET and REFRESH_SECRET values');
